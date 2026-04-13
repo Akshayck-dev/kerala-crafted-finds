@@ -22,8 +22,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-sm">
       <div className="mx-auto flex h-12 max-w-[1200px] items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-1.5">
-          <span className="text-lg font-bold text-primary">Mallu</span>
-          <span className="text-lg font-bold text-foreground">Smart</span>
+          <img src={logo} alt="Mallu Smart" className="h-9 w-auto" />
         </Link>
 
         <nav className="hidden items-center gap-5 md:flex">

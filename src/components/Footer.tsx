@@ -8,8 +8,7 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <span className="text-base font-bold text-primary">Mallu</span>
-              <span className="text-base font-bold text-foreground">Smart</span>
+              <img src={logo} alt="Mallu Smart" className="h-10 w-auto" />
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Bringing authentic Kerala products directly from local artisans to your doorstep.
