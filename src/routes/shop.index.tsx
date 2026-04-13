@@ -4,7 +4,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 
-export const Route = createFileRoute("/shop")({
+export const Route = createFileRoute("/shop/")({
   head: () => ({
     meta: [
       { title: "Shop — Mallu Smart" },
