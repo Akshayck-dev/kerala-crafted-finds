@@ -14,7 +14,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="group relative rounded-lg border border-border bg-card p-2 transition-shadow hover:shadow-md">
-      <Link to="/shop/$productId" params={{ productId: product.id }} className="block">
+      <Link to="/product/$productId" params={{ productId: product.id }} className="block">
         <div className="relative aspect-square overflow-hidden rounded-md bg-muted">
           <img
             src={product.image}
@@ -36,7 +36,7 @@ export function ProductCard({ product }: { product: Product }) {
       </Link>
 
       <div className="mt-2 space-y-1">
-        <Link to="/shop/$productId" params={{ productId: product.id }}>
+        <Link to="/product/$productId" params={{ productId: product.id }}>
           <h3 className="text-xs font-medium leading-tight text-card-foreground line-clamp-2 hover:text-primary transition-colors">
             {product.name}
           </h3>
