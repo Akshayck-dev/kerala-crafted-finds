@@ -4,6 +4,13 @@ import { products, categories } from "@/lib/data";
 import { ProductCard } from "@/components/ProductCard";
 import { ShieldCheck, Truck, Award, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,26 +24,60 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
+const heroSlides = [
+  {
+    title: "Discover Authentic Kerala Products",
+    subtitle: "Handmade, Natural & Trusted by Local Artisans",
+    bg: "bg-brand-light",
+  },
+  {
+    title: "Fresh Spices Direct from Kerala",
+    subtitle: "Cardamom, Pepper, Cinnamon & More — Farm Fresh",
+    bg: "bg-gradient-to-r from-primary/10 to-accent/30",
+  },
+  {
+    title: "Handcrafted with Love",
+    subtitle: "Support Local Artisans & Traditional Craftsmanship",
+    bg: "bg-gradient-to-r from-accent/20 to-brand-light",
+  },
+];
+
 function HomePage() {
   const featured = products.slice(0, 10);
 
   return (
     <div>
-      {/* Hero */}
-      <section className="bg-brand-light py-10">
-        <div className="mx-auto max-w-[1200px] px-4 text-center">
-          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-            Discover Authentic Kerala Products
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Handmade, Natural & Trusted by Local Artisans
-          </p>
-          <Link to="/shop">
-            <Button className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
-              Shop Now
-            </Button>
-          </Link>
-        </div>
+      {/* Hero Carousel */}
+      <section>
+        <Carousel opts={{ loop: true }} className="w-full">
+          <CarouselContent>
+            {heroSlides.map((slide, i) => (
+              <CarouselItem key={i}>
+                <div className={`${slide.bg} py-10`}>
+                  <div className="mx-auto max-w-[1200px] px-4 text-center">
+                    <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+                      {slide.title}
+                    </h1>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {slide.subtitle}
+                    </p>
+                    <Link to="/shop">
+                      <Button className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
+                        Shop Now
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <div className="absolute inset-y-0 left-2 flex items-center">
+            <CarouselPrevious className="relative left-0 top-0 translate-y-0" />
+          </div>
+          <div className="absolute inset-y-0 right-2 flex items-center">
+            <CarouselNext className="relative right-0 top-0 translate-y-0" />
+          </div>
+        </Carousel>
       </section>
 
       {/* Categories */}
