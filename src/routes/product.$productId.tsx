@@ -6,7 +6,7 @@ import { ShoppingCart, MessageCircle, Minus, Plus, ArrowLeft } from "lucide-reac
 import { useState } from "react";
 import { notFound } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/shop/$productId")({
+export const Route = createFileRoute("/product/$productId")({
   head: ({ params }) => {
     const product = products.find((p) => p.id === params.productId);
     return {
