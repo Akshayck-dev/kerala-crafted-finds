@@ -48,7 +48,6 @@ function HomePage() {
               <Link
                 key={cat.id}
                 to="/shop"
-                search={{ category: cat.id }}
                 className="flex min-w-[120px] flex-col items-center gap-1.5 rounded-lg border border-border bg-card p-3 text-center transition-shadow hover:shadow-md"
               >
                 <span className="text-2xl">{cat.icon}</span>
