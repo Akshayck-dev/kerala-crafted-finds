@@ -8,14 +8,40 @@ export interface CartItem {
 
 let cartItems: CartItem[] = [];
 let wishlistIds: Set<string> = new Set();
+let fetchedProducts: Product[] = [];
+let isCartOpen = false;
+let isCheckoutOpen = false;
+
 let cartListeners: Array<() => void> = [];
 let wishlistListeners: Array<() => void> = [];
+let cartOpenListeners: Array<() => void> = [];
+let checkoutOpenListeners: Array<() => void> = [];
+let productsListeners: Array<() => void> = [];
 
 function emitCart() {
   cartListeners.forEach((l) => l());
 }
 function emitWishlist() {
   wishlistListeners.forEach((l) => l());
+}
+function emitCartOpen() {
+  cartOpenListeners.forEach((l) => l());
+}
+function emitCheckoutOpen() {
+  checkoutOpenListeners.forEach((l) => l());
+}
+function emitProducts() {
+  productsListeners.forEach((l) => l());
+}
+
+export function toggleCart(open?: boolean) {
+  isCartOpen = open ?? !isCartOpen;
+  emitCartOpen();
+}
+
+export function toggleCheckout(open?: boolean) {
+  isCheckoutOpen = open ?? !isCheckoutOpen;
+  emitCheckoutOpen();
 }
 
 export function addToCart(product: Product, qty = 1) {
@@ -28,6 +54,7 @@ export function addToCart(product: Product, qty = 1) {
     cartItems = [...cartItems, { product, quantity: qty }];
   }
   emitCart();
+  toggleCart(true);
 }
 
 export function removeFromCart(productId: string) {
@@ -67,6 +94,9 @@ function getCartSnapshot() {
 function getWishlistSnapshot() {
   return wishlistIds;
 }
+function getCartOpenSnapshot() {
+  return isCartOpen;
+}
 
 export function useCart() {
   const items = useSyncExternalStore(
@@ -86,6 +116,36 @@ export function useCart() {
   return { items, totalItems, totalPrice };
 }
 
+export function useCartDrawer() {
+  const isOpen = useSyncExternalStore(
+    (cb) => {
+      cartOpenListeners.push(cb);
+      return () => {
+        cartOpenListeners = cartOpenListeners.filter((l) => l !== cb);
+      };
+    },
+    getCartOpenSnapshot,
+    getCartOpenSnapshot
+  );
+
+  return { isOpen, toggleCart };
+}
+
+export function useCheckoutModal() {
+  const isOpen = useSyncExternalStore(
+    (cb) => {
+      checkoutOpenListeners.push(cb);
+      return () => {
+        checkoutOpenListeners = checkoutOpenListeners.filter((l) => l !== cb);
+      };
+    },
+    () => isCheckoutOpen,
+    () => isCheckoutOpen
+  );
+
+  return { isOpen, toggleCheckout };
+}
+
 export function useWishlist() {
   const ids = useSyncExternalStore(
     (cb) => {
@@ -100,4 +160,24 @@ export function useWishlist() {
 
   const isWishlisted = useCallback((id: string) => ids.has(id), [ids]);
   return { wishlistIds: ids, isWishlisted, count: ids.size };
+}
+
+export function setProducts(products: Product[]) {
+  fetchedProducts = products;
+  emitProducts();
+}
+
+export function useProducts() {
+  const products = useSyncExternalStore(
+    (cb) => {
+      productsListeners.push(cb);
+      return () => {
+        productsListeners = productsListeners.filter((l) => l !== cb);
+      };
+    },
+    () => fetchedProducts,
+    () => fetchedProducts
+  );
+
+  return { products, setProducts };
 }

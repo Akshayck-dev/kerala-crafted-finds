@@ -1,198 +1,255 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { products } from "@/lib/data";
 import { Button } from "@/components/ui/button";
-import { addToCart } from "@/lib/store";
-import { ShoppingCart, MessageCircle, Minus, Plus, ArrowLeft } from "lucide-react";
-import { useState } from "react";
-import { notFound } from "@tanstack/react-router";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from "@/components/ui/carousel";
+import { addToCart, useProducts } from "@/lib/store";
+import { ShoppingCart, MessageCircle, Minus, Plus, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { fetchProducts } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/product/$productId")({
-  head: ({ params }) => {
-    const product = products.find((p) => p.id === params.productId);
-    return {
-      meta: [
-        { title: product ? `${product.name} — Mallu Smart` : "Product — Mallu Smart" },
-        { name: "description", content: product?.description || "" },
-        { property: "og:title", content: product ? `${product.name} — Mallu Smart` : "Product" },
-        { property: "og:description", content: product?.description || "" },
-      ],
-    };
-  },
   component: ProductDetailPage,
-  notFoundComponent: () => (
-    <div className="mx-auto max-w-[1200px] px-4 py-12 text-center">
-      <p className="text-muted-foreground">Product not found.</p>
-      <Link to="/shop" className="mt-2 inline-block text-primary text-sm hover:underline">Back to Shop</Link>
-    </div>
-  ),
 });
 
 function ProductDetailPage() {
   const { productId } = Route.useParams();
-  const product = products.find((p) => p.id === productId);
+  const { products, setProducts } = useProducts();
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isSyncing, setIsSyncing] = useState(products.length === 0);
 
-  if (!product) {
-    throw notFound();
+  const product = products.find((p) => p.id === productId);
+
+  useEffect(() => {
+    async function syncRegistry() {
+        if (products.length === 0) {
+            try {
+                const data = await fetchProducts();
+                setProducts(data);
+            } catch (err) {
+                console.error("Registry sync failed", err);
+            } finally {
+                setIsSyncing(false);
+            }
+        } else {
+            setIsSyncing(false);
+        }
+    }
+    syncRegistry();
+  }, [productId, products.length, setProducts]);
+
+  if (isSyncing) {
+    return (
+      <div className="mx-auto max-w-[1200px] px-4 py-8">
+        <div className="mb-6 h-4 w-32 animate-pulse bg-muted rounded-full" />
+        <div className="grid gap-12 lg:grid-cols-2">
+           <Skeleton className="aspect-square w-full rounded-[2.5rem]" />
+           <div className="space-y-6 pt-4">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-12 w-3/4" />
+              <Skeleton className="h-8 w-1/4" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-16 w-full rounded-full" />
+           </div>
+        </div>
+      </div>
+    );
   }
 
-  const discount = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : 0;
+  if (!product) {
+    return (
+        <div className="mx-auto max-w-[1200px] px-4 py-24 text-center">
+            <h2 className="text-2xl font-black italic uppercase tracking-tighter text-foreground mb-4">
+                Record Not Found
+            </h2>
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                The requested item could not be retrieved from the heritage registry. It may have been relocated or archived.
+            </p>
+            <Link to="/shop">
+                <Button className="rounded-full px-8">Return to Shop</Button>
+            </Link>
+        </div>
+    );
+  }
 
   const whatsappMsg = encodeURIComponent(`Hi, I'd like to order: ${product.name} (₹${product.price}) x ${qty}`);
-
-  // Build gallery: main image + extra images if available
   const galleryImages = [product.image, ...(product.images || [])];
 
   return (
-    <div className="mx-auto max-w-[1200px] px-4 py-6 pb-24 md:pb-6">
-      <Link to="/shop" className="mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-3 w-3" /> Back to Shop
+    <div className="mx-auto max-w-[1200px] px-4 py-6 md:py-12 pb-32">
+      <Link to="/shop" className="mb-6 inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-muted-foreground transition-colors hover:text-foreground uppercase">
+        <ArrowLeft className="h-4 w-4" /> Back to Collection
       </Link>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Image Gallery */}
-        <div>
-          {/* Swipeable carousel for mobile, clickable thumbnails for desktop */}
-          <Carousel opts={{ loop: true, startIndex: selectedImage }} className="w-full">
-            <CarouselContent>
-              {galleryImages.map((img, i) => (
-                <CarouselItem key={i}>
-                  <div className="aspect-square overflow-hidden rounded-lg bg-muted">
-                    <img src={img} alt={`${product.name} - ${i + 1}`} className="h-full w-full object-cover" />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            {galleryImages.length > 1 && (
-              <>
-                <div className="absolute inset-y-0 left-1 flex items-center">
-                  <CarouselPrevious className="relative left-0 top-0 translate-y-0 h-8 w-8" />
-                </div>
-                <div className="absolute inset-y-0 right-1 flex items-center">
-                  <CarouselNext className="relative right-0 top-0 translate-y-0 h-8 w-8" />
-                </div>
-              </>
+      <div className="grid gap-12 lg:grid-cols-2 lg:items-start">
+        {/* Left Column: Image Stack/Carousel */}
+        <div className="space-y-4">
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-muted shadow-2xl">
+            {product.badge && (
+              <Badge className="absolute left-6 top-6 z-10 bg-black/80 px-4 py-1.5 text-[10px] font-bold tracking-[0.2em] uppercase text-white backdrop-blur-md">
+                {product.badge}
+              </Badge>
             )}
-          </Carousel>
-
-          {/* Thumbnail strip */}
+            <img 
+              src={galleryImages[selectedImage]} 
+              alt={product.name} 
+              className="aspect-square w-full object-cover transition-all duration-700 hover:scale-110" 
+            />
+          </div>
+          
           {galleryImages.length > 1 && (
-            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
               {galleryImages.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setSelectedImage(i)}
-                  className={`h-14 w-14 shrink-0 overflow-hidden rounded-md border-2 transition-colors ${
-                    selectedImage === i ? "border-primary" : "border-border"
+                  className={`relative aspect-square w-20 flex-shrink-0 overflow-hidden rounded-2xl border-2 transition-all ${
+                    selectedImage === i ? "border-primary ring-2 ring-primary/20" : "border-transparent opacity-60 hover:opacity-100"
                   }`}
                 >
-                  <img src={img} alt={`Thumb ${i + 1}`} className="h-full w-full object-cover" />
+                  <img src={img} alt={`Thumbnail ${i}`} className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
           )}
-
-          {/* Dot indicators for mobile */}
-          {galleryImages.length > 1 && (
-            <div className="mt-2 flex justify-center gap-1.5 md:hidden">
-              {galleryImages.map((_, i) => (
-                <span
-                  key={i}
-                  className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                    selectedImage === i ? "bg-primary" : "bg-border"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Details */}
-        <div className="space-y-4">
-          <h1 className="text-xl font-bold text-foreground">{product.name}</h1>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-foreground">₹{product.price}</span>
-            {product.originalPrice && (
-              <>
-                <span className="text-sm text-muted-foreground line-through">₹{product.originalPrice}</span>
-                <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-xs font-medium text-destructive">-{discount}%</span>
-              </>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
+        {/* Right Column: Detailed Info */}
+        <div className="flex flex-col space-y-8 lg:pt-4">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-bold tracking-[0.3em] text-[#B68D40] uppercase">
+                Authorized Archive
+              </span>
+              <div className="h-[1px] flex-1 bg-[#B68D40]/30" />
+            </div>
 
-          {/* Quantity */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-foreground">Quantity:</span>
-            <div className="flex items-center rounded-md border border-border">
-              <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-2 py-1 text-muted-foreground hover:text-foreground">
-                <Minus className="h-3 w-3" />
-              </button>
-              <span className="px-3 py-1 text-sm font-medium">{qty}</span>
-              <button onClick={() => setQty(qty + 1)} className="px-2 py-1 text-muted-foreground hover:text-foreground">
-                <Plus className="h-3 w-3" />
-              </button>
+            <div className="space-y-2">
+              <span className="text-[10px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
+                {product.categoryName || product.category?.replace("-", " ")}
+              </span>
+              <h1 className="fluid-heading-2 font-black italic uppercase text-foreground">
+                {product.name}
+              </h1>
+            </div>
+
+            <div className="flex items-baseline gap-4">
+              <span className="text-4xl font-black text-[#B68D40]">₹{product.price}</span>
+              {product.originalPrice && (
+                <span className="text-lg text-muted-foreground line-through decoration-destructive/30">
+                  ₹{Math.round(product.originalPrice)}
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Desktop action buttons */}
-          <div className="hidden flex-col gap-2 pt-2 sm:flex sm:flex-row sm:gap-3">
-            <Button
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => addToCart(product, qty)}
-            >
-              <ShoppingCart className="h-4 w-4 mr-1" /> Add to Cart
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 border-success text-success hover:bg-success hover:text-success-foreground"
-              asChild
-            >
-              <a href={`https://wa.me/919999999999?text=${whatsappMsg}`} target="_blank" rel="noreferrer">
-                <MessageCircle className="h-4 w-4 mr-1" /> Order via WhatsApp
-              </a>
-            </Button>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <p className="text-lg font-medium leading-relaxed text-foreground/80">
+                {product.description}
+              </p>
+              {product.ingredients && (
+                <p className="text-[11px] font-bold tracking-widest text-muted-foreground uppercase leading-relaxed">
+                  {product.ingredients}
+                </p>
+              )}
+            </div>
+
+            {/* Artisan Card */}
+            <div className="flex items-center justify-between rounded-3xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-14 w-14 border-2 border-primary/10">
+                  <AvatarImage src={product.sellerAvatar} />
+                  <AvatarFallback className="bg-primary/5 text-primary">MS</AvatarFallback>
+                </Avatar>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                    Artisan Master
+                  </span>
+                  <p className="text-lg font-bold text-foreground">
+                    {product.sellerName || product.artisan || "Independent Artisan"}
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-full bg-primary/5 p-2 text-primary/60">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
+
+          <Separator className="bg-border/60" />
+
+          {/* Action Row */}
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between pt-4">
+            <div className="space-y-3">
+              <span className="text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase">
+                Requisition Volume
+              </span>
+              <div className="flex w-fit items-center overflow-hidden rounded-full border border-border bg-card shadow-inner">
+                <button 
+                  onClick={() => setQty(Math.max(1, qty - 1))}
+                  className="flex h-12 w-12 items-center justify-center transition-colors hover:bg-muted"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="flex min-w-[50px] items-center justify-center text-lg font-bold">
+                  {qty}
+                </span>
+                <button 
+                   onClick={() => setQty(qty + 1)}
+                   className="flex h-12 w-12 items-center justify-center transition-colors hover:bg-muted"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-3">
+              <Button 
+                size="lg" 
+                className="h-16 flex-1 rounded-2xl bg-primary px-8 text-lg font-black italic tracking-tight text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] sm:flex-none uppercase"
+                onClick={() => addToCart(product, qty)}
+              >
+                <ShoppingCart className="mr-2 h-5 w-5" /> Add to Selection
+              </Button>
+              <Button 
+                 variant="outline" 
+                 size="icon" 
+                 className="h-16 w-16 shrink-0 rounded-full border-2 border-[#25D366]/30 text-[#25D366] transition-all hover:bg-[#25D366] hover:text-white"
+                 asChild
+              >
+                <a href={`https://wa.me/919999999999?text=${whatsappMsg}`} target="_blank" rel="noreferrer">
+                  <MessageCircle className="h-6 w-6" />
+                </a>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile sticky bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card p-3 sm:hidden">
-        <div className="mx-auto flex max-w-[1200px] items-center gap-2">
-          <div className="min-w-0 flex-shrink-0">
-            <p className="text-xs text-muted-foreground truncate">{product.name}</p>
-            <p className="text-base font-bold text-foreground">₹{product.price * qty}</p>
-          </div>
-          <div className="ml-auto flex gap-2">
-            <Button
-              size="sm"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs h-9 px-3"
-              onClick={() => addToCart(product, qty)}
-            >
-              <ShoppingCart className="h-3.5 w-3.5 mr-1" /> Add to Cart
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-success text-success hover:bg-success hover:text-success-foreground text-xs h-9 px-3"
-              asChild
-            >
-              <a href={`https://wa.me/919999999999?text=${whatsappMsg}`} target="_blank" rel="noreferrer">
-                <MessageCircle className="h-3.5 w-3.5 mr-1" /> WhatsApp
-              </a>
-            </Button>
-          </div>
+      {/* Sticky Mobile Action Bar */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/80 p-4 backdrop-blur-xl transition-all duration-300 animate-in slide-in-from-bottom-full sm:hidden">
+        <div className="mx-auto flex max-w-md items-center gap-3">
+          <Button 
+             variant="outline" 
+             size="icon" 
+             className="h-12 w-12 shrink-0 rounded-full border-2 border-[#25D366]/30 text-[#25D366]"
+             asChild
+          >
+            <a href={`https://wa.me/919999999999?text=${whatsappMsg}`} target="_blank" rel="noreferrer">
+              <MessageCircle className="h-6 w-6" />
+            </a>
+          </Button>
+          <Button 
+            className="h-12 flex-1 rounded-full bg-primary text-xs font-black italic tracking-widest text-white shadow-lg uppercase"
+            onClick={() => addToCart(product, qty)}
+          >
+            <ShoppingCart className="mr-2 h-4 w-4" /> Add to Selection — ₹{product.price * qty}
+          </Button>
         </div>
+        <div className="h-2 w-full mobile-safe-bottom" />
       </div>
     </div>
   );

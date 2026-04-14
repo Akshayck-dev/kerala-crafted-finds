@@ -1,15 +1,17 @@
+import React, { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
-import { products, categories } from "@/lib/data";
 import { ProductCard } from "@/components/ProductCard";
 import { ShieldCheck, Truck, Award, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { fetchProducts, fetchCategories } from "@/lib/api";
+import { setProducts as globalSetProducts } from "@/lib/store";
+import { type Product, type Category } from "@/lib/data";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -28,111 +30,320 @@ export const Route = createFileRoute("/")({
 const heroSlides = [
   {
     title: "Discover Authentic Kerala Products",
-    subtitle: "Handmade, Natural & Trusted by Local Artisans",
-    bg: "bg-brand-light",
+    subtitle: "Made by real people, not factories. Shop local and support small businesses.",
+    image: "/images/registry_archive.png",
+    label: "Registry Archive",
   },
   {
-    title: "Fresh Spices Direct from Kerala",
-    subtitle: "Cardamom, Pepper, Cinnamon & More — Farm Fresh",
-    bg: "bg-gradient-to-r from-primary/10 to-accent/30",
+    title: "Discover Authentic Kerala Products",
+    subtitle: "Made by real people, not factories. Shop local and support small businesses.",
+    image: "/images/artisan_legacy.png",
+    label: "Legacy Registry",
   },
   {
-    title: "Handcrafted with Love",
-    subtitle: "Support Local Artisans & Traditional Craftsmanship",
-    bg: "bg-gradient-to-r from-accent/20 to-brand-light",
+    title: "Discover Authentic Kerala Products",
+    subtitle: "Made by real people, not factories. Shop local and support small businesses.",
+    image: "/images/backwater_majesty.png",
+    label: "Provenance Log",
   },
 ];
 
+const guaranteeItems = [
+  { icon: Award, title: "100% Local Products", desc: "Sourced directly from God's Own Country." },
+  { icon: Truck, title: "Direct from Sellers", desc: "We eliminate middle-men, ensuring fair pay for every creator." },
+  { icon: Package, title: "No Middlemen", desc: "Direct connection between artisans and customers." },
+  { icon: ShieldCheck, title: "Trusted Quality", desc: "Rigorous quality checks for every handmade artifact." },
+];
+
 function HomePage() {
-  const featured = products.slice(0, 10);
+  const [featured, setFeatured] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+        try {
+            const [pData, cData] = await Promise.all([
+              fetchProducts(),
+              fetchCategories()
+            ]);
+            setFeatured(pData.slice(0, 10));
+            globalSetProducts(pData);
+            setCategories(cData);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+    loadData();
+  }, []);
 
   return (
     <div>
-      {/* Hero Carousel */}
-      <section>
-        <Carousel opts={{ loop: true }} plugins={[Autoplay({ delay: 4000, stopOnInteraction: false })]} className="w-full">
+      {/* Modern Cinematic Hero Carousel */}
+      <section className="relative w-full overflow-hidden rounded-b-[4rem] shadow-2xl sm:rounded-b-[8rem]">
+        <Carousel
+          opts={{ loop: true }}
+          plugins={[Autoplay({ delay: 6000 })]}
+          className="w-full"
+        >
           <CarouselContent>
-            {heroSlides.map((slide, i) => (
-              <CarouselItem key={i}>
-                <div className={`${slide.bg} py-6 sm:py-10`}>
-                  <div className="mx-auto max-w-[1200px] px-4 text-center">
-                    <h1 className="text-lg font-bold text-foreground sm:text-2xl md:text-3xl">
-                      {slide.title}
-                    </h1>
-                    <p className="mt-2 text-sm text-muted-foreground">
+            {heroSlides.map((slide, index) => (
+              <CarouselItem key={index}>
+                <div className="relative h-[55vh] w-full sm:h-[85vh]">
+                  <img
+                    src={slide.image}
+                    alt={slide.title}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-[20s] hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
+                  
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white">
+                    <div className="mb-6 flex animate-in fade-in slide-in-from-bottom-4 duration-700 items-center gap-3">
+                       <span className="text-[10px] font-bold tracking-[0.4em] text-white/80 uppercase">
+                          The Mallu Smart Registry —— {slide.label}
+                       </span>
+                    </div>
+
+                    <h2 className="max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-1000 text-4xl font-black italic tracking-tighter uppercase min-[400px]:text-5xl sm:text-7xl lg:text-8xl leading-[0.9]">
+                      {slide.title.split(' ').map((word, i) => (
+                        <React.Fragment key={i}>
+                          {i > 0 && <br className="min-[500px]:hidden" />} {word}
+                        </React.Fragment>
+                      ))}
+                    </h2>
+                    
+                    <p className="mt-6 max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-1000 text-lg font-medium text-white/90 sm:text-2xl">
                       {slide.subtitle}
                     </p>
-                    <Link to="/shop">
-                      <Button className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
-                        Shop Now
-                      </Button>
-                    </Link>
+
+                    <div className="mt-8 flex animate-in fade-in slide-in-from-bottom-10 duration-1000 flex-col gap-3 min-[400px]:flex-row sm:gap-6">
+                      <Link to="/shop">
+                        <Button size="lg" className="h-12 sm:h-14 rounded-full bg-white px-8 sm:px-10 text-base sm:text-lg font-bold text-black ring-offset-black transition-all hover:scale-105 hover:bg-white/90 active:scale-95">
+                          Explore Products
+                        </Button>
+                      </Link>
+                      <Link to="/shop">
+                        <Button size="lg" variant="outline" className="h-12 sm:h-14 rounded-full border-2 border-white/30 px-8 sm:px-10 text-base sm:text-lg font-bold text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/10 active:scale-95">
+                          Start Selling
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </CarouselItem>
             ))}
           </CarouselContent>
-          <div className="absolute inset-y-0 left-2 flex items-center">
-            <CarouselPrevious className="relative left-0 top-0 translate-y-0" />
-          </div>
-          <div className="absolute inset-y-0 right-2 flex items-center">
-            <CarouselNext className="relative right-0 top-0 translate-y-0" />
-          </div>
         </Carousel>
+
+        {/* Scroll Indicator - Hidden on mobile for cleaner view at 55vh */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-50 pointer-events-none hidden sm:block">
+           <div className="h-10 w-6 rounded-full border-2 border-white/30 p-1">
+              <div className="h-2 w-full rounded-full bg-white/50" />
+           </div>
+        </div>
       </section>
 
-      {/* Categories */}
-      <section className="py-6">
+      {/* Shop by Category Section */}
+      <section className="pt-16 pb-4">
         <div className="mx-auto max-w-[1200px] px-4">
-          <h2 className="mb-4 text-base font-semibold text-foreground">Shop by Category</h2>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                to="/shop"
-                className="flex min-w-[120px] flex-col items-center gap-1.5 rounded-lg border border-border bg-card p-3 text-center transition-shadow hover:shadow-md"
-              >
-                <span className="text-2xl">{cat.icon}</span>
-                <span className="text-xs font-medium text-card-foreground">{cat.name}</span>
-              </Link>
-            ))}
+          <div className="mb-10 flex items-center gap-3">
+             <span className="text-[10px] font-bold tracking-[0.4em] text-[#B68D40] uppercase">
+                Handmade, natural and trusted products from Kerala ——
+             </span>
+             <div className="h-[1px] flex-1 bg-[#B68D40]/20" />
+          </div>
+
+          <h2 className="mb-8 text-4xl font-black italic uppercase tracking-tighter text-foreground">
+            Explore Local Creations
+          </h2>
+
+          <div className="flex gap-10 overflow-x-auto pb-4 scrollbar-hide sm:grid sm:grid-cols-5 sm:overflow-visible">
+            {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex flex-col items-center gap-3">
+                        <Skeleton className="h-16 w-16 rounded-full" />
+                        <Skeleton className="h-2 w-16" />
+                    </div>
+                ))
+            ) : (
+                categories.map((cat) => (
+                  <Link
+                    key={cat.id}
+                    to="/shop"
+                    className="group flex flex-col items-center gap-4 transition-all"
+                  >
+                    <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] border border-border/50 bg-card/40 backdrop-blur-md shadow-lg transition-all duration-500 group-hover:-translate-y-2 group-hover:bg-primary/10 group-hover:shadow-xl group-hover:shadow-primary/5 group-hover:border-primary/20">
+                      <span className="text-4xl transition-transform duration-500 group-hover:scale-110">{cat.icon || "📦"}</span>
+                    </div>
+                    <span className="max-w-[120px] text-[9px] font-black italic tracking-[0.15em] text-foreground/80 uppercase text-center leading-tight transition-colors group-hover:text-primary">
+                      {cat.name}
+                    </span>
+                  </Link>
+                ))
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Handpicked Collections */}
+      <section className="bg-brand-light/20 pt-4 pb-12">
+        <div className="mx-auto max-w-[1200px] px-4">
+          <h2 className="mb-8 text-center text-2xl font-bold text-foreground">Handpicked Collections</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="group relative h-[250px] overflow-hidden rounded-2xl shadow-lg transition-transform hover:-translate-y-1">
+              <img
+                src="/images/handmade-collection.png"
+                alt="Handmade Products"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute bottom-6 left-6 text-white">
+                <h3 className="text-2xl font-bold">Artisanal Crafts</h3>
+                <p className="mt-1 text-sm text-white/80">Support local families & preserve heritage</p>
+                <Link to="/shop">
+                  <Button variant="link" className="mt-2 p-0 text-white hover:text-white/80">
+                    Shop Now →
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <div className="group relative h-[250px] overflow-hidden rounded-2xl shadow-lg transition-transform hover:-translate-y-1">
+              <img
+                src="https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&fit=crop"
+                alt="Organic & Natural"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute bottom-6 left-6 text-white">
+                <h3 className="text-2xl font-bold">Organic & Natural</h3>
+                <p className="mt-1 text-sm text-white/80">Pure spices and oils for a healthy lifestyle</p>
+                <Link to="/shop">
+                  <Button variant="link" className="mt-2 p-0 text-white hover:text-white/80">
+                    Explore More →
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Featured Products */}
-      <section className="py-6">
+      <section className="bg-brand-light/5 py-16">
         <div className="mx-auto max-w-[1200px] px-4">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-foreground">Featured Products</h2>
-            <Link to="/shop" className="text-xs text-primary hover:underline">View All</Link>
+          <div className="mb-4">
+            <h2 className="text-2xl font-black italic uppercase tracking-tighter text-foreground">Featured Products</h2>
+            <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Trending items from local sellers</p>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {featured.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex flex-col gap-3 rounded-[2.5rem] border border-border/50 p-3">
+                        <Skeleton className="aspect-[4/5] w-full rounded-[2rem]" />
+                        <div className="space-y-2 px-2 pb-2">
+                            <Skeleton className="h-3 w-1/2" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-6 w-1/3" />
+                        </div>
+                    </div>
+                ))
+            ) : (
+                featured.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))
+            )}
           </div>
         </div>
       </section>
 
-      {/* Why Mallu Smart */}
-      <section className="py-6">
+      {/* Artisan Spotlight */}
+      <section className="py-16">
         <div className="mx-auto max-w-[1200px] px-4">
-          <h2 className="mb-4 text-center text-base font-semibold text-foreground">Why Mallu Smart?</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              { icon: Award, title: "Authentic Kerala Products", desc: "100% genuine local items" },
-              { icon: Truck, title: "Direct from Sellers", desc: "No middlemen involved" },
-              { icon: ShieldCheck, title: "Trusted Quality", desc: "Quality checked products" },
-              { icon: Package, title: "Easy Ordering", desc: "Simple checkout process" },
-            ].map((item) => (
-              <div key={item.title} className="flex flex-col items-center rounded-lg border border-border bg-card p-4 text-center">
-                <item.icon className="h-6 w-6 text-primary mb-2" />
-                <h3 className="text-xs font-semibold text-card-foreground">{item.title}</h3>
-                <p className="mt-1 text-[11px] text-muted-foreground">{item.desc}</p>
+          <div className="grid items-center gap-12 md:grid-cols-2">
+            <div className="relative aspect-square overflow-hidden rounded-3xl shadow-2xl">
+              <img
+                src="/images/artisan-at-work.png"
+                alt="Artisan at work"
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute -bottom-6 -right-6 h-32 w-32 rounded-full bg-brand-light/30 blur-3xl" />
+            </div>
+            <div className="space-y-6">
+              <span className="inline-block rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-primary uppercase">
+                Artisan Spotlight
+              </span>
+              <h2 className="text-3xl font-bold text-foreground sm:text-4xl">Every piece tells a story of tradition</h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Our products aren't just items; they are the result of generations of craftsmanship. By choosing Kerala Crafted Finds, you're directly supporting artisans who have dedicated their lives to mastering their trade.
+              </p>
+              <div className="grid grid-cols-2 gap-6 pt-4">
+                <div>
+                  <h4 className="text-2xl font-bold text-primary">50+</h4>
+                  <p className="text-sm text-muted-foreground">Certified Artisans</p>
+                </div>
+                <div>
+                  <h4 className="text-2xl font-bold text-primary">100%</h4>
+                  <p className="text-sm text-muted-foreground">Ethically Sourced</p>
+                </div>
               </div>
-            ))}
+              <Button className="mt-6 rounded-full px-8 py-4 text-lg">Read Our Story</Button>
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* Seller Section (CTA) */}
+      <section className="bg-primary py-16 text-primary-foreground">
+        <div className="mx-auto max-w-[1200px] px-4 text-center">
+            <h2 className="text-4xl font-black italic tracking-tighter uppercase sm:text-5xl">Start Selling Today</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-lg font-medium opacity-90">
+                Turn your skills into income. Join Mallu Smart and start selling your products.
+            </p>
+            <Button size="lg" className="mt-8 rounded-full bg-white px-10 py-6 text-lg font-bold text-black hover:bg-white/90">
+                Become a Seller
+            </Button>
+        </div>
+      </section>
+
+      {/* Why Mallu Smart (The Heritage Guarantee) */}
+      <section className="py-12 bg-card/30">
+        <div className="mx-auto max-w-[1200px] px-4">
+          <div className="mb-10 text-center">
+            <span className="text-[10px] font-bold tracking-[0.4em] text-primary uppercase">
+              Our Principles
+            </span>
+            <h2 className="mt-4 text-4xl font-black italic tracking-tighter text-foreground uppercase sm:text-5xl">
+              Why Choose Us
+            </h2>
+          </div>
+
+          <Carousel
+            plugins={[Autoplay({ delay: 3000 })]}
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent>
+              {guaranteeItems.map((item) => (
+                <CarouselItem key={item.title} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                  <div className="p-1 h-full">
+                    <div className="group relative flex flex-col items-center rounded-[2.5rem] border border-border/50 bg-background p-8 text-center transition-all duration-500 hover:-translate-y-2 hover:bg-card hover:shadow-2xl h-full">
+                      <div className="mb-6 rounded-2xl bg-primary/5 p-4 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                        <item.icon className="h-8 w-8" />
+                      </div>
+                      <h3 className="text-lg font-bold text-foreground mb-3">{item.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                      <div className="absolute inset-0 rounded-[2.5rem] ring-1 ring-inset ring-black/5" />
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
         </div>
       </section>
     </div>

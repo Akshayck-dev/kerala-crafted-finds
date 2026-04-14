@@ -1,6 +1,12 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { CartDrawer } from "@/components/CartDrawer";
+import { CheckoutModal } from "@/components/CheckoutModal";
+import { SplashScreen } from "@/components/SplashScreen";
+import { useState, useEffect } from "react";
+import { fetchProducts, fetchCategories } from "@/lib/api";
+import { setProducts } from "@/lib/store";
 
 import appCss from "../styles.css?url";
 
@@ -64,13 +70,42 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const [showSplash, setShowSplash] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  useEffect(() => {
+    async function initializeApp() {
+        try {
+            // Fetch initial registry data
+            const [pData] = await Promise.all([
+                fetchProducts(),
+                fetchCategories()
+            ]);
+            setProducts(pData);
+        } catch (err) {
+            console.error("Initialization failed", err);
+        } finally {
+            setIsInitializing(false);
+        }
+    }
+    initializeApp();
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col">
+      {showSplash && (
+        <SplashScreen 
+          isLoading={isInitializing} 
+          onComplete={() => setShowSplash(false)} 
+        />
+      )}
       <Header />
       <main className="flex-1">
         <Outlet />
       </main>
       <Footer />
+      <CartDrawer />
+      <CheckoutModal />
     </div>
   );
 }

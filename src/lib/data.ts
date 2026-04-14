@@ -6,8 +6,13 @@ export interface Product {
   image: string;
   images?: string[];
   category: string;
+  categoryName?: string;
   description: string;
   badge?: string;
+  artisan?: string;
+  sellerName?: string;
+  sellerAvatar?: string;
+  ingredients?: string;
 }
 
 export interface Category {
@@ -39,6 +44,9 @@ export const products: Product[] = [
     category: "traditional-food",
     description: "Crispy banana chips made with traditional Kerala recipe using coconut oil. A perfect snack for any time of the day.",
     badge: "Bestseller",
+    artisan: "Sreeja G Nair",
+    sellerAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sreeja",
+    ingredients: "RAW BANANA, COCONUT OIL, TURMERIC POWDER, SALT",
   },
   {
     id: "2",
@@ -53,6 +61,9 @@ export const products: Product[] = [
     category: "natural-care",
     description: "Pure cold-pressed virgin coconut oil from Kerala. Rich in nutrients and perfect for cooking, hair and skin care.",
     badge: "Organic",
+    artisan: "K. R. Madhavan",
+    sellerAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Madhavan",
+    ingredients: "100% PURE KERALA COCONUTS",
   },
   {
     id: "3",
