@@ -1,4 +1,4 @@
-import { Outlet, Link, createRootRoute } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, useLocation } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
@@ -42,6 +42,8 @@ export const Route = createRootRoute({
 function RootComponent() {
   const [showSplash, setShowSplash] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
     async function initializeApp() {
@@ -60,6 +62,10 @@ function RootComponent() {
     }
     initializeApp();
   }, []);
+
+  if (isAdminRoute) {
+    return <Outlet />;
+  }
 
   return (
     <div className="flex min-h-screen flex-col">

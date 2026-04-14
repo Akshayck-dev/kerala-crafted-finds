@@ -100,3 +100,95 @@ export async function saveOrder(order: OrderPayload) {
     throw error;
   }
 }
+
+// ---------------- Admin API Methods ----------------
+
+export async function adminLogin(email: string, password: string):Promise<string> {
+  try {
+    const response = await fetch(`${BASE_URL}/User/GenerateToken`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err || "Login failed");
+    }
+
+    const data = await response.json();
+    return data.token || data; // Handle depending on if they return raw token or wrapper object
+  } catch (error) {
+    console.error("API Error (AdminLogin):", error);
+    throw error;
+  }
+}
+
+export interface Member {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  joinedDate?: string;
+}
+
+export async function fetchMembers(token: string): Promise<Member[]> {
+  try {
+    const response = await fetch(`${BASE_URL}/User/GetAllMembers`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+    if (!response.ok) throw new Error("Failed to fetch members");
+    const data = await response.json();
+    
+    return (data || []).map((m: any) => ({
+      id: m.id || m.memberId || crypto.randomUUID(),
+      name: m.name || m.userName || "Unknown",
+      email: m.email || "No email",
+      phone: m.phone || m.mobile || "-",
+      joinedDate: m.createdOn || new Date().toISOString()
+    }));
+  } catch (error) {
+    console.error("API Error (Members):", error);
+    return [];
+  }
+}
+
+export interface AdminOrder {
+  id: string;
+  customerName: string;
+  date: string;
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  total: number;
+}
+
+export async function fetchOrders(token: string): Promise<AdminOrder[]> {
+  try {
+    const response = await fetch(`${BASE_URL}/Product/GetAllOrders`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+    if (!response.ok) {
+      // If endpoint doesn't exist, throw to fallback to mock data
+      throw new Error("Failed to fetch orders");
+    }
+    const data = await response.json();
+    
+    return (data || []).map((o: any) => ({
+      id: o.id || o.orderId || crypto.randomUUID(),
+      customerName: o.customerName || "Unknown",
+      date: o.createdOn || o.orderDate || new Date().toISOString(),
+      status: o.status ? o.status.toLowerCase() : "pending",
+      total: Number(o.total || o.totalAmount || 0)
+    }));
+  } catch (error) {
+    console.warn("API Warning (Orders fallback): Using mocked orders due to error.", error);
+    // Mock Data Fallback
+    const { MOCK_ORDERS } = await import("./mock-orders");
+    return MOCK_ORDERS;
+  }
+}

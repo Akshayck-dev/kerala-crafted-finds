@@ -32,11 +32,16 @@ export function CheckoutModal() {
     
     try {
         const formData = new FormData(e.currentTarget);
+        const name = formData.get("name") as string;
+        const phone = formData.get("phone") as string;
+        const email = formData.get("email") as string;
+        const address = `${formData.get("address")}, ${formData.get("city")}, ${formData.get("pincode")}`;
+
         const details = {
-          customerName: formData.get("name") as string,
-          mobile: formData.get("phone") as string,
-          email: formData.get("email") as string,
-          address: `${formData.get("address")}, ${formData.get("city")}, ${formData.get("pincode")}`,
+          customerName: name,
+          mobile: phone,
+          email: email,
+          address: address,
           createdOn: new Date().toISOString(),
           products: items.map(item => ({
             productId: parseInt(item.product.id),
@@ -44,7 +49,33 @@ export function CheckoutModal() {
           }))
         };
 
-        await saveOrder(details);
+        // Try to save order to your DB, but don't let it block the WhatsApp redirect if it fails
+        await saveOrder(details).catch(err => console.error("Database save fallback:", err));
+
+        // Format WhatsApp Message
+        let waText = `*New Order - Mallu Smart*\n\n`;
+        waText += `*Customer Details:*\n`;
+        waText += `👤 Name: ${name}\n`;
+        waText += `📱 Phone: ${phone}\n`;
+        waText += `📧 Email: ${email}\n`;
+        waText += `📍 Address: ${address}\n\n`;
+        
+        waText += `*Order Items:*\n`;
+        items.forEach((item, idx) => {
+           waText += `${idx + 1}. *${item.product.name}*\n`;
+           waText += `   Quantity: ${item.quantity} | Total: ₹${item.product.price * item.quantity}\n`;
+           if (item.product.image) {
+             let imgUrl = item.product.image;
+             if (imgUrl.startsWith('/')) imgUrl = `https://mallusmart.com${imgUrl}`;
+             waText += `   Image: ${imgUrl}\n`;
+           }
+        });
+        
+        waText += `\n*Total Amount:* ₹${totalPrice}\n`;
+
+        // Redirect to WhatsApp
+        const waUrl = `https://wa.me/919495532563?text=${encodeURIComponent(waText)}`;
+        window.open(waUrl, "_blank");
 
         clearCart();
         setSubmitted(true);
@@ -55,7 +86,7 @@ export function CheckoutModal() {
           toggleCheckout(false);
         }, 4000);
     } catch (error) {
-        toast.error("Failed to transmit order. Please try again.");
+        toast.error("Failed to process order. Please try again.");
     } finally {
         setIsSubmitting(false);
     }
