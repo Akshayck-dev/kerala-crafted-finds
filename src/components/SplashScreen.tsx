@@ -26,12 +26,12 @@ export function SplashScreen({ onComplete, isLoading }: SplashScreenProps) {
   return (
     <div 
       className={cn(
-        "fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0a0a0a] transition-all duration-1000 ease-in-out",
+        "fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background transition-all duration-1000 ease-in-out",
         exit ? "pointer-events-none opacity-0 scale-105" : "opacity-100"
       )}
     >
       {/* Background Texture/Grain */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+      <div className="absolute inset-0 opacity-[0.4] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/white-diamond.png')]" />
       
       {/* Logo Container */}
       <div className="relative flex flex-col items-center gap-8">
@@ -70,7 +70,7 @@ export function SplashScreen({ onComplete, isLoading }: SplashScreenProps) {
         <span className="text-[9px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
           Kerala Crafted Finds
         </span>
-        <div className="h-4 w-[1px] bg-border" />
+        <div className="h-4 w-[1px] bg-primary/20" />
       </div>
     </div>
   );

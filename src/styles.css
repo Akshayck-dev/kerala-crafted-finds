@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -56,8 +56,8 @@
 
 :root {
   --radius: 0.5rem;
-  --background: oklch(0.985 0.002 100);
-  --foreground: oklch(0.2 0.02 260);
+  --background: oklch(0.99 0.002 100);
+  --foreground: oklch(0.15 0.01 100);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.2 0.02 260);
   --popover: oklch(1 0 0);
@@ -154,7 +154,7 @@
 
 /* Glassmorphism Refinement */
 .glass-panel {
-  @apply border border-white/20 bg-white/10 backdrop-blur-xl;
+  @apply border border-black/5 bg-white/40 backdrop-blur-xl shadow-sm;
 }
 
 /* Custom Media Query Overrides for Mobile Purity */
