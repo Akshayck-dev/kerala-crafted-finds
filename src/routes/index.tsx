@@ -11,6 +11,7 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,7 +50,7 @@ function HomePage() {
     <div>
       {/* Hero Carousel */}
       <section>
-        <Carousel opts={{ loop: true }} className="w-full">
+        <Carousel opts={{ loop: true }} plugins={[Autoplay({ delay: 4000, stopOnInteraction: false })]} className="w-full">
           <CarouselContent>
             {heroSlides.map((slide, i) => (
               <CarouselItem key={i}>
