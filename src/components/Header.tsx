@@ -20,9 +20,9 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-20 max-w-[1200px] items-center justify-between px-4">
+      <div className="mx-auto flex h-14 max-w-[1200px] items-center justify-between px-3 md:h-20 md:px-4">
         <Link to="/" className="flex items-center gap-1.5">
-          <img src={logo} alt="Mallu Smart" className="h-20 w-auto" />
+          <img src={logo} alt="Mallu Smart" className="h-12 w-auto md:h-20" />
         </Link>
 
         <nav className="hidden items-center gap-5 md:flex">
@@ -39,7 +39,7 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1">
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <Search className="h-4 w-4" />
           </Button>

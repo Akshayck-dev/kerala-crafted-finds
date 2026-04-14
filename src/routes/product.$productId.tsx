@@ -82,7 +82,7 @@ function ProductDetailPage() {
             </div>
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:gap-3">
             <Button
               className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => addToCart(product, qty)}

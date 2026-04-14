@@ -53,9 +53,9 @@ function HomePage() {
           <CarouselContent>
             {heroSlides.map((slide, i) => (
               <CarouselItem key={i}>
-                <div className={`${slide.bg} py-10`}>
+                <div className={`${slide.bg} py-6 sm:py-10`}>
                   <div className="mx-auto max-w-[1200px] px-4 text-center">
-                    <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+                    <h1 className="text-lg font-bold text-foreground sm:text-2xl md:text-3xl">
                       {slide.title}
                     </h1>
                     <p className="mt-2 text-sm text-muted-foreground">

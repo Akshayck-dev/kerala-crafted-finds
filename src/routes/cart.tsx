@@ -38,32 +38,34 @@ function CartPage() {
 
       <div className="space-y-3">
         {items.map(({ product, quantity }) => (
-          <div key={product.id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
-            <img src={product.image} alt={product.name} className="h-16 w-16 rounded-md object-cover" />
+          <div key={product.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-3 sm:flex-nowrap sm:gap-3">
+            <img src={product.image} alt={product.name} className="h-14 w-14 rounded-md object-cover sm:h-16 sm:w-16" />
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-medium text-card-foreground truncate">{product.name}</h3>
+              <h3 className="text-xs font-medium text-card-foreground truncate sm:text-sm">{product.name}</h3>
               <p className="text-sm font-bold text-foreground">₹{product.price}</p>
             </div>
-            <div className="flex items-center rounded-md border border-border">
-              <button onClick={() => updateQuantity(product.id, quantity - 1)} className="px-2 py-1">
-                <Minus className="h-3 w-3" />
-              </button>
-              <span className="px-2 text-sm">{quantity}</span>
-              <button onClick={() => updateQuantity(product.id, quantity + 1)} className="px-2 py-1">
-                <Plus className="h-3 w-3" />
+            <div className="flex items-center gap-2 ml-auto">
+              <div className="flex items-center rounded-md border border-border">
+                <button onClick={() => updateQuantity(product.id, quantity - 1)} className="px-2 py-1">
+                  <Minus className="h-3 w-3" />
+                </button>
+                <span className="px-2 text-sm">{quantity}</span>
+                <button onClick={() => updateQuantity(product.id, quantity + 1)} className="px-2 py-1">
+                  <Plus className="h-3 w-3" />
+                </button>
+              </div>
+              <span className="text-sm font-semibold text-foreground w-14 text-right sm:w-16">₹{product.price * quantity}</span>
+              <button onClick={() => removeFromCart(product.id)} className="text-muted-foreground hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
-            <span className="text-sm font-semibold text-foreground w-16 text-right">₹{product.price * quantity}</span>
-            <button onClick={() => removeFromCart(product.id)} className="text-muted-foreground hover:text-destructive">
-              <Trash2 className="h-4 w-4" />
-            </button>
           </div>
         ))}
       </div>
 
-      <div className="mt-6 flex items-center justify-between rounded-lg border border-border bg-card p-4">
+      <div className="mt-6 flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-base font-bold text-foreground">Total: ₹{totalPrice}</span>
-        <Button className="bg-primary text-primary-foreground" onClick={() => setCheckoutOpen(true)}>
+        <Button className="w-full bg-primary text-primary-foreground sm:w-auto" onClick={() => setCheckoutOpen(true)}>
           Proceed to Checkout
         </Button>
       </div>
