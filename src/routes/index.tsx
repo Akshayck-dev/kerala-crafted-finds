@@ -237,7 +237,7 @@ function HomePage() {
             <h2 className="text-2xl font-black italic uppercase tracking-tighter text-foreground">Featured Products</h2>
             <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Trending items from local sellers</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className="flex flex-col gap-3 rounded-[2.5rem] border border-border/50 p-3">

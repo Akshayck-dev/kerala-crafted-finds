@@ -165,7 +165,7 @@ function ShopPage() {
             )}
           </div>
 
-          <div className="grid mobile-grid-dense sm:grid-cols-3 lg:grid-cols-4 [&>*]:min-w-0">
+          <div className="grid mobile-grid-dense gap-6 sm:grid-cols-3 md:gap-8 lg:grid-cols-4 lg:gap-10 [&>*]:min-w-0">
             {isLoading ? (
                 Array.from({ length: 8 }).map((_, i) => (
                     <div key={i} className="flex flex-col gap-3 rounded-[2.5rem] border border-border/50 p-3">
