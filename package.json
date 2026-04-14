@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "cross-env NITRO_PRESET=vercel vite build",
+    "build": "vite build && node scripts/fix-deployment.js",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint ."
