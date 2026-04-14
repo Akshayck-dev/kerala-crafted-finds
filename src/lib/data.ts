@@ -4,6 +4,7 @@ export interface Product {
   price: number;
   originalPrice?: number;
   image: string;
+  images?: string[];
   category: string;
   description: string;
   badge?: string;
@@ -31,6 +32,10 @@ export const products: Product[] = [
     price: 199,
     originalPrice: 299,
     image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=300&h=300&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1599490659213-e2b9527e3cfd?w=300&h=300&fit=crop",
+      "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=300&h=300&fit=crop",
+    ],
     category: "traditional-food",
     description: "Crispy banana chips made with traditional Kerala recipe using coconut oil. A perfect snack for any time of the day.",
     badge: "Bestseller",
@@ -41,6 +46,10 @@ export const products: Product[] = [
     price: 349,
     originalPrice: 449,
     image: "https://images.unsplash.com/photo-1526947425960-945c6e72858f?w=300&h=300&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=300&h=300&fit=crop",
+      "https://images.unsplash.com/photo-1595348020949-87cdfbb44174?w=300&h=300&fit=crop",
+    ],
     category: "natural-care",
     description: "Pure cold-pressed virgin coconut oil from Kerala. Rich in nutrients and perfect for cooking, hair and skin care.",
     badge: "Organic",
@@ -61,6 +70,9 @@ export const products: Product[] = [
     price: 599,
     originalPrice: 799,
     image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=300&h=300&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=300&h=300&fit=crop",
+    ],
     category: "gifts",
     description: "A curated gift box featuring authentic Kerala spices including cardamom, pepper, cinnamon and cloves.",
   },
