@@ -36,7 +36,7 @@ export function Footer() {
         </div>
         <div className="mt-6 border-t border-border pt-4 text-center">
           <p className="text-xs text-muted-foreground">Mallu Smart — Built for local sellers</p>
-          <p className="text-[10px] text-muted-foreground/60 mt-1 uppercase tracking-[0.2em]">© 2026 Registry Archives. All rights reserved.</p>
+          <p className="text-[10px] text-muted-foreground/60 mt-1 uppercase tracking-[0.2em]">© 2026 Kerala Crafted Finds. All rights reserved.</p>
         </div>
       </div>
     </footer>

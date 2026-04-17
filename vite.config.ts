@@ -5,12 +5,23 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
+  base: '/',
   plugins: [
-    TanStackRouterVite(),
     react(),
+    TanStackRouterVite(),
     tailwindcss(),
     tsconfigPaths(),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://mallusmart.com',
+        changeOrigin: true,
+        secure: false, // Ignore SSL issues for the proxy target
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
   build: {
     outDir: 'dist',
     rollupOptions: {

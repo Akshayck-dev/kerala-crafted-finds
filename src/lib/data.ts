@@ -13,13 +13,51 @@ export interface Product {
   sellerName?: string;
   sellerAvatar?: string;
   ingredients?: string;
+  quantity?: number;
+  unit?: string;
+  categoryID?: number;
+  memberID?: number;
+  createdOn?: string;
+  modifiedOn?: string;
+  isActive?: boolean;
 }
-
 export interface Category {
   id: string;
   name: string;
   icon: string;
   image: string;
+}
+
+export interface Member {
+  id: string | number;
+  name: string;
+  email?: string;
+  phone?: string;
+  joinedDate?: string;
+  businessName?: string;
+  place?: string;
+  district?: string;
+  product?: string;
+  contactNumber?: string;
+  licenceNumber?: string;
+  ownProduct?: boolean;
+  createdOn?: string;
+  modifiedOn?: string;
+  isActive?: boolean;
+}
+
+export interface Order {
+  id: string | number;
+  customerName: string;
+  date: string;
+  createdOn?: string; // Compatibility with backend
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  totalPrice: number;
+  phone?: string;
+  mobile?: string; // Compatibility with backend
+  address?: string;
+  email?: string;
+  products?: { productId: number; quantity: number }[];
 }
 
 export const categories: Category[] = [

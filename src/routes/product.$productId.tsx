@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { addToCart, useProducts } from "@/lib/store";
-import { ShoppingCart, MessageCircle, Minus, Plus, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ShoppingCart, MessageCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { QuantitySelector } from "@/components/QuantitySelector";
 import { fetchProducts } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -65,7 +66,7 @@ function ProductDetailPage() {
                 Record Not Found
             </h2>
             <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                The requested item could not be retrieved from the heritage registry. It may have been relocated or archived.
+                The requested item could not be found. It may have been removed or the link is broken.
             </p>
             <Link to="/shop">
                 <Button className="rounded-full px-8">Return to Shop</Button>
@@ -121,7 +122,7 @@ function ProductDetailPage() {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-bold tracking-[0.3em] text-[#B68D40] uppercase">
-                Authorized Archive
+                Product Detail
               </span>
               <div className="h-[1px] flex-1 bg-[#B68D40]/30" />
             </div>
@@ -185,25 +186,13 @@ function ProductDetailPage() {
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between pt-4">
             <div className="space-y-3">
               <span className="text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase">
-                Requisition Volume
+                Select Quantity
               </span>
-              <div className="flex w-fit items-center overflow-hidden rounded-full border border-border bg-card shadow-inner">
-                <button 
-                  onClick={() => setQty(Math.max(1, qty - 1))}
-                  className="flex h-12 w-12 items-center justify-center transition-colors hover:bg-muted"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="flex min-w-[50px] items-center justify-center text-lg font-bold">
-                  {qty}
-                </span>
-                <button 
-                   onClick={() => setQty(qty + 1)}
-                   className="flex h-12 w-12 items-center justify-center transition-colors hover:bg-muted"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
+              <QuantitySelector 
+                quantity={qty} 
+                onUpdate={setQty} 
+                size="lg" 
+              />
             </div>
 
             <div className="hidden sm:flex items-center gap-3">
@@ -212,7 +201,7 @@ function ProductDetailPage() {
                 className="h-16 flex-1 rounded-2xl bg-primary px-8 text-lg font-black italic tracking-tight text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] sm:flex-none uppercase"
                 onClick={() => addToCart(product, qty)}
               >
-                <ShoppingCart className="mr-2 h-5 w-5" /> Add to Selection
+                <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
               </Button>
               <Button 
                  variant="outline" 
@@ -246,7 +235,7 @@ function ProductDetailPage() {
             className="h-12 flex-1 rounded-full bg-primary text-xs font-black italic tracking-widest text-white shadow-lg uppercase"
             onClick={() => addToCart(product, qty)}
           >
-            <ShoppingCart className="mr-2 h-4 w-4" /> Add to Selection — ₹{product.price * qty}
+            <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart — ₹{product.price * qty}
           </Button>
         </div>
         <div className="h-2 w-full mobile-safe-bottom" />

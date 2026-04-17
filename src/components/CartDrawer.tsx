@@ -1,6 +1,7 @@
-import { ShoppingCart, Plus, Minus, X, ArrowRight, Trash2 } from "lucide-react";
+import { ShoppingCart, ArrowRight, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useCart, useCartDrawer, removeFromCart, updateQuantity, toggleCheckout } from "@/lib/store";
+import { QuantitySelector } from "@/components/QuantitySelector";
 import {
   Sheet,
   SheetContent,
@@ -72,27 +73,11 @@ export function CartDrawer() {
                         </Button>
                       </div>
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 rounded-full border border-border bg-background p-0.5">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5 rounded-full"
-                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                          >
-                            <Minus className="h-2 w-2" />
-                          </Button>
-                          <span className="min-w-[16px] text-center text-[10px] font-medium">
-                            {item.quantity}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5 rounded-full"
-                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                          >
-                            <Plus className="h-2 w-2" />
-                          </Button>
-                        </div>
+                        <QuantitySelector 
+                            quantity={item.quantity} 
+                            onUpdate={(newQty) => updateQuantity(item.product.id, newQty)} 
+                            size="sm"
+                        />
                         <span className="text-xs min-[380px]:text-sm font-bold text-foreground">
                           ₹{item.product.price * item.quantity}
                         </span>
@@ -131,7 +116,7 @@ export function CartDrawer() {
                       toggleCheckout(true);
                     }}
                   >
-                    Proceed to Registry <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    Checkout Now <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 </div>
                 <p className="text-center text-[9px] sm:text-[10px] text-muted-foreground">

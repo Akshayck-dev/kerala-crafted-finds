@@ -9,12 +9,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Very basic auth check
     const token = localStorage.getItem("adminToken");
     if (!token) {
-      navigate({ to: "/admin/login" });
+      const currentPath = location.pathname;
+      navigate({ to: "/admin/login", search: { redirect: currentPath } as any });
+      return;
     }
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");

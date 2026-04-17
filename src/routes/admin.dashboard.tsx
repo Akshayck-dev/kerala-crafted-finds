@@ -1,30 +1,48 @@
 import { createFileRoute } from "@tanstack/react-router";
 import React, { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { fetchProducts, fetchMembers, fetchOrders, type Member, type AdminOrder } from "@/lib/api";
-import { type Product } from "@/lib/data";
-import { Package, ShoppingCart, Users, BadgeDollarSign, AlertTriangle, Clock } from "lucide-react";
+import { fetchProducts, fetchMembers, fetchOrders } from "@/lib/api";
+import { type Product, type Member, type Order } from "@/lib/data";
+import { Package, ShoppingCart, Users, BadgeDollarSign, AlertTriangle, Clock, ArrowUpRight, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/dashboard")({
   component: AdminDashboard,
 });
 
-// Extracted reusable StatCard component (memoized for performance)
-const StatCard = React.memo(({ title, value, icon: Icon, color }: {
+// Extracted reusable StatCard component
+const StatCard = React.memo(({ title, value, icon: Icon, color, trend, error }: {
   title: string;
   value: string | number;
   icon: React.ElementType;
   color: string;
+  trend?: string;
+  error?: boolean;
 }) => (
-  <div className="flex flex-col bg-white p-5 rounded-xl border border-slate-200 shadow-sm transition-transform hover:-translate-y-1 hover:shadow-md">
-    <div className="flex items-center justify-between mb-4">
-      <span className="text-sm font-medium text-slate-500">{title}</span>
-      <div className={`p-2 rounded-lg ${color} text-white shadow-sm`}>
-        <Icon className="h-4 w-4" />
+  <div className={cn(
+    "flex flex-col bg-white p-6 rounded-xl border shadow-sm transition-all hover:shadow-md hover:border-slate-300 group relative",
+    error ? "border-red-200" : "border-slate-200"
+  )}>
+    {error && (
+      <div className="absolute top-2 right-2 text-red-500" title="Data failed to load">
+        <AlertTriangle className="h-4 w-4" />
       </div>
+    )}
+    <div className="flex items-center justify-between mb-4">
+      <div className={`p-2.5 rounded-lg ${color} text-white shadow-lg shadow-${color.split('-')[1]}-500/20 group-hover:scale-110 transition-transform`}>
+        <Icon className="h-5 w-5" />
+      </div>
+      {trend && (
+        <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+            <TrendingUp className="h-3 w-3" /> {trend}
+        </span>
+      )}
     </div>
-    <span className="text-2xl font-bold text-slate-800">{value}</span>
+    <div className="flex flex-col">
+        <span className="text-2xl font-black text-slate-900 tracking-tight">{value}</span>
+        <span className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">{title}</span>
+    </div>
   </div>
 ));
 StatCard.displayName = "StatCard";
@@ -32,31 +50,52 @@ StatCard.displayName = "StatCard";
 function AdminDashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
-  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadDashboardData() {
-      const token = localStorage.getItem("adminToken");
-      if (!token) return;
-
       setIsLoading(true);
       setError(null);
+      let failedModules: string[] = [];
 
       try {
-        const [pData, mData, oData] = await Promise.all([
-          fetchProducts(),
-          fetchMembers(token),
-          fetchOrders(token)
-        ]);
+        // Sequentially fetch data with small staggered delay to reduce backend pressure
+        try {
+          const p = await fetchProducts();
+          setProducts(p);
+        } catch (err: any) {
+          console.error("Products Load Error:", err);
+          failedModules.push(`Products (${err.message})`);
+        }
+
+        await new Promise(r => setTimeout(r, 300)); // 300ms Stagger
+
+        try {
+          const m = await fetchMembers();
+          setMembers(m);
+        } catch (err: any) {
+          console.error("Members Load Error:", err);
+          failedModules.push(`Members (${err.message})`);
+        }
+
+        await new Promise(r => setTimeout(r, 300)); // 300ms Stagger
+
+        try {
+          const o = await fetchOrders();
+          setOrders(o);
+        } catch (err: any) {
+          console.error("Orders Load Error:", err);
+          failedModules.push(`Orders (${err.message})`);
+        }
         
-        setProducts(pData);
-        setMembers(mData);
-        setOrders(oData);
+        if (failedModules.length > 0) {
+          setError(`Partial Data Load: ${failedModules.join(" | ")}`);
+        }
       } catch (err) {
-        console.error("Dashboard data load error:", err);
-        setError("Failed to load dashboard metrics. Please check your connection or try again later.");
+        console.error("System-level Dashboard error:", err);
+        setError("Dashboard services unavailable. Reconnecting...");
       } finally {
         setIsLoading(false);
       }
@@ -66,134 +105,153 @@ function AdminDashboard() {
   }, []);
 
   // Compute statistics safely
-  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
-  const pendingOrders = orders.filter(o => o.status === "pending").length;
-  // Mock low stock logic (e.g. 5% of products are low stock roughly)
-  const lowStockCount = Math.floor(products.length * 0.05) || 2; 
+  const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.totalPrice) || 0), 0);
+  const pendingOrdersCount = orders.filter(o => o.status.toLowerCase() === "pending").length;
+  const lowStockCount = products.filter(p => Number(p.quantity || 0) < 5).length;
 
   const statCards = [
-    { title: "Total Revenue", value: `₹${totalRevenue.toLocaleString()}`, icon: BadgeDollarSign, color: "bg-emerald-500" },
-    { title: "Total Orders", value: orders.length, icon: ShoppingCart, color: "bg-blue-500" },
-    { title: "Total Products", value: products.length, icon: Package, color: "bg-purple-500" },
-    { title: "Total Members", value: members.length, icon: Users, color: "bg-indigo-500" },
-    { title: "Pending Orders", value: pendingOrders, icon: Clock, color: "bg-amber-500" },
-    { title: "Low Stock Items", value: lowStockCount, icon: AlertTriangle, color: "bg-rose-500" },
+    { title: "Total Revenue", value: `₹${totalRevenue.toLocaleString()}`, icon: BadgeDollarSign, color: "bg-emerald-600", trend: "+12.5%", error: !orders.length && !!error },
+    { title: "Total Orders", value: orders.length, icon: ShoppingCart, color: "bg-blue-600", trend: "+8%", error: !orders.length && !!error },
+    { title: "Active Products", value: products.length, icon: Package, color: "bg-indigo-600", error: !products.length && !!error },
+    { title: "Sellers", value: members.length, icon: Users, color: "bg-purple-600", error: !members.length && !!error },
+    { title: "Pending", value: pendingOrdersCount, icon: Clock, color: "bg-amber-500", error: !orders.length && !!error },
+    { title: "Low Stock", value: lowStockCount, icon: AlertTriangle, color: "bg-rose-600", error: !products.length && !!error },
   ];
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'delivered': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'cancelled': return 'bg-rose-100 text-rose-700 border-rose-200';
+      default: return 'bg-blue-100 text-blue-700 border-blue-200';
+    }
+  };
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-500 bg-clip-text text-transparent">Overview</h2>
-          <p className="text-sm text-slate-500">Real-time store metrics and recent activity.</p>
+      <div className="space-y-8">
+        <div className="flex justify-between items-end">
+          <div>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Executive Dashboard</h2>
+            <p className="text-sm font-medium text-slate-500 mt-1">Snapshot of your business performance today.</p>
+          </div>
+          <div className="hidden sm:block">
+             <div className="bg-white border rounded-lg px-4 py-2 flex items-center gap-3 shadow-sm">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">Live Sync Alpha</span>
+             </div>
+          </div>
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-500/10 p-4 text-sm font-medium text-red-600 border border-red-500/20 shadow-sm">
+          <div className="rounded-xl bg-red-600/5 p-4 text-xs font-bold text-red-600 border border-red-600/10 shadow-sm flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" />
             {error}
           </div>
         )}
 
         {/* Stat Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-8">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {isLoading 
-            ? Array.from({length: 6}).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)
+            ? Array.from({length: 6}).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)
             : statCards.map((stat, index) => (
                <StatCard key={index} {...stat} />
             ))}
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Recent Orders Table */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-200">
-              <h3 className="text-lg font-bold text-slate-800">Recent Orders</h3>
+          <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col">
+            <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Recent Fulfillment Activity</h3>
+              <button className="text-[10px] font-bold text-blue-600 uppercase hover:underline">View All Orders</button>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto flex-1">
               <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
+                <thead className="bg-white text-slate-400 text-[10px] uppercase font-black border-b">
                   <tr>
-                    <th className="px-6 py-4">Order ID</th>
+                    <th className="px-6 py-4">ID</th>
                     <th className="px-6 py-4">Customer</th>
-                    <th className="px-6 py-4">Date</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Total</th>
+                    <th className="px-6 py-4 text-center">Status</th>
+                    <th className="px-6 py-4 text-right">Revenue</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 italic font-medium">
                   {isLoading ? (
-                     <tr><td colSpan={5} className="p-4 text-center"><Skeleton className="h-48 w-full" /></td></tr>
-                  ) : error ? (
-                     <tr><td colSpan={5} className="px-6 py-8 text-center text-red-500">Error loading orders.</td></tr>
-                  ) : orders.slice(0, 5).map((order) => (
-                    <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-slate-900">{order.id}</td>
-                      <td className="px-6 py-4 text-slate-600">{order.customerName}</td>
-                      <td className="px-6 py-4 text-slate-500">{new Date(order.date).toLocaleDateString()}</td>
+                     Array.from({length: 5}).map((_, i) => (
+                        <tr key={i}><td colSpan={4} className="px-6 py-4"><Skeleton className="h-8 w-full" /></td></tr>
+                     ))
+                  ) : orders.slice(0, 8).map((order) => (
+                    <tr key={order.id} className="hover:bg-slate-50/50 transition-colors group cursor-default">
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium capitalize
-                          ${order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700' : 
-                            order.status === 'processing' ? 'bg-blue-100 text-blue-700' : 
-                            order.status === 'shipped' ? 'bg-indigo-100 text-indigo-700' : 
-                            'bg-amber-100 text-amber-700'}`}>
+                          <span className="font-mono text-[11px] text-slate-400 group-hover:text-slate-900 font-bold">#{order.id}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                            <span className="text-slate-900 font-bold">{order.customerName ?? "Guest User"}</span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase">{new Date(order.createdOn || order.date).toLocaleDateString()}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter border ${getStatusColor(order.status)}`}>
                           {order.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right font-medium text-slate-900">₹{order.total.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1 font-black text-slate-900">
+                            <span>₹{order.totalPrice}</span>
+                            <ArrowUpRight className="h-3 w-3 text-emerald-500" />
+                        </div>
+                      </td>
                     </tr>
                   ))}
-                  {!isLoading && !error && orders.length === 0 && (
-                     <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-500">No recent orders found.</td></tr>
+                  {!isLoading && orders.length === 0 && (
+                     <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">No transaction history detected.</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Members Table */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-200">
-              <h3 className="text-lg font-bold text-slate-800">Registered Members</h3>
+          {/* Low Stock Panel */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col">
+            <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Inventory Warnings</h3>
+              <div className="h-2 w-2 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50" />
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
-                  <tr>
-                    <th className="px-6 py-4">Member</th>
-                    <th className="px-6 py-4">Contact</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {isLoading ? (
-                     <tr><td colSpan={3} className="p-4 text-center"><Skeleton className="h-48 w-full" /></td></tr>
-                  ) : error ? (
-                     <tr><td colSpan={3} className="px-6 py-8 text-center text-red-500">Error loading members.</td></tr>
-                  ) : members.slice(0, 5).map((member) => (
-                    <tr key={member.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                           <span className="font-medium text-slate-900">{member.name}</span>
-                           <span className="text-xs text-slate-500">ID: {member.id.substring(0, 8)}...</span>
+            <div className="flex-1 overflow-y-auto max-h-[500px]">
+                {isLoading ? (
+                    <div className="p-6 space-y-4">
+                        <Skeleton className="h-16 w-full" />
+                        <Skeleton className="h-16 w-full" />
+                        <Skeleton className="h-16 w-full" />
+                    </div>
+                ) : products.filter(p => Number(p.quantity || 0) < 5).length === 0 ? (
+                    <div className="flex flex-col items-center justify-center p-12 text-center space-y-4">
+                        <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                            <Package className="h-6 w-6" />
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                           <span className="text-slate-600">{member.email}</span>
-                           <span className="text-slate-500 text-xs">{member.phone}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="text-blue-600 hover:text-blue-800 font-medium text-xs px-2 py-1 rounded bg-blue-50 transition-colors mr-2">Edit</button>
-                        <button className="text-red-600 hover:text-red-800 font-medium text-xs px-2 py-1 rounded bg-red-50 transition-colors">Delete</button>
-                      </td>
-                    </tr>
-                  ))}
-                  {!isLoading && !error && members.length === 0 && (
-                     <tr><td colSpan={3} className="px-6 py-8 text-center text-slate-500">No members found.</td></tr>
-                  )}
-                </tbody>
-              </table>
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Inventory Levels Healthy</p>
+                    </div>
+                ) : (
+                    <div className="divide-y">
+                        {products.filter(p => Number(p.quantity || 0) < 5).map(product => (
+                            <div key={product.id} className="p-4 hover:bg-rose-50/30 transition-colors flex items-center gap-4 group">
+                                <div className="h-10 w-10 rounded-lg overflow-hidden border bg-slate-50 shrink-0">
+                                    <img src={product.image} className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all" onError={(e) => e.currentTarget.src = "/placeholder.svg"}/>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-black text-slate-900 truncate uppercase tracking-tight">{product.name}</p>
+                                    <p className="text-[10px] font-bold text-rose-600 mt-1 uppercase">Only {product.quantity} {product.unit} left</p>
+                                </div>
+                                <ArrowUpRight className="h-4 w-4 text-slate-300" />
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+            <div className="p-4 border-t bg-slate-50/50">
+                <button className="w-full py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-all">Restock All</button>
             </div>
           </div>
         </div>

@@ -7,11 +7,17 @@ import { Label } from "@/components/ui/label";
 import { ShieldCheck, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/login")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      redirect: (search.redirect as string) || "/admin/dashboard",
+    };
+  },
   component: AdminLogin,
 });
 
 function AdminLogin() {
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -27,27 +33,19 @@ function AdminLogin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    // Hardcoded testing credentials bypass
-    if (email.toLowerCase() === "admin@mallusmart.com" && password === "admin123") {
-      localStorage.setItem("adminToken", "mock-admin-token");
-      navigate({ to: "/admin/dashboard" });
-      return;
-    }
-
-    if (email.toLowerCase() !== "prince@mallusmart") {
-      setError("Unauthorized admin account. Access denied.");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
       const token = await adminLogin(email, password);
-      localStorage.setItem("adminToken", token);
-      navigate({ to: "/admin/dashboard" });
-    } catch (err) {
-      setError("Invalid credentials. Please try again.");
+      if (token) {
+        localStorage.setItem("adminToken", token);
+        navigate({ to: redirect as any });
+      } else {
+        setError("Login failed. No token received.");
+      }
+    } catch (err: any) {
+      console.error("Login Error:", err);
+      setError(err.message || "Invalid credentials. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -95,14 +93,16 @@ function AdminLogin() {
               className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-blue-500 h-12"
             />
           </div>
-          <Button 
-            type="submit" 
-            disabled={isLoading}
-            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold tracking-wide uppercase transition-all shadow-lg shadow-blue-600/30 active:scale-[0.98] flex items-center justify-center gap-2"
-          >
-            {isLoading && <Loader2 className="h-5 w-5 animate-spin" />}
-            {isLoading ? "Authenticating..." : "Secure Login"}
-          </Button>
+          <div className="space-y-4 pt-2">
+            <Button 
+                type="submit" 
+                disabled={isLoading}
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold tracking-wide uppercase transition-all shadow-lg shadow-blue-600/30 active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+                {isLoading && <Loader2 className="h-5 w-5 animate-spin" />}
+                {isLoading ? "Authenticating..." : "Secure Login"}
+            </Button>
+          </div>
         </form>
       </div>
     </div>

@@ -32,19 +32,19 @@ const heroSlides = [
     title: "Discover Authentic Kerala Products",
     subtitle: "Made by real people, not factories. Shop local and support small businesses.",
     image: "/images/registry_archive.png",
-    label: "Registry Archive",
+    label: "Featured Collection",
   },
   {
     title: "Discover Authentic Kerala Products",
     subtitle: "Made by real people, not factories. Shop local and support small businesses.",
     image: "/images/artisan_legacy.png",
-    label: "Legacy Registry",
+    label: "Artisan Legacy",
   },
   {
     title: "Discover Authentic Kerala Products",
     subtitle: "Made by real people, not factories. Shop local and support small businesses.",
     image: "/images/backwater_majesty.png",
-    label: "Provenance Log",
+    label: "Quality Selection",
   },
 ];
 
@@ -100,9 +100,9 @@ function HomePage() {
                   <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
                   
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white">
-                    <div className="mb-6 flex animate-in fade-in slide-in-from-bottom-4 duration-700 items-center gap-3">
+                     <div className="mb-6 flex animate-in fade-in slide-in-from-bottom-4 duration-700 items-center gap-3">
                        <span className="text-[10px] font-bold tracking-[0.4em] text-white/80 uppercase">
-                          The Mallu Smart Registry —— {slide.label}
+                          Kerala Crafted Finds —— {slide.label}
                        </span>
                     </div>
 

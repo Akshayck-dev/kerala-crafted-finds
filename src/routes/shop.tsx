@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ProductCard } from "@/components/ProductCard";
+import { PageHeader } from "@/components/PageHeader";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect } from "react";
@@ -71,22 +72,15 @@ function ShopPage() {
 
   return (
     <div className="section-padding !pb-24">
-      <div className="mb-12 space-y-4">
-          <div className="flex items-center gap-3">
-             <span className="text-[10px] font-bold tracking-[0.4em] text-[#B68D40] uppercase">
-                Artisan Directory ——
-             </span>
-             <div className="h-[1px] flex-1 bg-[#B68D40]/20" />
-          </div>
-          <h1 className="fluid-heading-2 font-black italic tracking-tighter uppercase text-foreground">
-            The Shop Registry.
-          </h1>
-      </div>
+      <PageHeader 
+        title="Browse All Products" 
+        subtitle="Our Collection" 
+      />
 
       <div className="flex flex-col gap-6 md:flex-row md:gap-8">
         <aside className="hidden w-48 shrink-0 space-y-6 md:block">
           <div>
-            <h3 className="mb-4 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Heritage Class</h3>
+            <h3 className="mb-4 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Categories</h3>
             <div className="flex flex-col gap-1.5">
                 <button
                   onClick={() => setSelectedCategory("all")}
@@ -95,7 +89,7 @@ function ShopPage() {
                     selectedCategory === "all" ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  All Archive
+                  All Products
                 </button>
                 {categories.map((cat) => (
                   <button
@@ -115,7 +109,7 @@ function ShopPage() {
 
         <div className="flex-1">
           <div className="mb-8 flex items-center justify-between">
-            {isLoading ? <Skeleton className="h-4 w-24" /> : <p className="text-[10px] font-bold tracking-widest text-[#B68D40] uppercase">{filtered.length} Indexed Records</p>}
+            {isLoading ? <Skeleton className="h-4 w-24" /> : <p className="text-[10px] font-bold tracking-widest text-[#B68D40] uppercase">{filtered.length} Products Found</p>}
             <Select value={sort} onValueChange={setSort}>
               <SelectTrigger className="h-10 w-44 rounded-full border-border/50 bg-card text-[10px] font-bold uppercase tracking-widest">
                 <SelectValue placeholder="Sort by" />
@@ -145,7 +139,7 @@ function ShopPage() {
                             : "bg-card border-border/50 text-muted-foreground hover:border-primary/30"
                         )}
                     >
-                      All Archive
+                      All Products
                     </button>
                     {categories.map((cat) => (
                       <button

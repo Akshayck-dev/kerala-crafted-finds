@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { clearCart, useCart, useCheckoutModal } from "@/lib/store";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle2, ShieldCheck, Loader2, Send, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { saveOrder } from "@/lib/api";
@@ -26,8 +26,27 @@ export function CheckoutModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isMobile = useIsMobile();
 
+  // Guard against accidental tab closure during submission
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isSubmitting) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isSubmitting]);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    
+    // Instant Offline Check
+    if (!navigator.onLine) {
+      toast.error("No internet connection. Please check your network and try again.");
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -37,23 +56,39 @@ export function CheckoutModal() {
         const email = formData.get("email") as string;
         const address = `${formData.get("address")}, ${formData.get("city")}, ${formData.get("pincode")}`;
 
+        // Industry Standard Idempotency
+        const orderRef = window.crypto?.randomUUID?.() || Date.now().toString();
+
         const details = {
           customerName: name,
           mobile: phone,
           email: email,
           address: address,
           createdOn: new Date().toISOString(),
+          orderRef: orderRef,
           products: items.map(item => ({
             productId: parseInt(item.product.id),
             quantity: item.quantity
           }))
         };
 
-        // Try to save order to your DB, but don't let it block the WhatsApp redirect if it fails
-        await saveOrder(details).catch(err => console.error("Database save fallback:", err));
+        // 1. Digital Sync (Mandatory Success)
+        try {
+          await saveOrder(details);
+          toast.success("Order synchronized! Redirecting to WhatsApp...");
+        } catch (err) {
+          console.error("Order Sync Failed:", err);
+          toast.error("Process failed. Please try again.");
+          setIsSubmitting(false);
+          return; // STOP: Do not open WhatsApp if sync failed
+        }
 
-        // Format WhatsApp Message
-        let waText = `*New Order - Mallu Smart*\n\n`;
+        // 2. Sequential Transition (Polish Delay)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // 3. Format WhatsApp Message
+        let waText = `*New Order - MalluSmart*\n`;
+        waText += `*Ref:* \`${orderRef}\`\n\n`;
         waText += `*Customer Details:*\n`;
         waText += `👤 Name: ${name}\n`;
         waText += `📱 Phone: ${phone}\n`;
@@ -63,30 +98,35 @@ export function CheckoutModal() {
         waText += `*Order Items:*\n`;
         items.forEach((item, idx) => {
            waText += `${idx + 1}. *${item.product.name}*\n`;
-           waText += `   Quantity: ${item.quantity} | Total: ₹${item.product.price * item.quantity}\n`;
-           if (item.product.image) {
-             let imgUrl = item.product.image;
-             if (imgUrl.startsWith('/')) imgUrl = `https://mallusmart.com${imgUrl}`;
-             waText += `   Image: ${imgUrl}\n`;
-           }
+           waText += `   Qty: ${item.quantity} | Total: ₹${item.product.price * item.quantity}\n`;
         });
         
         waText += `\n*Total Amount:* ₹${totalPrice}\n`;
 
-        // Redirect to WhatsApp
+        // 4. WhatsApp Redirect with Popup Guard
         const waUrl = `https://wa.me/919495532563?text=${encodeURIComponent(waText)}`;
-        window.open(waUrl, "_blank");
+        const waWindow = window.open(waUrl, "_blank");
 
+        if (!waWindow || waWindow.closed || typeof waWindow.closed === 'undefined') {
+          toast.warning("WhatsApp was blocked! Order is SAVED. Please contact +919495532563 manually.");
+        }
+
+        // 5. Success State Cleanup
         clearCart();
         setSubmitted(true);
-        toast.success("Order registered successfully!");
         
+        if (isMobile) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         setTimeout(() => {
           setSubmitted(false);
           toggleCheckout(false);
-        }, 4000);
+        }, 5000);
+
     } catch (error) {
-        toast.error("Failed to process order. Please try again.");
+        console.error("Fulfillment Error:", error);
+        toast.error("An unexpected error occurred. No charges were made.");
     } finally {
         setIsSubmitting(false);
     }
@@ -102,10 +142,10 @@ export function CheckoutModal() {
       </div>
       <div className="space-y-3">
         <h3 className="text-3xl font-black italic tracking-tighter text-foreground uppercase">
-          Registry Logged
+          Order Placed
         </h3>
         <p className="max-w-md text-muted-foreground leading-relaxed">
-          Your selection has been officially transmitted to our heritage verification team.
+          Your order has been successfully transmitted to our team for processing.
         </p>
       </div>
     </div>
@@ -177,10 +217,10 @@ export function CheckoutModal() {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-black italic tracking-tighter text-foreground uppercase">
-              {items.length > 0 ? "Order Registry" : "Registry Empty"}
+              {items.length > 0 ? "Order Details" : "Cart is Empty"}
             </h3>
             <p className="text-[9px] font-bold tracking-[0.2em] text-primary uppercase mt-1">
-              Direct heritage provision
+              Direct shipping from Kerala
             </p>
           </div>
           <div className="rounded-full bg-primary/10 p-2 text-primary">
@@ -292,12 +332,12 @@ export function CheckoutModal() {
                {isSubmitting ? (
                    <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    TRANSMITTING...
+                    PLACING ORDER...
                    </>
                ) : (
                    <>
                     <Send className="h-5 w-5" />
-                    CONFIRM REGISTRY
+                    CONFIRM ORDER
                    </>
                )}
             </div>
@@ -322,10 +362,10 @@ export function CheckoutModal() {
             <DrawerHeader className="px-0 mb-4 flex flex-row items-center justify-between">
                 <div className="text-left">
                     <DrawerTitle className="text-left text-lg font-black italic tracking-tighter text-foreground uppercase">
-                       Order Registry
+                       Complete Order
                     </DrawerTitle>
                     <p className="text-[9px] font-bold tracking-[0.2em] text-primary uppercase mt-1">
-                       Direct heritage provision
+                       Direct shipping from Kerala
                     </p>
                 </div>
                 <Button 

@@ -1,14 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCart, updateQuantity, removeFromCart, toggleCheckout } from "@/lib/store";
 import { Button } from "@/components/ui/button";
-import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
+import { Trash2, ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { PageHeader } from "@/components/PageHeader";
+import { QuantitySelector } from "@/components/QuantitySelector";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
     meta: [
-      { title: "Your Selection — Mallu Smart Registry" },
-      { name: "description", content: "Review your curated selection of Kerala heritage products." },
+      { title: "Your Cart — Kerala Crafted Finds" },
+      { name: "description", content: "Review the items in your cart." },
     ],
   }),
   component: CartPage,
@@ -25,13 +27,13 @@ function CartPage() {
                 <ShoppingBag className="h-16 w-16 text-primary/40" />
             </div>
         </div>
-        <h1 className="text-3xl font-black italic tracking-tighter uppercase text-foreground">Your Selection is Empty</h1>
+        <h1 className="text-3xl font-black italic tracking-tighter uppercase text-foreground">Your Cart is Empty</h1>
         <p className="mt-4 text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
-            The registry has no active records of items for your current session.
+            You haven't added any items to your cart yet.
         </p>
         <Link to="/shop" className="mt-10 inline-block">
           <Button size="lg" className="rounded-full px-10 h-14 bg-primary text-lg font-black italic tracking-tight uppercase">
-            Browse Archive
+            Start Shopping
           </Button>
         </Link>
       </div>
@@ -40,17 +42,10 @@ function CartPage() {
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-12 md:py-24">
-      <div className="mb-16 space-y-4">
-          <div className="flex items-center gap-3">
-             <span className="text-[10px] font-bold tracking-[0.4em] text-[#B68D40] uppercase">
-                Collection Registry ——
-             </span>
-             <div className="h-[1px] flex-1 bg-[#B68D40]/20" />
-          </div>
-          <h1 className="fluid-heading-2 font-black italic tracking-tighter uppercase text-foreground">
-            Current Selection
-          </h1>
-      </div>
+      <PageHeader 
+        title="Your Shopping Cart" 
+        subtitle="Order Review" 
+      />
 
       <div className="grid gap-12 lg:grid-cols-3">
         {/* Cart Items List */}
@@ -79,21 +74,11 @@ function CartPage() {
                  
                  <div className="mt-4 flex items-center justify-between sm:mt-0">
                     <div className="flex items-center gap-6">
-                        <div className="flex items-center rounded-full border border-border bg-background p-1 shadow-inner">
-                            <button 
-                                onClick={() => updateQuantity(product.id, quantity - 1)} 
-                                className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-muted"
-                            >
-                                <Minus className="h-3 w-3" />
-                            </button>
-                            <span className="min-w-[30px] text-center font-bold text-sm">{quantity}</span>
-                            <button 
-                                onClick={() => updateQuantity(product.id, quantity + 1)} 
-                                className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-muted"
-                            >
-                                <Plus className="h-3 w-3" />
-                            </button>
-                        </div>
+                        <QuantitySelector 
+                            quantity={quantity} 
+                            onUpdate={(newQty) => updateQuantity(product.id, newQty)} 
+                            size="sm"
+                        />
                         <span className="text-xl font-black text-foreground">₹{product.price * quantity}</span>
                     </div>
 
@@ -119,28 +104,28 @@ function CartPage() {
                 </div>
                 
                 <h2 className="text-xl font-black italic tracking-tighter uppercase text-foreground mb-8">
-                    Registry Summary
+                    Order Summary
                 </h2>
                 
                 <div className="space-y-5">
                     <div className="flex justify-between items-center text-sm font-medium">
-                        <span className="text-muted-foreground">Original Value</span>
+                        <span className="text-muted-foreground">Subtotal</span>
                         <span className="text-foreground">₹{totalPrice}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm font-medium">
-                        <span className="text-muted-foreground">Registry Credit</span>
-                        <span className="text-success">FREE</span>
+                        <span className="text-muted-foreground">Discount</span>
+                        <span className="text-success">₹0</span>
                     </div>
                     <div className="flex justify-between items-center text-sm font-medium">
-                        <span className="text-muted-foreground">Verification Fee</span>
-                        <span className="text-success">WAIVED</span>
+                        <span className="text-muted-foreground">Shipping</span>
+                        <span className="text-success">FREE</span>
                     </div>
                     
                     <Separator className="bg-border/60" />
                     
                     <div className="flex justify-between items-end pt-2">
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-bold tracking-widest text-[#B68D40] uppercase">Total Grant</span>
+                            <span className="text-[10px] font-bold tracking-widest text-[#B68D40] uppercase">Total Amount</span>
                             <span className="text-3xl font-black italic tracking-tighter text-primary uppercase">₹{totalPrice}</span>
                         </div>
                     </div>
@@ -150,17 +135,17 @@ function CartPage() {
                             className="w-full h-16 rounded-[1.5rem] bg-primary text-base font-black italic tracking-tight text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] uppercase"
                             onClick={() => toggleCheckout(true)}
                         >
-                            Confirm Selection <ArrowRight className="ml-2 h-5 w-5" />
+                            Checkout Now <ArrowRight className="ml-2 h-5 w-5" />
                         </Button>
                         <Link to="/shop" className="block text-center text-[10px] font-bold tracking-widest text-muted-foreground uppercase hover:text-foreground transition-colors">
-                            Continue Browsing Archive
+                            Continue Shopping
                         </Link>
                     </div>
                 </div>
 
                 <div className="mt-8 rounded-2xl bg-muted/30 p-4 border border-border/50">
                     <p className="text-[10px] text-muted-foreground leading-relaxed">
-                        <strong>Official Provision:</strong> All selections in the Mallu Smart Registry are verified for heritage authenticity and institutional quality standards.
+                        <strong>Standard Shipping:</strong> All products are sourced directly from Kerala artisans and delivered with care to your doorstep.
                     </p>
                 </div>
             </div>
