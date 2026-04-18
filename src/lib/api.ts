@@ -2,7 +2,7 @@ import { fixImagePath } from "./utils";
 import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
 
-// BASE_URL is now /api to utilize the Vite proxy and bypass local CORS restrictions
+// BASE_URL is set to /api to utilize the Vite proxy and bypass browser CORS restrictions
 const BASE_URL = "/api";
 
 // --- Helper Functions ---
@@ -10,23 +10,29 @@ const BASE_URL = "/api";
 function getAuthHeaders(method: string = "GET") {
   let token = localStorage.getItem("adminToken");
   
-  // Aggressive Sanitization: trim whitespace/newlines and remove all surrounding quotes
+  // Standard Sanitization: remove quotes and whitespace
   if (token) {
-    token = token.trim().replace(/^["']+|["']+$/g, '');
+    token = token.toString().trim().replace(/^"|"$/g, '');
   }
 
+  // CRITICAL: Prevent sending literal "null", "undefined", or "[object Object]" which crashes the IIS backend (500)
+  const isInvalidToken = !token || 
+                         token === "null" || 
+                         token === "undefined" || 
+                         token === "[object Object]" ||
+                         token.length < 10;
+  
   const headers: Record<string, string> = {
-    "Accept": "application/json, text/plain, */*",
-    "Cache-Control": "no-cache",
-    "Pragma": "no-cache"
+    "Accept": "application/json"
   };
   
   if (method !== "GET") {
     headers["Content-Type"] = "application/json";
   }
   
-  if (token) {
-    headers["Authorization"] = token;
+  if (!isInvalidToken) {
+    // Adding the standard Bearer prefix for ASP.NET JWT compatibility
+    headers["Authorization"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
   }
   
   return headers;
@@ -36,10 +42,28 @@ async function safeFetch(url: string, options: RequestInit = {}, retry = true): 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s Timeout
 
+  const method = options.method || 'GET';
+  console.log(`[API] calling ${url} ${method}`);
+  
+  // Debug headers
+  const authHeader = (options.headers as Record<string, string>)?.['Authorization'];
+  if (authHeader) {
+    console.log(`[AUTH] Header present: ${authHeader.substring(0, 15)}... [Length: ${authHeader.length}]`);
+    if (authHeader.includes('undefined') || authHeader.includes('null') || authHeader.includes('[object')) {
+      console.warn(`[AUTH] SUSPICIOUS HEADER DETECTED: ${authHeader}`);
+    }
+  } else {
+    console.log(`[AUTH] No Authorization header sent.`);
+  }
+
   try {
-    console.log(`[API] calling ${url}`, options.method || "GET");
     const response = await fetch(url, {
       ...options,
+      headers: {
+        ...options.headers,
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      },
       signal: controller.signal,
     });
     console.log(`[API] ${url} -> status ${response.status}`);
@@ -78,6 +102,15 @@ async function handleResponse(response: Response) {
   if (response.status === 500) {
     const errorText = await response.clone().text().catch(() => "Unknown Server Error");
     const endpoint = response.url.split('/').pop() || "unknown";
+    
+    // If we sent an Auth header and got a 500, the token might be the cause. 
+    // Purge it to be safe and force a re-login.
+    const hasAuth = !!localStorage.getItem("adminToken");
+    if (hasAuth) {
+      console.warn("Backend 500 detected while authenticated. Purging token to prevent crash loops.");
+      localStorage.removeItem("adminToken");
+    }
+
     console.error(`Critical Backend Error (500) at ${endpoint}:`, errorText);
     throw new Error(`[${endpoint.toUpperCase()}] Backend Error (500): The server crashed. [Detail: ${errorText.substring(0, 200)}...]`);
   }
@@ -234,7 +267,11 @@ export async function adminLogin(email: string, password: string): Promise<strin
 
     const data = await handleResponse(response);
     const token = typeof data === 'string' ? data : data.token;
-    return (token || "").toString().replace(/^"|"$/g, '');
+    
+    if (!token) throw new Error("No token received from login API");
+    
+    // Clean and return the token
+    return token.toString().trim().replace(/^"|"$/g, '');
   } catch (error) {
     console.error("API Error (AdminLogin):", error);
     throw error;

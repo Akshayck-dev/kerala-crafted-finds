@@ -61,6 +61,7 @@ function AdminOrders() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <button onClick={() => { localStorage.removeItem('adminToken'); window.location.reload(); }} className="p-2 border border-red-500 rounded bg-red-100 text-red-700 hover:bg-red-200 transition-colors">Refresh & Re‑login</button>
           <div>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-500 bg-clip-text text-transparent">Orders</h2>
             <p className="text-sm text-slate-500">Track and fulfill customer orders.</p>
