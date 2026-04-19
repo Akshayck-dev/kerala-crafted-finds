@@ -277,31 +277,40 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 // Product CRUD
-export async function addOrUpdateProduct(product: Partial<Product>) {
+export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File) {
   try {
-    // Backend sample showed camelCase (productName, memberID, etc.)
-    // Trying flattened structure as it's common in modern .NET Core APIs
-    const payload = {
-      id: Number(product.id || 0),
-      productName: product.name || "",
-      description: product.description || "",
-      price: Number(product.price || 0),
-      quantity: Number(product.quantity || 0),
-      unit: product.unit || "pcs",
-      categoryID: Number(product.categoryID || 0),
-      memberID: Number(product.memberID || 1),
-      isActive: product.isActive ?? true,
-      image: product.image || "",
-      createdOn: product.createdOn || new Date().toISOString(),
-      modifiedOn: new Date().toISOString(),
-    };
+    // Backend strictly requires multipart/form-data with PascalCase keys for this endpoint
+    const fd = new FormData();
+    fd.append("Id", String(product.id || 0));
+    fd.append("ProductName", product.name || "");
+    fd.append("Description", product.description || "");
+    fd.append("Price", String(product.price || 0));
+    fd.append("Quantity", String(product.quantity || 0));
+    fd.append("Unit", product.unit || "pcs");
+    fd.append("CategoryID", String(product.categoryID || 0));
+    fd.append("MemberID", String(product.memberID || 1));
+    fd.append("IsActive", String(product.isActive ?? true));
 
-    const response = await safeFetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
+    if (imageFile) {
+        fd.append("Image", imageFile);
+    } else if (product.image) {
+        // If no new file but we have a URL/path, we might need to send it if the backend supports it, 
+        // but typically [FromForm] expects a file or ignores strings.
+        fd.append("ImageURL", product.image); 
+    }
+
+    const response = await fetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
       method: "POST",
-      headers: getAuthHeaders("POST"),
-      body: JSON.stringify(payload),
+      headers: {
+        ...getAuthHeaders("POST"),
+        // Note: Do NOT set Content-Type manually when sending FormData; 
+        // the browser/fetch will set it automatically with the boundary.
+      },
+      body: fd,
     });
     
+    // safeFetch handles the logging and 401 redirection, but for FormData we use fetch directly 
+    // to avoid the automated JSON Content-Type header in safeFetch.
     return await handleResponse(response);
   } catch (error) {
     console.error("API Error (AddOrUpdateProduct):", error);

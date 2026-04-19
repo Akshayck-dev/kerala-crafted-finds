@@ -33,47 +33,47 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
   const [categories, setCategories] = useState<Category[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [formData, setFormData] = useState<Partial<Product>>({
     id: "0",
     name: "",
     description: "",
-    image: "",
     price: 0,
     quantity: 0,
     unit: "pcs",
     categoryID: 0,
-    memberID: 0,
+    memberID: 1,
     isActive: true,
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
   useEffect(() => {
     if (product) {
       setFormData({
         ...product,
-        name: product.name ?? "",
-        description: product.description ?? "",
-        image: product.image ?? "",
+        id: product.id || "0",
+        name: product.name || "",
+        description: product.description || "",
         price: Number(product.price || 0),
         quantity: Number(product.quantity || 0),
-        unit: product.unit ?? "pcs",
+        unit: product.unit || "pcs",
         categoryID: Number(product.categoryID || 0),
-        memberID: Number(product.memberID || 0),
+        memberID: Number(product.memberID || 1),
       });
+      setImageFile(null); // Reset file on edit
     } else {
       setFormData({
         id: "0",
         name: "",
         description: "",
-        image: "",
         price: 0,
         quantity: 0,
         unit: "pcs",
         categoryID: 0,
-        memberID: 0,
+        memberID: 1,
         isActive: true,
       });
+      setImageFile(null);
     }
   }, [product, isOpen]);
 
@@ -101,13 +101,7 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
     setLoading(true);
 
     try {
-      const payload = {
-        ...formData,
-        price: Number(formData.price),
-        quantity: Number(formData.quantity),
-      };
-
-      await addOrUpdateProduct(payload);
+      await addOrUpdateProduct(formData, imageFile || undefined);
       onSuccess();
       onClose();
     } catch (error) {
