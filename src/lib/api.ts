@@ -7,7 +7,7 @@ const BASE_URL = "/api";
 
 // --- Helper Functions ---
 
-function getAuthHeaders(method: string = "GET") {
+function getAuthHeaders(method: string = "GET", includeContentType: boolean = true) {
   let token = localStorage.getItem("adminToken");
   
   if (token) {
@@ -24,7 +24,7 @@ function getAuthHeaders(method: string = "GET") {
     "Accept": "application/json"
   };
   
-  if (method !== "GET" && method !== "DELETE") {
+  if (includeContentType && method !== "GET" && method !== "DELETE") {
     headers["Content-Type"] = "application/json";
   }
   
@@ -302,7 +302,7 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     const response = await fetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
       method: "POST",
       headers: {
-        ...getAuthHeaders("POST"),
+        ...getAuthHeaders("POST", false),
         // Note: Do NOT set Content-Type manually when sending FormData; 
         // the browser/fetch will set it automatically with the boundary.
       },
@@ -322,7 +322,7 @@ export async function deleteProduct(productId: number) {
   try {
     const response = await safeFetch(`${BASE_URL}/Product/DeleteProduct`, {
       method: "POST",
-      headers: getAuthHeaders("POST"),
+      headers: getAuthHeaders("POST", true),
       body: JSON.stringify({ ProductId: productId }),
     });
     
@@ -337,7 +337,7 @@ export async function deleteProduct(productId: number) {
 export async function fetchMembers(): Promise<Member[]> {
   try {
     const response = await safeFetch(`${BASE_URL}/User/GetAllMembers`, {
-      headers: getAuthHeaders(),
+      headers: getAuthHeaders("GET", false),
     });
     const data = await handleResponse(response);
     
@@ -376,7 +376,7 @@ export async function addOrUpdateMember(member: Partial<Member>) {
     const response = await fetch(`${BASE_URL}/User/AddOrUpdateMember`, {
       method: "POST",
       headers: {
-        ...getAuthHeaders("POST"),
+        ...getAuthHeaders("POST", true),
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
@@ -393,7 +393,7 @@ export async function deleteMember(memberId: number) {
   try {
     const response = await safeFetch(`${BASE_URL}/User/DeleteMember`, {
       method: "POST",
-      headers: getAuthHeaders("POST"),
+      headers: getAuthHeaders("POST", true),
       body: JSON.stringify({ MemberId: memberId }),
     });
     
@@ -420,7 +420,7 @@ export interface AdminOrder {
 
 export async function fetchOrders(): Promise<AdminOrder[]> {
   const response = await safeFetch(`${BASE_URL}/Product/GetAllOrders`, {
-    headers: getAuthHeaders(),
+    headers: getAuthHeaders("GET", false),
   });
   const data = await handleResponse(response);
   

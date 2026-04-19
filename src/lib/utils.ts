@@ -22,6 +22,6 @@ export function fixImagePath(path?: string | null) {
   // Clean the path (remove leading slashes to prevent double slashes)
   const cleanPath = trimmedPath.replace(/^\/+/, '');
   
-  // Return the full URL with base
-  return `https://mallusmart.com/${cleanPath}`;
+  // Return the path with /api prefix to use Vite proxy
+  return `/api/${cleanPath}`;
 }
