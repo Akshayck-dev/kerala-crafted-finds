@@ -279,22 +279,21 @@ export async function adminLogin(email: string, password: string): Promise<strin
 // Product CRUD
 export async function addOrUpdateProduct(product: Partial<Product>) {
   try {
-    // Ensuring numerical types and standardized structure
+    // Backend sample showed camelCase (productName, memberID, etc.)
+    // Trying flattened structure as it's common in modern .NET Core APIs
     const payload = {
-      product: {
-        Id: Number(product.id || 0),
-        ProductName: product.name || "",
-        Description: product.description || "",
-        Price: Number(product.price || 0),
-        Quantity: Number(product.quantity || 0),
-        Unit: product.unit || "pcs",
-        CategoryID: Number(product.categoryID || 0),
-        MemberID: Number(product.memberID || 1), // Defaulting to 1 if not provided
-        IsActive: product.isActive ?? true,
-        Image: product.image || "", // Still using string, assuming backend handles it now or it's optional
-        CreatedOn: product.createdOn || new Date().toISOString(),
-        ModifiedOn: new Date().toISOString(),
-      }
+      id: Number(product.id || 0),
+      productName: product.name || "",
+      description: product.description || "",
+      price: Number(product.price || 0),
+      quantity: Number(product.quantity || 0),
+      unit: product.unit || "pcs",
+      categoryID: Number(product.categoryID || 0),
+      memberID: Number(product.memberID || 1),
+      isActive: product.isActive ?? true,
+      image: product.image || "",
+      createdOn: product.createdOn || new Date().toISOString(),
+      modifiedOn: new Date().toISOString(),
     };
 
     const response = await safeFetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
@@ -351,8 +350,12 @@ export async function fetchMembers(): Promise<Member[]> {
 export async function addOrUpdateMember(member: Partial<Member>) {
   try {
     const payload = {
-      ...member,
       id: Number(member.id || 0),
+      name: member.name || "",
+      email: member.email || "",
+      contactNumber: member.phone || member.contactNumber || "",
+      businessName: member.businessName || "",
+      district: member.district || "Ernakulam",
       ownProduct: member.ownProduct ?? true,
       isActive: member.isActive ?? true,
       createdOn: member.createdOn || new Date().toISOString(),
