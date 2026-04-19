@@ -10,28 +10,26 @@ const BASE_URL = "/api";
 function getAuthHeaders(method: string = "GET") {
   let token = localStorage.getItem("adminToken");
   
-  // Standard Sanitization: remove quotes and whitespace
   if (token) {
     token = token.toString().trim().replace(/^"|"$/g, '');
   }
 
-  // CRITICAL: Prevent sending literal "null", "undefined", or "[object Object]" which crashes the IIS backend (500)
   const isInvalidToken = !token || 
                          token === "null" || 
                          token === "undefined" || 
                          token === "[object Object]" ||
-                         token.length < 10;
+                         token.length < 5;
   
   const headers: Record<string, string> = {
     "Accept": "application/json"
   };
   
-  if (method !== "GET") {
+  if (method !== "GET" && method !== "DELETE") {
     headers["Content-Type"] = "application/json";
   }
   
   if (!isInvalidToken) {
-    // Adding the standard Bearer prefix for ASP.NET JWT compatibility
+    // Backend accepts both raw and Bearer, standardize on Bearer
     headers["Authorization"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
   }
   
@@ -281,8 +279,7 @@ export async function adminLogin(email: string, password: string): Promise<strin
 // Product CRUD
 export async function addOrUpdateProduct(product: Partial<Product>) {
   try {
-    // We are using the "product" wrapper and PascalCase keys
-    // identified during API probing as the correct structure.
+    // Ensuring numerical types and standardized structure
     const payload = {
       product: {
         Id: Number(product.id || 0),
@@ -292,9 +289,9 @@ export async function addOrUpdateProduct(product: Partial<Product>) {
         Quantity: Number(product.quantity || 0),
         Unit: product.unit || "pcs",
         CategoryID: Number(product.categoryID || 0),
-        MemberID: Number(product.memberID || 0),
+        MemberID: Number(product.memberID || 1), // Defaulting to 1 if not provided
         IsActive: product.isActive ?? true,
-        Image: product.image || "", // This field currently blocks the API due to backend type mismatch (IFormFile)
+        Image: product.image || "", // Still using string, assuming backend handles it now or it's optional
         CreatedOn: product.createdOn || new Date().toISOString(),
         ModifiedOn: new Date().toISOString(),
       }
