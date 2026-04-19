@@ -84,6 +84,7 @@ function AdminDashboard() {
 
         try {
           const o = await fetchOrders();
+          console.log("[DASHBOARD AUDIT] Orders fetched successfully:", o.length);
           setOrders(o);
         } catch (err: any) {
           console.error("Orders Load Error:", err);

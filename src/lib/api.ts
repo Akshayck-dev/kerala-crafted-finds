@@ -2,8 +2,10 @@ import { fixImagePath } from "./utils";
 import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
 
-// BASE_URL is set to /api to utilize the Vite proxy (all requests MUST go through proxy to avoid CORS)
+// BASE_URL is set to /api to utilize the Vite proxy (essential for avoiding CORS in dev)
 const BASE_URL = "/api";
+
+console.log("[API] Module loaded. Version: 1.0.2 - PASCAL_CASE_VALIDATION");
 
 // --- Helper Functions ---
 
@@ -101,14 +103,8 @@ async function handleResponse(response: Response) {
     const errorText = await response.clone().text().catch(() => "Unknown Server Error");
     const endpoint = response.url.split('/').pop() || "unknown";
     
-    // If we sent an Auth header and got a 500, the token might be the cause. 
-    // Purge it to be safe and force a re-login.
-    const hasAuth = !!localStorage.getItem("adminToken");
-    if (hasAuth) {
-      console.warn("Backend 500 detected while authenticated. Purging token to prevent crash loops.");
-      localStorage.removeItem("adminToken");
-    }
-
+    // Log the error but do NOT purge the token on 500. 
+    // Purging should only happen on 401 Unauthorized to avoid frustrating logouts during backend instability.
     console.error(`Critical Backend Error (500) at ${endpoint}:`, errorText);
     throw new Error(`[${endpoint.toUpperCase()}] Backend Error (500): The server crashed. [Detail: ${errorText.substring(0, 200)}...]`);
   }
@@ -149,8 +145,9 @@ export async function fetchProducts(): Promise<Product[]> {
         throw new Error("API did not return an array of products");
     }
 
-    return data.map((p: any) => ({
-      id: (p.id || p.ID)?.toString(),
+    return data.map((p: any, index: number) => ({
+      // Handle cases where ID might be missing or hidden by generating a stable fallback
+      id: (p.id || p.ID || p.Id || `AUTO-${index}`).toString(),
       name: p.productName || p.ProductName || "N/A",
       price: Number(p.price || p.Price || 0),
       image: fixImagePath(p.image || p.Image),
@@ -164,7 +161,9 @@ export async function fetchProducts(): Promise<Product[]> {
       unit: p.unit || p.Unit || "pcs",
       categoryID: Number(p.categoryID || p.CategoryID || 0),
       memberID: Number(p.memberID || p.MemberID || 0),
-    })).filter((p: any) => p.id && (p.name !== "N/A"));
+      isActive: p.isActive ?? p.IsActive ?? true,
+    })).filter((p: any) => p.id && (p.name !== "N/A") && (p.isActive !== false))
+      .sort((a: any, b: any) => Number(b.id) - Number(a.id));
   } catch (error) {
     console.error("API Error (Products):", error);
     throw error; 
@@ -181,13 +180,20 @@ export async function fetchCategories(): Promise<Category[]> {
     }
 
     return data
-      .filter((c: any) => c.name && c.name.toLowerCase() !== "uncategorized")
-      .map((c: any) => ({
-        id: c.name.toLowerCase().trim().replace(/\s+/g, "-"),
-        name: c.name ?? "N/A",
-        icon: getCategoryIcon(c.name || ""),
-        image: "",
-      }));
+      .map((c: any, index: number) => {
+        // IMPORTANT: The original API omits IDs in the category list but expects numeric IDs (1, 2, 3...) for saves.
+        // We use (index + 1) to reconstruct those missing IDs based on the server's list order.
+        const dbId = (index + 1).toString();
+        
+        return {
+          id: dbId,
+          name: c.name ?? "N/A",
+          slug: (c.name || "category").toLowerCase().trim().replace(/\s+/g, "-"),
+          icon: getCategoryIcon(c.name || ""),
+          image: "",
+        };
+      })
+      .filter((c) => c.name.toLowerCase() !== "uncategorized");
   } catch (error) {
     console.error("API Error (Categories):", error);
     throw error;
@@ -279,38 +285,47 @@ export async function adminLogin(email: string, password: string): Promise<strin
 // Product CRUD
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File) {
   try {
-    // Backend strictly requires multipart/form-data with PascalCase keys for this endpoint
+    // The original API (mallusmart.com) strictly requires PascalCase keys for model binding
     const fd = new FormData();
-    fd.append("Id", String(product.id || 0));
-    fd.append("ProductName", product.name || "");
-    fd.append("Description", product.description || "");
-    fd.append("Price", String(product.price || 0));
-    fd.append("Quantity", String(product.quantity || 0));
-    fd.append("Unit", product.unit || "pcs");
-    fd.append("CategoryID", String(product.categoryID || 0));
-    fd.append("MemberID", String(product.memberID || 1));
-    fd.append("IsActive", String(product.isActive ?? true));
+    const finalId = Number(product.id || 0);
+    const finalCategoryId = Math.floor(Number(product.categoryID) || 1);
+    const finalMemberId = Math.floor(Number(product.memberID) || 1);
 
-    if (imageFile) {
-        fd.append("Image", imageFile);
-    } else if (product.image) {
-        // If no new file but we have a URL/path, we might need to send it if the backend supports it, 
-        // but typically [FromForm] expects a file or ignores strings.
-        fd.append("ImageURL", product.image); 
+    fd.append("Id", String(finalId));
+    fd.append("ProductName", String(product.name || ""));
+    fd.append("Description", String(product.description || ""));
+    fd.append("Price", String(Number(product.price) || 0));
+    fd.append("Quantity", String(Number(product.quantity) || 0));
+    fd.append("Unit", String(product.unit || "pcs"));
+    fd.append("CategoryID", String(finalCategoryId));
+    fd.append("MemberID", String(finalMemberId));
+    fd.append("IsActive", String(product.isActive !== false).toLowerCase());
+
+    console.log(`[PAYLOAD AUDIT] ID: ${finalId} | Cat: ${finalCategoryId} | Mem: ${finalMemberId}`);
+    console.log(`[PAYLOAD AUDIT] Full Set:`, Object.fromEntries(fd.entries()));
+
+    if (imageFile instanceof File) {
+        // ALWAYS use PascalCase 'Image' for the binary file part
+        fd.append("Image", imageFile, imageFile.name);
+    }
+
+    const auth = getAuthHeaders("POST", false);
+    const headers: Record<string, string> = {};
+    if (auth["Authorization"]) {
+        headers["Authorization"] = auth["Authorization"];
     }
 
     const response = await fetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
       method: "POST",
-      headers: {
-        ...getAuthHeaders("POST", false),
-        // Note: Do NOT set Content-Type manually when sending FormData; 
-        // the browser/fetch will set it automatically with the boundary.
-      },
+      headers: headers,
       body: fd,
     });
     
-    // safeFetch handles the logging and 401 redirection, but for FormData we use fetch directly 
-    // to avoid the automated JSON Content-Type header in safeFetch.
+    // Brief delay to allow backend stabilization before refresh
+    if (response.ok) {
+        await new Promise(r => setTimeout(r, 800));
+    }
+
     return await handleResponse(response);
   } catch (error) {
     console.error("API Error (AddOrUpdateProduct):", error);
@@ -320,11 +335,16 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
 
 export async function deleteProduct(productId: number) {
   try {
-    const response = await safeFetch(`${BASE_URL}/Product/DeleteProduct`, {
+    // Backend strictly requires ProductId as a Query Parameter for this specific endpoint
+    const response = await safeFetch(`${BASE_URL}/Product/DeleteProduct?ProductId=${productId}`, {
       method: "POST",
-      headers: getAuthHeaders("POST", true),
-      body: JSON.stringify({ ProductId: productId }),
+      headers: getAuthHeaders("POST", false), // Body is empty
     });
+    
+    // Add a slightly longer delay to ensure the database soft-delete is indexed before refresh
+    if (response.ok) {
+        await new Promise(r => setTimeout(r, 1200));
+    }
     
     return await handleResponse(response);
   } catch (error) {
@@ -341,8 +361,9 @@ export async function fetchMembers(): Promise<Member[]> {
     });
     const data = await handleResponse(response);
     
-    return (data || []).map((m: any) => ({
-      id: m.id || m.ID || m.memberId || m.MemberId || crypto.randomUUID(),
+    return (data || []).map((m: any, index: number) => ({
+      // Handle various backend casing for Member ID and provide index fallback
+      id: (m.id || m.ID || m.memberId || m.MemberId || m.Id || (index + 1)).toString(),
       name: m.name || m.Name || "N/A",
       email: m.email || m.Email || "No email",
       phone: m.contactNumber || m.ContactNumber || m.phone || m.Phone || "N/A",
@@ -425,20 +446,24 @@ export async function fetchOrders(): Promise<AdminOrder[]> {
   const data = await handleResponse(response);
   
   return (data || []).map((o: any, index: number) => {
-    // Robust mapping for actual backend response structure
+    // Robust mapping for actual backend response structure (handling both casing styles)
+    const rawDate = o.createdOn || o.CreatedOn || o.date || o.Date || new Date().toISOString();
+    
     return {
-      // Backend does not return an ID, so we generate one based on customer and date, or index
-      id: (o.id || o.ID || o.orderId || o.OrderId || `ORD-${o.customerName}-${index}`).toString(),
-      customerName: o.customerName || "Guest User",
-      date: o.createdOn || new Date().toISOString(),
-      createdOn: o.createdOn,
-      status: (o.status || "pending").toString().toLowerCase() as any,
-      // Backend does not currently return a total price, so we default to 0
+      id: (o.id || o.ID || o.orderId || o.OrderId || index).toString(),
+      customerName: o.customerName || o.CustomerName || "Guest User",
+      date: rawDate,
+      createdOn: rawDate,
+      status: (o.status || o.Status || "pending").toString().toLowerCase() as any,
       totalPrice: Number(o.totalPrice || o.TotalPrice || 0),
-      phone: o.mobile || o.phone || "N/A",
-      address: o.address || "N/A",
-      email: o.email || "N/A",
-      products: o.products || [],
+      phone: o.mobile || o.Mobile || o.phone || o.Phone || "N/A",
+      address: o.address || o.Address || "N/A",
+      email: o.email || o.Email || "N/A",
+      products: o.products || o.Products || [],
     };
+  }).sort((a, b) => {
+    const timeA = new Date(a.date).getTime() || 0;
+    const timeB = new Date(b.date).getTime() || 0;
+    return timeB - timeA;
   });
 }

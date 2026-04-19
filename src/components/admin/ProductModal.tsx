@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,32 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
         categoryID: Number(product.categoryID || 0),
         memberID: Number(product.memberID || 1),
       });
+      
+      // Auto-lookup category ID by name if ID is missing (common in this backend)
+      if (categories.length > 0 && !product.categoryID && product.categoryName) {
+        console.log(`[EditModal] Attempting to match category: "${product.categoryName}"`);
+        const searchName = product.categoryName.toLowerCase().trim();
+        
+        // Try exact match first
+        let match = categories.find(c => c.name.toLowerCase().trim() === searchName);
+        
+        // Fallback to partial matches if exact match fails
+        if (!match) {
+          match = categories.find(c => {
+            const catName = c.name.toLowerCase().trim();
+            return catName.includes(searchName) || searchName.includes(catName);
+          });
+        }
+        
+        if (match) {
+          console.log(`[EditModal] Found matching category: ${match.name} (ID: ${match.id})`);
+          setFormData(prev => ({ ...prev, categoryID: Number(match.id) }));
+        } else {
+          console.warn(`[EditModal] No matching category found for: "${product.categoryName}"`);
+        }
+      }
+
+      setPreviewUrl(product.image || "");
       setImageFile(null); // Reset file on edit
     } else {
       setFormData({
@@ -73,6 +100,7 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
         memberID: 1,
         isActive: true,
       });
+      setPreviewUrl("");
       setImageFile(null);
     }
   }, [product, isOpen]);
@@ -98,15 +126,30 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    
+    // Prevent 500 error by validating category selection with descriptive feedback
+    if (!formData.categoryID || isNaN(formData.categoryID) || formData.categoryID === 0) {
+      toast.error(`Category selection required! (Value: ${formData.categoryID})`);
+      console.warn("[Validation] Save blocked: categoryID is", formData.categoryID);
+      return;
+    }
 
+    if (!formData.memberID || isNaN(formData.memberID)) {
+      toast.error(`Seller selection required! (Value: ${formData.memberID})`);
+      console.warn("[Validation] Save blocked: memberID is", formData.memberID);
+      return;
+    }
+
+    const toastId = toast.loading("Saving product to Mallu Smart API...");
+    setLoading(true);
     try {
       await addOrUpdateProduct(formData, imageFile || undefined);
+      toast.success(product && Number(product.id) > 0 ? "Product updated successfully" : "Product added successfully", { id: toastId });
       onSuccess();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Save product error:", error);
-      alert("Failed to save product. Check console for details.");
+      toast.error(error.message || "Failed to save product", { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -259,8 +302,9 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
 
             {/* Relationships */}
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label className="flex gap-1">Category <span className="text-red-500">*</span></Label>
               <Select 
+                key={`${categories.length}-${formData.categoryID}`}
                 value={formData.categoryID?.toString() || "0"} 
                 onValueChange={(val) => setFormData({ ...formData, categoryID: Number(val) })}
               >
@@ -269,8 +313,8 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                 </SelectTrigger>
                 <SelectContent className="bg-white">
                     <SelectItem value="0">Uncategorized</SelectItem>
-                    {categories.map((c, idx) => (
-                        <SelectItem key={idx} value={(idx + 1).toString()}>{c.name}</SelectItem>
+                    {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.id?.toString() || "0"}>{c.name}</SelectItem>
                     ))}
                 </SelectContent>
               </Select>

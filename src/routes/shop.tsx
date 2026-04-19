@@ -94,10 +94,10 @@ function ShopPage() {
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
+                    onClick={() => setSelectedCategory(cat.slug)}
                     className={cn(
                         "text-left text-xs font-bold uppercase tracking-wide py-2.5 px-3 rounded-xl transition-all",
-                        selectedCategory === cat.id ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        selectedCategory === cat.slug ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
                     {cat.name}
@@ -144,10 +144,10 @@ function ShopPage() {
                     {categories.map((cat) => (
                       <button
                         key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
+                        onClick={() => setSelectedCategory(cat.slug)}
                         className={cn(
                             "shrink-0 rounded-full px-6 py-3 text-[10px] font-black italic tracking-widest uppercase transition-all duration-300 border shadow-md",
-                            selectedCategory === cat.id 
+                            selectedCategory === cat.slug 
                               ? "bg-primary text-white border-primary shadow-primary/30" 
                               : "bg-card border-border/50 text-muted-foreground hover:border-primary/30"
                         )}
