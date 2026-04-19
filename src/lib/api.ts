@@ -2,8 +2,8 @@ import { fixImagePath } from "./utils";
 import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
 
-// BASE_URL set to absolute production domain as requested
-const BASE_URL = "https://mallusmart.com";
+// BASE_URL is set to /api to utilize the Vite proxy (all requests MUST go through proxy to avoid CORS)
+const BASE_URL = "/api";
 
 // --- Helper Functions ---
 
@@ -358,22 +358,27 @@ export async function fetchMembers(): Promise<Member[]> {
 
 export async function addOrUpdateMember(member: Partial<Member>) {
   try {
+    // Backend requires Unwrapped PascalCase JSON with all fields populated
     const payload = {
-      id: Number(member.id || 0),
-      name: member.name || "",
-      email: member.email || "",
-      contactNumber: member.phone || member.contactNumber || "",
-      businessName: member.businessName || "",
-      district: member.district || "Ernakulam",
-      ownProduct: member.ownProduct ?? true,
-      isActive: member.isActive ?? true,
-      createdOn: member.createdOn || new Date().toISOString(),
-      modifiedOn: new Date().toISOString(),
+      Id: Number(member.id || 0),
+      Name: member.name || "",
+      BusinessName: member.businessName || "",
+      Place: member.place || "",
+      District: member.district || "Ernakulam",
+      Product: member.product || "",
+      ContactNumber: member.contactNumber || "",
+      LicenceNumber: member.licenceNumber || "NA",
+      OwnProduct: member.ownProduct ?? true,
+      IsActive: member.isActive ?? true,
+      CreatedOn: member.createdOn || new Date().toISOString(),
     };
 
-    const response = await safeFetch(`${BASE_URL}/User/AddOrUpdateMember`, {
+    const response = await fetch(`${BASE_URL}/User/AddOrUpdateMember`, {
       method: "POST",
-      headers: getAuthHeaders("POST"),
+      headers: {
+        ...getAuthHeaders("POST"),
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(payload),
     });
     
