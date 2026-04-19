@@ -2,8 +2,8 @@ import { fixImagePath } from "./utils";
 import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
 
-// BASE_URL is set to the absolute production domain as requested
-const BASE_URL = "https://mallusmart.com";
+// Reverting to /api to utilize the Vite proxy and bypass browser CORS restrictions
+const BASE_URL = "/api";
 
 // --- Helper Functions ---
 
