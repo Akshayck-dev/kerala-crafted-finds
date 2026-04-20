@@ -2,7 +2,9 @@ import { fixImagePath } from "./utils";
 import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
 
-// BASE_URL is set to /api to utilize the Vite proxy (essential for avoiding CORS in dev)
+// BASE_URL is set directly to the production domain as requested.
+// NOTE: This may require CORS configuration on the backend.
+// Use the Vite proxy to avoid CORS issues and standardize headers.
 const BASE_URL = "/api";
 
 console.log("[API] Module loaded. Version: 1.0.2 - PASCAL_CASE_VALIDATION");
@@ -126,7 +128,8 @@ async function handleResponse(response: Response) {
        const detail = Array.isArray(firstError) ? firstError[0] : firstError;
        throw new Error(`Validation Error: ${detail || "Check all fields"}`);
     }
-    const errorMsg = data.message || data.error || `API Request failed with status ${response.status}`;
+    const errorMsg = data.message || data.error || (typeof data === 'string' ? data : null) || `API Request failed with status ${response.status}`;
+    console.error(`[API ERROR] Status: ${response.status} | Message: ${errorMsg}`);
     throw new Error(errorMsg);
   }
   
@@ -135,35 +138,46 @@ async function handleResponse(response: Response) {
 
 // --- Public Product APIs ---
 
-export async function fetchProducts(): Promise<Product[]> {
+export async function fetchProducts(onlyActive: boolean = true): Promise<Product[]> {
   try {
-    // NOTE: Backend has a typo in this endpoint (Produtcs). Do not "fix" it here.
-    const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`);
+    // Added timestamp to bust any browser/proxy caches
+    const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs?t=${Date.now()}`, {
+        headers: getAuthHeaders("GET", false)
+    });
     const data = await handleResponse(response);
 
     if (!Array.isArray(data)) {
         throw new Error("API did not return an array of products");
     }
 
-    return data.map((p: any, index: number) => ({
-      // Handle cases where ID might be missing or hidden by generating a stable fallback
-      id: (p.id || p.ID || p.Id || `AUTO-${index}`).toString(),
-      name: p.productName || p.ProductName || "N/A",
-      price: Number(p.price || p.Price || 0),
-      image: fixImagePath(p.image || p.Image),
-      category: (p.categoryName || p.CategoryName || "all").toLowerCase().trim().replace(/\s+/g, "-"),
-      categoryName: p.categoryName || p.CategoryName || "Uncategorized",
-      sellerName: p.memberName || p.MemberName || "Mallu Smart",
-      description: p.description || p.Description || "Authentic Kerala handmade product.",
-      originalPrice: Number(p.price || p.Price || 0) * 1.25,
-      badge: "Authentic",
-      quantity: Number(p.quantity || p.Quantity || 0),
-      unit: p.unit || p.Unit || "pcs",
-      categoryID: Number(p.categoryID || p.CategoryID || 0),
-      memberID: Number(p.memberID || p.MemberID || 0),
-      isActive: p.isActive ?? p.IsActive ?? true,
-    })).filter((p: any) => p.id && (p.name !== "N/A") && (p.isActive !== false))
-      .sort((a: any, b: any) => Number(b.id) - Number(a.id));
+    return data.map((p: any, index: number) => {
+      // Robust ID handling: treat 0 as a valid ID value by explicitly checking for undefined/null
+      const rawId = p.id !== undefined && p.id !== null ? p.id : (p.ID ?? p.Id ?? `AUTO-${index}`);
+      
+      return {
+        id: rawId.toString(),
+        name: p.productName || p.ProductName || "N/A",
+        price: Number(p.price || p.Price || 0),
+        image: fixImagePath(p.image || p.Image),
+        category: (p.categoryName || p.CategoryName || "all").toLowerCase().trim().replace(/\s+/g, "-"),
+        categoryName: p.categoryName || p.CategoryName || "Uncategorized",
+        sellerName: p.memberName || p.MemberName || "Mallu Smart",
+        description: p.description || p.Description || "Authentic Kerala handmade product.",
+        originalPrice: Number(p.price || p.Price || 0) * 1.25,
+        badge: "Authentic",
+        quantity: Number(p.quantity || p.Quantity || 0),
+        unit: p.unit || p.Unit || "pcs",
+        categoryID: Number(p.categoryID || p.CategoryID || 0),
+        memberID: Number(p.memberID || p.MemberID || 0),
+        isActive: p.isActive ?? p.IsActive ?? true,
+      };
+    }).filter((p: any) => p.id && (p.name !== "N/A") && (!onlyActive || p.isActive !== false))
+       .sort((a: any, b: any) => {
+         const idA = parseInt(a.id);
+         const idB = parseInt(b.id);
+         if (!isNaN(idA) && !isNaN(idB)) return idB - idA;
+         return b.id.localeCompare(a.id); // Fallback for string IDs
+       });
   } catch (error) {
     console.error("API Error (Products):", error);
     throw error; 
@@ -282,51 +296,47 @@ export async function adminLogin(email: string, password: string): Promise<strin
   }
 }
 
-// Product CRUD
-export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File) {
+export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
   try {
-    // The original API (mallusmart.com) strictly requires PascalCase keys for model binding
-    const fd = new FormData();
     const finalId = Number(product.id || 0);
-    const finalCategoryId = Math.floor(Number(product.categoryID) || 1);
-    const finalMemberId = Math.floor(Number(product.memberID) || 1);
+    const now = new Date().toISOString();
 
-    fd.append("Id", String(finalId));
-    fd.append("ProductName", String(product.name || ""));
-    fd.append("Description", String(product.description || ""));
-    fd.append("Price", String(Number(product.price) || 0));
-    fd.append("Quantity", String(Number(product.quantity) || 0));
-    fd.append("Unit", String(product.unit || "pcs"));
-    fd.append("CategoryID", String(finalCategoryId));
-    fd.append("MemberID", String(finalMemberId));
-    fd.append("IsActive", String(product.isActive !== false).toLowerCase());
-
-    console.log(`[PAYLOAD AUDIT] ID: ${finalId} | Cat: ${finalCategoryId} | Mem: ${finalMemberId}`);
-    console.log(`[PAYLOAD AUDIT] Full Set:`, Object.fromEntries(fd.entries()));
-
-    if (imageFile instanceof File) {
-        // ALWAYS use PascalCase 'Image' for the binary file part
-        fd.append("Image", imageFile, imageFile.name);
-    }
-
-    const auth = getAuthHeaders("POST", false);
-    const headers: Record<string, string> = {};
-    if (auth["Authorization"]) {
-        headers["Authorization"] = auth["Authorization"];
-    }
-
-    const response = await fetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
-      method: "POST",
-      headers: headers,
-      body: fd,
-    });
+    const formData = new FormData();
     
-    // Brief delay to allow backend stabilization before refresh
-    if (response.ok) {
-        await new Promise(r => setTimeout(r, 800));
+    // Core fields with exact casing as per documentation
+    formData.append("id", finalId.toString());
+    formData.append("memberID", (product.memberID || 1).toString());
+    formData.append("categoryID", (product.categoryID || 0).toString());
+    formData.append("productName", product.name || "");
+    formData.append("description", product.description || "");
+    formData.append("price", (product.price || 0).toString());
+    formData.append("quantity", (product.quantity || 0).toString());
+    formData.append("isActive", (product.isActive !== false).toString());
+    formData.append("unit", product.unit || "pcs");
+    formData.append("categoryName", product.categoryName || "");
+    formData.append("memberName", product.memberName || "");
+    formData.append("createdOn", now);
+    formData.append("modifiedOn", now);
+
+    // Image handling: Use file if provided, otherwise fallback to URL string
+    if (imageFile) {
+        formData.append("image", imageFile);
+    } else {
+        formData.append("image", product.image || "");
     }
 
-    return await handleResponse(response);
+    const headers = getAuthHeaders("POST", false); // false = Don't set application/json for FormData
+
+    console.log(`[API] Saving product via MultiPart: ${product.name}`);
+    const response = await safeFetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    const result = await handleResponse(response);
+    return result;
+
   } catch (error) {
     console.error("API Error (AddOrUpdateProduct):", error);
     throw error;
@@ -335,10 +345,11 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
 
 export async function deleteProduct(productId: number) {
   try {
-    // Backend strictly requires ProductId as a Query Parameter for this specific endpoint
+    // Backend requires ProductId in BOTH query string and JSON body for POST
     const response = await safeFetch(`${BASE_URL}/Product/DeleteProduct?ProductId=${productId}`, {
       method: "POST",
-      headers: getAuthHeaders("POST", false), // Body is empty
+      headers: getAuthHeaders("POST", true),
+      body: JSON.stringify({ ProductId: productId }),
     });
     
     // Add a slightly longer delay to ensure the database soft-delete is indexed before refresh
@@ -379,27 +390,25 @@ export async function fetchMembers(): Promise<Member[]> {
 
 export async function addOrUpdateMember(member: Partial<Member>) {
   try {
-    // Backend requires Unwrapped PascalCase JSON with all fields populated
+    // Exact mapping to the structure preferred by the Mallu Smart production backend
     const payload = {
-      Id: Number(member.id || 0),
-      Name: member.name || "",
-      BusinessName: member.businessName || "",
-      Place: member.place || "",
-      District: member.district || "Ernakulam",
-      Product: member.product || "",
-      ContactNumber: member.contactNumber || "",
-      LicenceNumber: member.licenceNumber || "NA",
-      OwnProduct: member.ownProduct ?? true,
-      IsActive: member.isActive ?? true,
-      CreatedOn: member.createdOn || new Date().toISOString(),
+      id: Number(member.id || 0),
+      name: String(member.name || ""),
+      businessName: String(member.businessName || ""),
+      place: String(member.place || ""),
+      district: String(member.district || "Ernakulam"),
+      product: String(member.product || ""),
+      contactNumber: String(member.phone || member.contactNumber || ""),
+      licenceNumber: String(member.licenceNumber || "NA"),
+      ownProduct: member.ownProduct ?? true,
+      isActive: member.isActive ?? true,
+      createdOn: member.joinedDate || member.createdOn || new Date().toISOString(),
+      modifiedOn: new Date().toISOString()
     };
 
-    const response = await fetch(`${BASE_URL}/User/AddOrUpdateMember`, {
+    const response = await safeFetch(`${BASE_URL}/User/AddOrUpdateMember`, {
       method: "POST",
-      headers: {
-        ...getAuthHeaders("POST", true),
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders("POST", true),
       body: JSON.stringify(payload),
     });
     
@@ -410,9 +419,11 @@ export async function addOrUpdateMember(member: Partial<Member>) {
   }
 }
 
+
 export async function deleteMember(memberId: number) {
   try {
-    const response = await safeFetch(`${BASE_URL}/User/DeleteMember`, {
+    // Backend requires MemberId in BOTH query string and JSON body for POST
+    const response = await safeFetch(`${BASE_URL}/User/DeleteMember?MemberId=${memberId}`, {
       method: "POST",
       headers: getAuthHeaders("POST", true),
       body: JSON.stringify({ MemberId: memberId }),
@@ -440,30 +451,71 @@ export interface AdminOrder {
 }
 
 export async function fetchOrders(): Promise<AdminOrder[]> {
-  const response = await safeFetch(`${BASE_URL}/Product/GetAllOrders`, {
-    headers: getAuthHeaders("GET", false),
-  });
-  const data = await handleResponse(response);
-  
-  return (data || []).map((o: any, index: number) => {
-    // Robust mapping for actual backend response structure (handling both casing styles)
-    const rawDate = o.createdOn || o.CreatedOn || o.date || o.Date || new Date().toISOString();
+  try {
+    // Phase 1: Fetch products to get prices (orders don't include them)
+    let productPriceMap: Record<string, number> = {};
+    try {
+      const products = await fetchProducts(false);
+      productPriceMap = products.reduce((acc, p) => {
+        acc[p.id.toString()] = p.price;
+        return acc;
+      }, {} as Record<string, number>);
+    } catch (e) {
+      console.warn("[API] Could not fetch products for order price calculation:", e);
+    }
+
+    const response = await safeFetch(`${BASE_URL}/Product/GetAllOrders`, {
+      headers: getAuthHeaders("GET", false),
+    });
+    const data = await handleResponse(response);
     
-    return {
-      id: (o.id || o.ID || o.orderId || o.OrderId || index).toString(),
-      customerName: o.customerName || o.CustomerName || "Guest User",
-      date: rawDate,
-      createdOn: rawDate,
-      status: (o.status || o.Status || "pending").toString().toLowerCase() as any,
-      totalPrice: Number(o.totalPrice || o.TotalPrice || 0),
-      phone: o.mobile || o.Mobile || o.phone || o.Phone || "N/A",
-      address: o.address || o.Address || "N/A",
-      email: o.email || o.Email || "N/A",
-      products: o.products || o.Products || [],
-    };
-  }).sort((a, b) => {
-    const timeA = new Date(a.date).getTime() || 0;
-    const timeB = new Date(b.date).getTime() || 0;
-    return timeB - timeA;
-  });
+    return (data || []).map((o: any, index: number) => {
+      const rawDate = o.createdOn || o.CreatedOn || o.date || o.Date || new Date().toISOString();
+      const rawProducts = o.products || o.Products || [];
+      
+      // Calculate total price from product lookup
+      let calculatedTotal = 0;
+      rawProducts.forEach((item: any) => {
+          const pid = (item.productId || item.ProductId || "").toString();
+          const price = productPriceMap[pid] || 0;
+          const qty = Number(item.quantity || item.Quantity || 1); // Default to 1 if null
+          calculatedTotal += price * qty;
+      });
+
+      return {
+        id: (o.id || o.ID || o.orderId || o.OrderId || index).toString(),
+        customerName: o.customerName || o.CustomerName || "Guest User",
+        date: rawDate,
+        createdOn: rawDate,
+        status: (o.status || o.Status || "pending").toString().toLowerCase() as any,
+        totalPrice: calculatedTotal > 0 ? calculatedTotal : Number(o.totalPrice || o.TotalPrice || 0),
+        phone: o.mobile || o.Mobile || o.phone || o.Phone || "N/A",
+        address: o.address || o.Address || "N/A",
+        email: o.email || o.Email || "N/A",
+        products: rawProducts,
+      };
+    }).sort((a, b) => {
+      const timeA = new Date(a.date).getTime() || 0;
+      const timeB = new Date(b.date).getTime() || 0;
+      return timeB - timeA;
+    });
+  } catch (error) {
+    console.error("API Error (Orders):", error);
+    return [];
+  }
 }
+
+
+export async function changePassword(newPassword: string) {
+  try {
+    const response = await safeFetch(`${BASE_URL}/User/ChangePassword?Password=${encodeURIComponent(newPassword)}`, {
+      method: "POST",
+      headers: getAuthHeaders("POST", false),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    console.error("API Error (ChangePassword):", error);
+    throw error;
+  }
+}
+

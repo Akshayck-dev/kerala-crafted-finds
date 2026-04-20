@@ -58,8 +58,9 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
         price: Number(product.price || 0),
         quantity: Number(product.quantity || 0),
         unit: product.unit || "pcs",
-        categoryID: Number(product.categoryID || 0),
-        memberID: Number(product.memberID || 1),
+        categoryID: product.categoryID ? Number(product.categoryID) : 0,
+        memberID: product.memberID ? Number(product.memberID) : 0,
+        isActive: product.isActive !== false,
       });
       
       // Auto-lookup category ID by name if ID is missing (common in this backend)
@@ -119,6 +120,15 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
       ]);
       setCategories(cats);
       setMembers(mems);
+
+      // Auto-select first category/member if NOT editing an existing product
+      if (!product) {
+          setFormData(prev => ({
+              ...prev,
+              categoryID: prev.categoryID || (cats.length > 0 ? Number(cats[0].id) : 0),
+              memberID: prev.memberID || (mems.length > 0 ? Number(mems[0].id) : 0)
+          }));
+      }
     } catch (err) {
       console.error("Failed to load modal dependencies:", err);
     }
@@ -128,22 +138,36 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
     e.preventDefault();
     
     // Prevent 500 error by validating category selection with descriptive feedback
-    if (!formData.categoryID || isNaN(formData.categoryID) || formData.categoryID === 0) {
-      toast.error(`Category selection required! (Value: ${formData.categoryID})`);
-      console.warn("[Validation] Save blocked: categoryID is", formData.categoryID);
+    // Improved validation with automatic fallback for missing IDs
+    const finalCategoryID = Number(formData.categoryID || 0);
+    const finalMemberID = Number(formData.memberID || 0);
+
+    if (finalCategoryID === 0) {
+      toast.error("Please select a Product Category.");
       return;
     }
 
-    if (!formData.memberID || isNaN(formData.memberID)) {
-      toast.error(`Seller selection required! (Value: ${formData.memberID})`);
-      console.warn("[Validation] Save blocked: memberID is", formData.memberID);
-      return;
+    if (finalMemberID === 0) {
+      // If only one member exists (common), auto-select it instead of blocking
+      if (members.length === 1) {
+        formData.memberID = Number(members[0].id);
+      } else {
+        toast.error("Please select a Seller/Member.");
+        return;
+      }
     }
 
     const toastId = toast.loading("Saving product to Mallu Smart API...");
     setLoading(true);
     try {
-      await addOrUpdateProduct(formData, imageFile || undefined);
+      // Enrich payload with names for the JSON API
+      const enrichedData = {
+        ...formData,
+        categoryName: categories.find(c => Number(c.id) === formData.categoryID)?.name || "",
+        memberName: members.find(m => Number(m.id) === formData.memberID)?.name || ""
+      };
+
+      await addOrUpdateProduct(enrichedData, imageFile);
       toast.success(product && Number(product.id) > 0 ? "Product updated successfully" : "Product added successfully", { id: toastId });
       onSuccess();
       onClose();
@@ -252,6 +276,7 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                           const file = e.target.files?.[0];
                           if (file) {
                             setImageFile(file);
+                            setFormData(prev => ({ ...prev, image: "" })); // Clear URL if file is chosen
                             setPreviewUrl(URL.createObjectURL(file));
                           }
                         }}

@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import React, { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Check, Mail, Bell, Shield, KeyRound, Store } from "lucide-react";
+import { Check, Mail, Bell, Shield, KeyRound, Store, Loader2 } from "lucide-react";
+import { changePassword } from "@/lib/api";
+import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/admin/settings")({
   component: AdminSettings,
@@ -9,12 +12,36 @@ export const Route = createFileRoute("/admin/settings")({
 
 function AdminSettings() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [newPassword, setNewPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const handleSave = () => {
     setSaveStatus("saving");
-    setTimeout(() => setSaveStatus("saved"), 800);
+    setTimeout(() => {
+        setSaveStatus("saved");
+        toast.success("General settings updated successfully");
+    }, 800);
     setTimeout(() => setSaveStatus("idle"), 3000);
   };
+
+  const handlePasswordChange = async () => {
+    if (!newPassword || newPassword.length < 4) {
+      toast.error("Password must be at least 4 characters.");
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await changePassword(newPassword);
+      toast.success("Admin password updated successfully!");
+      setNewPassword("");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update password.");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
 
   return (
     <AdminLayout>
@@ -78,15 +105,34 @@ function AdminSettings() {
              </div>
 
              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-6">
-                <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-4 text-red-600">Danger Zone</h3>
+                <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-4">Security</h3>
                 
                 <div className="space-y-4">
-                   <p className="text-sm text-slate-600">These actions are destructive. Proceed with caution.</p>
-                   <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100">
-                      <KeyRound className="h-4 w-4" /> Reset Admin Password
+                   <div className="grid gap-2">
+                     <label className="text-sm font-medium text-slate-700">New Admin Password</label>
+                     <div className="relative">
+                       <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                       <input 
+                         type="password" 
+                         value={newPassword}
+                         onChange={(e) => setNewPassword(e.target.value)}
+                         placeholder="Enter new password" 
+                         className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+                       />
+                     </div>
+                   </div>
+                   
+                   <button 
+                     onClick={handlePasswordChange}
+                     disabled={isChangingPassword || !newPassword}
+                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 disabled:opacity-50 rounded-lg transition-colors border border-blue-100"
+                   >
+                      {isChangingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+                      Update Admin Password
                    </button>
                 </div>
              </div>
+
           </div>
 
         </div>

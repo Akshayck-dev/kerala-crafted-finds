@@ -16,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+
 import { addOrUpdateMember } from "@/lib/api";
 import { type Member } from "@/lib/data";
 import { Loader2 } from "lucide-react";
@@ -188,7 +190,30 @@ export function MemberModal({ member, isOpen, onClose, onSuccess }: MemberModalP
                 required
               />
             </div>
+
+            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+               <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Self-Produced Items</Label>
+                  <p className="text-xs text-slate-500">Member manufactures their own products</p>
+               </div>
+               <Switch 
+                  checked={formData.ownProduct ?? true}
+                  onCheckedChange={(val) => setFormData({ ...formData, ownProduct: val })}
+               />
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+               <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Active Status</Label>
+                  <p className="text-xs text-slate-500">Allow member to sell on platform</p>
+               </div>
+               <Switch 
+                  checked={formData.isActive ?? true}
+                  onCheckedChange={(val) => setFormData({ ...formData, isActive: val })}
+               />
+            </div>
           </div>
+
 
           <DialogFooter className="border-t pt-6">
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
