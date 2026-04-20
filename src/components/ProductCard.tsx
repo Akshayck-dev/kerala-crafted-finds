@@ -81,7 +81,7 @@ export function ProductCard({ product }: { product: Product }) {
             {product.name}
           </h3>
           <p className="text-[8px] min-[400px]:text-[9px] sm:text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider mt-0.5">
-            By local seller
+            By {product.sellerName || "Local Seller"}
           </p>
         </Link>
 
