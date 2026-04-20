@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://mallusmart.com/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
