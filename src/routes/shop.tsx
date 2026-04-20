@@ -3,11 +3,12 @@ import { ProductCard } from "@/components/ProductCard";
 import { PageHeader } from "@/components/PageHeader";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { fetchProducts, fetchCategories } from "@/lib/api";
 import type { Product, Category } from "@/lib/data";
 import { setProducts as globalSetProducts } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/shop")({
   head: () => ({
@@ -28,6 +29,10 @@ function ShopPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sort, setSort] = useState("default");
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     async function loadData() {
@@ -48,12 +53,33 @@ function ShopPage() {
     loadData();
   }, []);
 
-  let filtered = selectedCategory === "all"
-    ? products
-    : products.filter((p) => p.category === selectedCategory);
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, sort]);
 
-  if (sort === "low") filtered = [...filtered].sort((a, b) => a.price - b.price);
-  if (sort === "high") filtered = [...filtered].sort((a, b) => b.price - a.price);
+  const filtered = useMemo(() => {
+    let result = selectedCategory === "all"
+      ? products
+      : products.filter((p) => p.category === selectedCategory);
+
+    if (sort === "low") result = [...result].sort((a, b) => a.price - b.price);
+    if (sort === "high") result = [...result].sort((a, b) => b.price - a.price);
+    
+    return result;
+  }, [products, selectedCategory, sort]);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedProducts = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (error) {
     return (
@@ -159,7 +185,7 @@ function ShopPage() {
             )}
           </div>
 
-          <div className="grid mobile-grid-dense gap-6 sm:grid-cols-3 md:gap-8 lg:grid-cols-4 lg:gap-10 [&>*]:min-w-0">
+          <div className="grid mobile-grid-dense gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-4 lg:gap-10 [&>*]:min-w-0">
             {isLoading ? (
                 Array.from({ length: 8 }).map((_, i) => (
                     <div key={i} className="flex flex-col gap-3 rounded-[2.5rem] border border-border/50 p-3">
@@ -172,11 +198,66 @@ function ShopPage() {
                     </div>
                 ))
             ) : (
-                filtered.map((p) => (
+                paginatedProducts.map((p) => (
                   <ProductCard key={p.id} product={p} />
                 ))
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {!isLoading && totalPages > 1 && (
+            <div className="mt-16 flex items-center justify-center gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-border/50 bg-card text-muted-foreground transition-all hover:border-primary hover:text-primary disabled:opacity-30 disabled:hover:border-border/50 disabled:hover:text-muted-foreground"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const page = i + 1;
+                  // Show current page, first, last, and pages around current
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={cn(
+                          "h-10 min-w-10 rounded-full px-4 text-xs font-bold transition-all shadow-sm",
+                          currentPage === page 
+                            ? "bg-primary text-white shadow-primary/20 scale-110" 
+                            : "bg-card border border-border/50 text-muted-foreground hover:bg-muted"
+                        )}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (
+                    page === currentPage - 2 ||
+                    page === currentPage + 2
+                  ) {
+                    return <span key={page} className="px-1 text-muted-foreground">...</span>;
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-border/50 bg-card text-muted-foreground transition-all hover:border-primary hover:text-primary disabled:opacity-30 disabled:hover:border-border/50 disabled:hover:text-muted-foreground"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
           {!isLoading && filtered.length === 0 && (
             <p className="py-24 text-center text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase italic pb-48">Registry contains no records for this classification.</p>
           )}
@@ -185,3 +266,4 @@ function ShopPage() {
     </div>
   );
 }
+

@@ -17,8 +17,8 @@ export function SplashScreen({ onComplete, isLoading }: SplashScreenProps) {
         setExit(true);
         setTimeout(() => {
           onComplete?.();
-        }, 800); // Duration of fade-out animation
-      }, 500);
+        }, 300); // Duration of fade-out animation
+      }, 100);
       return () => clearTimeout(timer);
     }
   }, [isLoading, onComplete]);
@@ -26,7 +26,7 @@ export function SplashScreen({ onComplete, isLoading }: SplashScreenProps) {
   return (
     <div 
       className={cn(
-        "fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background transition-all duration-1000 ease-in-out",
+        "fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background transition-all duration-400 ease-in-out",
         exit ? "pointer-events-none opacity-0 scale-105" : "opacity-100"
       )}
     >

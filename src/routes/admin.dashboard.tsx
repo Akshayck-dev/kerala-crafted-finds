@@ -61,7 +61,7 @@ function AdminDashboard() {
       let failedModules: string[] = [];
 
       try {
-        // Sequentially fetch data with small staggered delay to reduce backend pressure
+        // Sequentially fetch data without staggered delay for maximum speed
         try {
           const p = await fetchProducts();
           setProducts(p);
@@ -70,8 +70,6 @@ function AdminDashboard() {
           failedModules.push(`Products (${err.message})`);
         }
 
-        await new Promise(r => setTimeout(r, 300)); // 300ms Stagger
-
         try {
           const m = await fetchMembers();
           setMembers(m);
@@ -79,8 +77,6 @@ function AdminDashboard() {
           console.error("Members Load Error:", err);
           failedModules.push(`Members (${err.message})`);
         }
-
-        await new Promise(r => setTimeout(r, 300)); // 300ms Stagger
 
         try {
           const o = await fetchOrders();

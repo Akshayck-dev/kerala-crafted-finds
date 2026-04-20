@@ -1,6 +1,7 @@
 import { fixImagePath } from "./utils";
 import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
+import { useLoadingStore } from "./loading-store";
 
 // BASE_URL is set directly to the production domain as requested.
 // NOTE: This may require CORS configuration on the backend.
@@ -41,6 +42,9 @@ function getAuthHeaders(method: string = "GET", includeContentType: boolean = tr
 }
 
 async function safeFetch(url: string, options: RequestInit = {}, retry = true): Promise<Response> {
+  const { startLoading, stopLoading } = useLoadingStore.getState();
+  startLoading();
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s Timeout
 
@@ -62,6 +66,7 @@ async function safeFetch(url: string, options: RequestInit = {}, retry = true): 
     const response = await fetch(url, {
       ...options,
       headers: {
+        ...getAuthHeaders(method),
         ...options.headers,
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache'
@@ -87,6 +92,8 @@ async function safeFetch(url: string, options: RequestInit = {}, retry = true): 
       return safeFetch(url, options, false);
     }
     throw error;
+  } finally {
+    stopLoading();
   }
 }
 
