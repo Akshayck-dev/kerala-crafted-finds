@@ -82,7 +82,18 @@ function AdminLogin() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-slate-300">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-slate-300">Password</Label>
+              <button 
+                type="button"
+                onClick={() => {
+                  setError("Please contact the system administrator (admin@mallusmart.com) to reset your credentials.");
+                }}
+                className="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
             <Input
               id="password"
               type="password"
