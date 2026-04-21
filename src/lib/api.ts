@@ -447,11 +447,11 @@ export async function addOrUpdateMember(member: Partial<Member>) {
 
 export async function deleteMember(memberId: number) {
   try {
-    // Backend prefers MemberId in query string; sending empty body as per Postman
+    // Exactly following the provided specification: MemberId (lowercase d) in query and body
     const response = await safeFetch(`${BASE_URL}/User/DeleteMember?MemberId=${memberId}`, {
       method: "POST",
-      headers: getAuthHeaders("POST", false), 
-      body: "",
+      headers: getAuthHeaders("POST", true), 
+      body: JSON.stringify({ MemberId: memberId }),
     });
     
     // Add a short delay to ensure the backend database/index is updated before the refresh happens
