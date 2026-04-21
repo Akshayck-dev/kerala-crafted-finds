@@ -167,8 +167,8 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
     }
 
     return data.map((p: any, index: number) => {
-      // Robust ID handling: treat 0 as a valid ID value by explicitly checking for undefined/null
-      const rawId = p.id !== undefined && p.id !== null ? p.id : (p.ID ?? p.Id ?? `AUTO-${index}`);
+      // Robust ID mapping: check for all backend variations
+      const rawId = p.productId || p.ProductId || p.ProductID || p.productID || p.id || p.ID || p.Id || `AUTO-${index}`;
       
       return {
         id: rawId.toString(),
@@ -392,7 +392,7 @@ export async function fetchMembers(): Promise<Member[]> {
     
     return (data || []).map((m: any, index: number) => ({
       // Handle various backend casing for Member ID and provide index fallback
-      id: (m.id || m.ID || m.memberId || m.MemberId || m.Id || (index + 1)).toString(),
+      id: (m.id || m.ID || m.memberId || m.MemberId || m.memberID || m.MemberID || m.Id || (index + 1)).toString(),
       name: m.name || m.Name || "N/A",
       email: m.email || m.Email || "No email",
       phone: m.contactNumber || m.ContactNumber || m.phone || m.Phone || "N/A",
@@ -510,14 +510,14 @@ export async function fetchOrders(): Promise<AdminOrder[]> {
       // Calculate total price from product lookup
       let calculatedTotal = 0;
       rawProducts.forEach((item: any) => {
-          const pid = (item.productId || item.ProductId || "").toString();
+          const pid = (item.productId || item.ProductId || item.ProductID || item.productID || item.id || item.ID || "").toString();
           const price = productPriceMap[pid] || 0;
           const qty = Number(item.quantity || item.Quantity || 1); // Default to 1 if null
           calculatedTotal += price * qty;
       });
 
       return {
-        id: (o.id || o.ID || o.orderId || o.OrderId || index).toString(),
+        id: (o.id || o.ID || o.orderId || o.OrderId || o.OrderID || o.orderID || (index + 1)).toString(),
         customerName: o.customerName || o.CustomerName || "Guest User",
         date: rawDate,
         createdOn: rawDate,
