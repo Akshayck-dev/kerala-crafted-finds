@@ -6,7 +6,7 @@ import { useLoadingStore } from "./loading-store";
 // BASE_URL is set directly to the production domain as requested.
 // NOTE: This may require CORS configuration on the backend.
 // Use the Vite proxy to avoid CORS issues and standardize headers.
-const BASE_URL = "/api";
+const BASE_URL = "https://mallusmart.com";
 
 console.log("[API] Module loaded. Version: 1.0.2 - PASCAL_CASE_VALIDATION");
 
@@ -62,17 +62,26 @@ async function safeFetch(url: string, options: RequestInit = {}, retry = true): 
     console.log(`[AUTH] No Authorization header sent.`);
   }
 
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...getAuthHeaders(method),
-        ...options.headers,
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      },
-      signal: controller.signal,
-    });
+    const finalHeaders: Record<string, string> = {
+      ...getAuthHeaders(method),
+      ...(options.headers as Record<string, string>),
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    };
+
+    // CRITICAL: If body is FormData (e.g. AddOrUpdateProduct), we MUST NOT set Content-Type.
+    // The browser must set it automatically to include the boundary string, otherwise 415 error occurs.
+    if (options.body instanceof FormData) {
+      delete finalHeaders['Content-Type'];
+      console.log(`[API] FormData detected for ${url}. Stripping manual Content-Type header.`);
+    }
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: finalHeaders,
+        signal: controller.signal,
+      });
     console.log(`[API] ${url} -> status ${response.status}`);
     clearTimeout(timeoutId);
 
@@ -306,35 +315,36 @@ export async function adminLogin(email: string, password: string): Promise<strin
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
   try {
     const finalId = Number(product.id || 0);
-    const now = new Date().toISOString();
+    const now = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD to match Postman collection exactly
 
     const formData = new FormData();
     
-    // Core fields with exact casing as per documentation
+    // Core fields with exact casing as per Postman collection (PASCAL_CASE)
+    // NOTE: 'id' remains lowercase as seen in Postman Trace
     formData.append("id", finalId.toString());
-    formData.append("memberID", (product.memberID || 1).toString());
-    formData.append("categoryID", (product.categoryID || 0).toString());
-    formData.append("productName", product.name || "");
-    formData.append("description", product.description || "");
-    formData.append("price", (product.price || 0).toString());
-    formData.append("quantity", (product.quantity || 0).toString());
-    formData.append("isActive", (product.isActive !== false).toString());
-    formData.append("unit", product.unit || "pcs");
-    formData.append("categoryName", product.categoryName || "");
-    formData.append("memberName", product.memberName || "");
-    formData.append("createdOn", now);
-    formData.append("modifiedOn", now);
+    formData.append("MemberID", (product.memberID || 1).toString());
+    formData.append("CategoryID", (product.categoryID || 0).toString());
+    formData.append("ProductName", product.name || "");
+    formData.append("Description", product.description || "");
+    formData.append("Price", (product.price || 0).toString());
+    formData.append("Quantity", (product.quantity || 0).toString());
+    formData.append("IsActive", (product.isActive !== false).toString());
+    formData.append("Unit", product.unit || "pcs");
+    formData.append("CreatedOn", now);
+    formData.append("ModifiedOn", now);
 
-    // Image handling: Use file if provided, otherwise fallback to URL string
+    // Image handling: Postman uses 'Image' for the current path/null and 'NewImage' for the file
+    // We send the existing path in 'Image' and the new file in 'NewImage'
+    formData.append("Image", product.image || "");
+    
     if (imageFile) {
-        formData.append("image", imageFile);
-    } else {
-        formData.append("image", product.image || "");
+        formData.append("NewImage", imageFile);
+        console.log(`[API] Attaching new image file under 'NewImage': ${imageFile.name}`);
     }
 
     const headers = getAuthHeaders("POST", false); // false = Don't set application/json for FormData
 
-    console.log(`[API] Saving product via MultiPart: ${product.name}`);
+    console.log(`[API] Saving product via MultiPart (PASCAL_CASE): ${product.name}`);
     const response = await safeFetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
       method: "POST",
       headers,
@@ -374,7 +384,8 @@ export async function deleteProduct(productId: number) {
 // Member CRUD
 export async function fetchMembers(): Promise<Member[]> {
   try {
-    const response = await safeFetch(`${BASE_URL}/User/GetAllMembers`, {
+    // Added timestamp to bust any browser/proxy caches
+    const response = await safeFetch(`${BASE_URL}/User/GetAllMembers?t=${Date.now()}`, {
       headers: getAuthHeaders("GET", false),
     });
     const data = await handleResponse(response);
@@ -385,9 +396,16 @@ export async function fetchMembers(): Promise<Member[]> {
       name: m.name || m.Name || "N/A",
       email: m.email || m.Email || "No email",
       phone: m.contactNumber || m.ContactNumber || m.phone || m.Phone || "N/A",
+      contactNumber: m.contactNumber || m.ContactNumber || "N/A",
       businessName: m.businessName || m.BusinessName || "N/A",
       district: m.district || m.District || "All Kerala",
-      joinedDate: m.createdOn || m.CreatedOn || new Date().toISOString()
+      place: m.place || m.Place || "",
+      product: m.product || m.Product || "",
+      licenceNumber: m.licenceNumber || m.LicenceNumber || "NA",
+      ownProduct: m.ownProduct ?? m.OwnProduct ?? true,
+      isActive: m.isActive ?? m.IsActive ?? true,
+      joinedDate: m.createdOn || m.CreatedOn || new Date().toISOString(),
+      modifiedOn: m.modifiedOn || m.ModifiedOn || new Date().toISOString(),
     }));
   } catch (error) {
     console.error("API Error (Members):", error);
@@ -429,13 +447,18 @@ export async function addOrUpdateMember(member: Partial<Member>) {
 
 export async function deleteMember(memberId: number) {
   try {
-    // Backend requires MemberId in BOTH query string and JSON body for POST
+    // Backend prefers MemberId in query string; sending empty body as per Postman
     const response = await safeFetch(`${BASE_URL}/User/DeleteMember?MemberId=${memberId}`, {
       method: "POST",
-      headers: getAuthHeaders("POST", true),
-      body: JSON.stringify({ MemberId: memberId }),
+      headers: getAuthHeaders("POST", false), 
+      body: "",
     });
     
+    // Add a short delay to ensure the backend database/index is updated before the refresh happens
+    if (response.ok) {
+        await new Promise(r => setTimeout(r, 1200));
+    }
+
     return await handleResponse(response);
   } catch (error) {
     console.error("API Error (DeleteMember):", error);

@@ -4,7 +4,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { fetchMembers, deleteMember } from "@/lib/api";
 import { type Member } from "@/lib/data";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, UserPlus, Mail, Phone, Calendar, Trash2, MapPin, Building2, UserX } from "lucide-react";
+import { Search, UserPlus, Mail, Phone, Calendar, Trash2, MapPin, Building2, UserX, Edit } from "lucide-react";
 import { MemberModal } from "@/components/admin/MemberModal";
 import {
   AlertDialog,
@@ -230,7 +230,7 @@ function AdminMembers() {
                                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors" 
                                 title="Edit"
                             >
-                                <Search className="h-4 w-4" />
+                                <Edit className="h-4 w-4" />
                             </button>
                             <button 
                                 onClick={() => confirmDelete(member.id)}
