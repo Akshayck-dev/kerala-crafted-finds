@@ -390,6 +390,11 @@ export async function fetchMembers(): Promise<Member[]> {
     });
     const data = await handleResponse(response);
     
+    if (data && data.length > 0) {
+        console.log("DEBUG - MEMBER DATA KEYS:", Object.keys(data[0]));
+        console.log("DEBUG - FIRST MEMBER SAMPLE:", data[0]);
+    }
+    
     return (data || []).map((m: any, index: number) => ({
       // Handle various backend casing for Member ID and provide index fallback
       id: (m.id || m.ID || m.memberId || m.MemberId || m.memberID || m.MemberID || m.Id || (index + 1)).toString(),
@@ -447,13 +452,14 @@ export async function addOrUpdateMember(member: Partial<Member>) {
 
 export async function deleteMember(memberId: number) {
   try {
-    // Sending triple-redundant ID keys to ensure compatibility with all potential backend model binders
-    const response = await safeFetch(`${BASE_URL}/User/DeleteMember?MemberId=${memberId}`, {
+    // Sending triple-redundant ID keys to ensure    // Added memberId (camelCase) for exhaustive compatibility
+    const response = await safeFetch(`${BASE_URL}/User/DeleteMember?MemberId=${memberId}&memberId=${memberId}`, {
       method: "POST",
       headers: getAuthHeaders("POST", true), 
       body: JSON.stringify({ 
         MemberId: memberId,
         MemberID: memberId,
+        memberId: memberId,
         id: memberId
       }),
     });
