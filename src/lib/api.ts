@@ -390,11 +390,6 @@ export async function fetchMembers(): Promise<Member[]> {
     });
     const data = await handleResponse(response);
     
-    if (data && data.length > 0) {
-        console.log("DEBUG - MEMBER DATA KEYS:", Object.keys(data[0]));
-        console.log("DEBUG - FIRST MEMBER SAMPLE:", data[0]);
-    }
-    
     return (data || []).map((m: any, index: number) => ({
       // Handle various backend casing for Member ID and provide index fallback
       id: (m.id || m.ID || m.memberId || m.MemberId || m.memberID || m.MemberID || m.Id || (index + 1)).toString(),

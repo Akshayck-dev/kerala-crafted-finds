@@ -99,16 +99,17 @@ function AdminMembers() {
     }
   };
 
-  const filteredMembers = members.filter(m => {
-    const matchesSearch = 
+    const filteredMembers = members.filter(m => {
+      const matchesSearch = 
         (m.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
         (m.businessName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (m.phone && m.phone.includes(searchTerm));
-    
-    const matchesDistrict = districtFilter === "All Districts" || m.district === districtFilter;
-    
-    return matchesSearch && matchesDistrict;
-  });
+      
+      const matchesDistrict = districtFilter === "All Districts" || m.district === districtFilter;
+      const isActive = m.isActive !== false;
+      
+      return matchesSearch && matchesDistrict && isActive;
+    });
 
   return (
     <AdminLayout>
