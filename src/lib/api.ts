@@ -414,12 +414,11 @@ export async function deleteProduct(productId: number) {
 // Member CRUD
 export async function fetchMembers(): Promise<Member[]> {
   try {
-    // Added timestamp to bust any browser/proxy caches
-    const response = await safeFetch(`${BASE_URL}/User/GetAllMembers?t=${Date.now()}`, {
+    const response = await safeFetch(`${BASE_URL}/User/GetAllMembers`, {
       headers: getAuthHeaders("GET", false),
     });
     const data = await handleResponse(response);
-    console.log("[API] GetAllMembers Raw Data (First Item):", data[0]);
+    console.log("[API] GetAllMembers Full Raw Data:", data);
     
     return (Array.isArray(data) ? data : []).map((m: any, index: number) => ({
       id: (m.memberID || m.MemberID || m.memberId || m.MemberId || m.id || m.ID || (index + 1)).toString(),
