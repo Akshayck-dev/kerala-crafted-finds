@@ -98,7 +98,7 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
                         <MapPin className="h-3.5 w-3.5" /> Shipping Address
                     </h3>
                     <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-                        <p className="text-sm text-slate-700 italic">"Address data not present in basic order API, assumed member location or profile address."</p>
+                        <p className="text-sm text-slate-700">{order.address || "No address provided"}</p>
                     </div>
                 </div>
             </section>
