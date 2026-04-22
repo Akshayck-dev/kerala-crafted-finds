@@ -305,82 +305,67 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 2.4 (Exact Mirroring)");
+  console.log("[API] Product Update VERSION: 3.0 (Postman Strict)");
   try {
     const productId = Number(product.id || 0);
-    const formData = new FormData();
     
-    // FETCH ORIGINAL DATA TO MIRROR EXACT BACKEND EXPECTATIONS
-    let originalData: any = {};
-    if (productId > 0) {
-      try {
-        console.log("[API] VERSION 2.4: Mirroring through typoed endpoint...");
-        const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
-          headers: getAuthHeaders("GET", false),
-        });
-        const data = await handleResponse(response);
-        
-        if (Array.isArray(data)) {
-          originalData = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId) || {};
+    // WE STILL NEED THE REAL IDs, BUT WE WON'T SEND THE WHOLE MIRROR OBJECT
+    let realCategoryId = product.categoryID || 0;
+    let realMemberId = product.memberID || 1;
+
+    try {
+      console.log("[API] VERSION 3.0: Getting real IDs from background mirror...");
+      const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
+        headers: getAuthHeaders("GET", false),
+      });
+      const data = await handleResponse(response);
+      if (Array.isArray(data)) {
+        const original = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId);
+        if (original) {
+          realCategoryId = original.categoryID || original.CategoryID || realCategoryId;
+          realMemberId = original.memberID || original.MemberID || realMemberId;
+          console.log(`[API] Success! Using Real IDs: Category=${realCategoryId}, Member=${realMemberId}`);
         }
-        console.log("[API] Successfully Mirrored Data (v2.4):", originalData);
-      } catch (e) {
-        console.warn("[API] Mirror Fetch failed (v2.4):", e);
       }
+    } catch (e) {
+      console.warn("[API] Mirror failed, falling back to UI IDs.");
     }
 
-    // MERGE UPDATES INTO ORIGINAL DATA (EXACT MIRRORING)
-    const payload: any = {
-      ...originalData, // Keep all original hidden fields!
-      
-      // Basic Info (Dual Case for safety)
-      ProductId: productId,
-      productId: productId,
-      ProductName: product.name || originalData.productName || originalData.ProductName || "",
-      productName: product.name || originalData.productName || originalData.ProductName || "",
-      ProductDescription: product.description || originalData.description || originalData.ProductDescription || "",
-      productDescription: product.description || originalData.description || originalData.ProductDescription || "",
-      description: product.description || originalData.description || originalData.ProductDescription || "",
-      Description: product.description || originalData.description || originalData.ProductDescription || "",
-      
-      // Pricing/Stock
-      Price: Number(product.price || originalData.price || 0),
-      price: Number(product.price || originalData.price || 0),
-      Quantity: Number(product.quantity || originalData.quantity || 0),
-      quantity: Number(product.quantity || originalData.quantity || 0),
-      Unit: product.unit || originalData.unit || "pcs",
-      unit: product.unit || originalData.unit || "pcs",
-      
-      // Status
-      IsActive: true,
-      isActive: true,
-      
-      // Category & Member (Use original IDs strictly)
-      CategoryID: originalData.categoryID || originalData.CategoryID || product.categoryID || 0,
-      categoryID: originalData.categoryID || originalData.CategoryID || product.categoryID || 0,
-      MemberID: originalData.memberID || originalData.MemberID || product.memberID || 1,
-      memberID: originalData.memberID || originalData.MemberID || product.memberID || 1,
+    // MINIMAL PAYLOAD - ONLY 10-11 KEYS FROM POSTMAN
+    const apiPayload: any = {
+      id: productId,
+      ProductName: product.name || "",
+      ProductDescription: product.description || "",
+      Description: product.description || "", // Send both just in case
+      Price: Number(product.price || 0),
+      Quantity: Number(product.quantity || 0),
+      Unit: product.unit || "pcs",
+      IsActive: "true",
+      CategoryID: realCategoryId,
+      MemberID: realMemberId
     };
 
-    console.log(`[API] Final Mirror Payload (v2.4):`, JSON.stringify(payload, null, 2));
+    console.log("[API] POSTMAN STRICT PAYLOAD:", apiPayload);
 
-    Object.keys(payload).forEach(key => {
-        if (payload[key] !== undefined && payload[key] !== null) {
-            formData.append(key, payload[key].toString());
-        }
+    const formData = new FormData();
+    Object.keys(apiPayload).forEach(key => {
+      formData.append(key, apiPayload[key].toString());
     });
 
+    // IMAGE HANDLING: Only send NewImage if it's a new file
     if (imageFile) {
-      formData.append("Image", imageFile);
       formData.append("NewImage", imageFile);
+      console.log("[API] Appending NewImage file.");
     } else if (product.image) {
+      // If no new file, but existing image URL exists, 
+      // some APIs expect the existing path in "Image" field
       formData.append("Image", product.image);
     }
 
     const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
     const response = await safeFetch(url, {
       method: "POST",
-      headers: getAuthHeaders("POST", false),
+      headers: getAuthHeaders("POST", false), // Let browser set Content-Type for FormData
       body: formData,
     });
 
