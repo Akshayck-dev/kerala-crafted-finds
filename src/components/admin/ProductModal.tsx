@@ -50,6 +50,7 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
 
   useEffect(() => {
     if (product) {
+      console.log("Edit Product:", product);
       setFormData({
         ...product,
         id: product.id || "0",
@@ -163,6 +164,15 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
         toast.error("Please select a Seller/Member.");
         return;
       }
+    }
+
+    // 🔥 IMAGE VALIDATION (Final Fix)
+    if (product && Number(product.id) > 0) {
+      if (!formData.image && !imageFile) {
+        toast.error("Product image is required for update ❌");
+        return;
+      }
+      console.log("Existing Image URL for Update:", formData.image);
     }
 
     const toastId = toast.loading("Saving product to Mallu Smart API...");

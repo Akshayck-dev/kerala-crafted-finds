@@ -328,7 +328,7 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     // 2. 🔥 FINAL IMAGE LOGIC (v6.2)
     if (isUpdate) {
       // UPDATE: always send existing image URL
-      console.log("UPDATE → Existing image:", product.image || "");
+      console.log("Existing Image:", product.image || "");
       formData.append("image", product.image || ""); // old image string (always)
 
       if (imageFile) {
