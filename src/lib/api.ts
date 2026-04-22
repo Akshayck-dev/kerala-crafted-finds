@@ -331,13 +331,11 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       console.warn("[API] Mirror failed, falling back to UI IDs.");
     }
 
-    // MINIMAL PAYLOAD - VERSION 3.4 (Triple-ID Version)
+    // MINIMAL PAYLOAD - VERSION 3.5 (Mandatory Empty Image Version)
     const apiPayload: any = {
-      // Triple-ID for maximum model binder compatibility
       id: productId,
       ProductId: productId,
       productID: productId,
-      
       MemberID: realMemberId,
       CategoryID: realCategoryId,
       ProductName: product.name || "",
@@ -349,19 +347,22 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       CreatedOn: "2026-04-14"
     };
 
-    console.log("[API] VERSION 3.4 PAYLOAD (Restored URL ID):", apiPayload);
+    console.log("[API] VERSION 3.5 PAYLOAD (Always NewImage):", apiPayload);
 
     const formData = new FormData();
     Object.keys(apiPayload).forEach(key => {
       formData.append(key, apiPayload[key].toString());
     });
 
+    // ALWAYS APPEND NewImage, send empty string if no file
     if (imageFile) {
-      console.log("[API] Appending NewImage file.");
+      console.log("[API] Appending real file to NewImage.");
       formData.append("NewImage", imageFile);
+    } else {
+      console.log("[API] Appending empty string to NewImage to avoid null crash.");
+      formData.append("NewImage", "");
     }
 
-    // RESTORED ?id= TO URL FOR STABILITY
     const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
     const response = await safeFetch(url, {
       method: "POST",
