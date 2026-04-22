@@ -324,19 +324,20 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     formData.append("isActive", "true");
     formData.append("unit", product.unit || "pcs");
 
-    // 2. 🔥 CRITICAL IMAGE FIX
-    // Add  (id = 0) → field name: "image"
-    // Update (id > 0) → field name: "newImage"
+    // 2. 🔥 FINAL IMAGE LOGIC (v6.1)
+    // Add    (id = 0): "image" = file
+    // Update (id > 0): "image" = existing URL + "newImage" = new file
     if (imageFile) {
       if (isUpdate) {
-        console.log("UPDATE mode → Appending file as 'newImage':", imageFile.name);
-        formData.append("newImage", imageFile);
+        console.log("UPDATE mode → Sending existing URL as 'image' + new file as 'newImage'");
+        formData.append("image", product.image || ""); // existing image URL
+        formData.append("newImage", imageFile);         // new file upload
       } else {
-        console.log("ADD mode → Appending file as 'image':", imageFile.name);
+        console.log("ADD mode → Sending file as 'image':", imageFile.name);
         formData.append("image", imageFile);
       }
     } else {
-      console.log("No file selected — image field omitted.");
+      console.log("No new file selected — image fields omitted.");
     }
 
     // 3. 🔍 Debug: Log all FormData entries
