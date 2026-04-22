@@ -315,32 +315,58 @@ export async function adminLogin(email: string, password: string): Promise<strin
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
   try {
     const finalId = Number(product.id || 0);
-    const now = new Date().toISOString(); // Full ISO string to match Member API
+    const now = new Date().toISOString();
 
+    // Strategy: If no new image is provided, try JSON (like the working Member API)
+    // If a new image is provided, we MUST use FormData (MultiPart)
+    if (!imageFile) {
+        const jsonPayload = {
+            id: finalId,
+            Id: finalId,
+            ProductID: finalId,
+            ProductId: finalId,
+            MemberID: Number((product as any).memberID || (product as any).memberId || 1),
+            CategoryID: Number((product as any).categoryID || (product as any).categoryId || 0),
+            ProductName: String(product.name || ""),
+            Description: String(product.description || ""),
+            ProductDescription: String(product.description || ""),
+            Price: Number(product.price || 0),
+            Quantity: Number(product.quantity || 0),
+            Unit: String(product.unit || "pcs"),
+            IsActive: product.isActive !== false,
+            Image: String(product.image || ""),
+            CreatedOn: now,
+            ModifiedOn: now
+        };
+
+        console.log(`[API] AddOrUpdateProduct (JSON MODE) - ID: ${finalId}`, jsonPayload);
+        
+        // Add ID as query param too, just like DeleteProduct
+        const url = `${BASE_URL}/Product/AddOrUpdateProduct?id=${finalId}`;
+        const response = await safeFetch(url, {
+            method: "POST",
+            headers: getAuthHeaders("POST", true), // application/json
+            body: JSON.stringify(jsonPayload),
+        });
+
+        return await handleResponse(response);
+    }
+
+    // MULTIPART MODE (For image uploads)
     const formData = new FormData();
-    
-    console.log(`[API] AddOrUpdateProduct - Processing ID: ${finalId}`);
+    console.log(`[API] AddOrUpdateProduct (MULTIPART MODE) - ID: ${finalId}`);
 
-    // EXHAUSTIVE ID keys for model binding (some backends are very picky about casing)
     formData.append("ProductID", finalId.toString());
     formData.append("productId", finalId.toString());
-    formData.append("Productid", finalId.toString());
     formData.append("id", finalId.toString());
     formData.append("Id", finalId.toString());
     formData.append("ID", finalId.toString());
     
-    // Also support redundant casing for foreign keys
     const catId = (product as any).categoryID || (product as any).categoryId || 0;
     const memId = (product as any).memberID || (product as any).memberId || 1;
     
     formData.append("CategoryID", catId.toString());
-    formData.append("categoryID", catId.toString());
-    formData.append("categoryid", catId.toString());
-    
     formData.append("MemberID", memId.toString());
-    formData.append("memberID", memId.toString());
-    formData.append("memberid", memId.toString());
-
     formData.append("ProductName", product.name || "");
     formData.append("Description", product.description || "");
     formData.append("ProductDescription", product.description || "");
@@ -351,31 +377,18 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     formData.append("CreatedOn", now);
     formData.append("ModifiedOn", now);
 
-    // Image handling: Send file in both common keys
-    if (imageFile) {
-        formData.append("NewImage", imageFile);
-        formData.append("Image", imageFile); // Some backends use 'Image' for the file itself
-        console.log(`[API] Attaching new image file under 'NewImage' and 'Image': ${imageFile.name}`);
-    } else {
-        formData.append("Image", product.image || "");
-    }
+    formData.append("NewImage", imageFile);
+    formData.append("Image", imageFile);
+    console.log(`[API] Attaching new image: ${imageFile.name}`);
 
-    console.log("[API] AddOrUpdateProduct FormData Payload:");
-    formData.forEach((value, key) => {
-      if (typeof value === 'string') console.log(`  ${key}: ${value}`);
-      else console.log(`  ${key}: [File: ${value.name}]`);
-    });
-
-    const headers = getAuthHeaders("POST", false);
-    console.log(`[API] calling ${BASE_URL}/Product/AddOrUpdateProduct POST`);
-    const response = await safeFetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
+    const url = `${BASE_URL}/Product/AddOrUpdateProduct?id=${finalId}`;
+    const response = await safeFetch(url, {
       method: "POST",
-      headers,
+      headers: getAuthHeaders("POST", false),
       body: formData,
     });
 
-    const result = await handleResponse(response);
-    return result;
+    return await handleResponse(response);
 
   } catch (error) {
     console.error("API Error (AddOrUpdateProduct):", error);
