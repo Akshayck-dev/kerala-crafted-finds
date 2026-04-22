@@ -308,7 +308,7 @@ export async function adminLogin(email: string, password: string): Promise<strin
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
   const productId = Number(product.id || 0);
   const isUpdate = productId > 0;
-  console.log(`[API] VERSION 6.0 - ${isUpdate ? "UPDATE (newImage)" : "ADD (image)"} | id=${productId}`);
+  console.log(`[API] VERSION 6.2 - ${isUpdate ? "UPDATE" : "ADD"} | id=${productId}`);
   
   try {
     const formData = new FormData();
@@ -324,20 +324,22 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     formData.append("isActive", "true");
     formData.append("unit", product.unit || "pcs");
 
-    // 2. 🔥 FINAL IMAGE LOGIC (v6.1)
-    // Add    (id = 0): "image" = file
-    // Update (id > 0): "image" = existing URL + "newImage" = new file
-    if (imageFile) {
-      if (isUpdate) {
-        console.log("UPDATE mode → Sending existing URL as 'image' + new file as 'newImage'");
-        formData.append("image", product.image || ""); // existing image URL
-        formData.append("newImage", imageFile);         // new file upload
-      } else {
-        console.log("ADD mode → Sending file as 'image':", imageFile.name);
-        formData.append("image", imageFile);
+    // 2. 🔥 FINAL IMAGE LOGIC (v6.2)
+    if (isUpdate) {
+      // UPDATE: always send existing image URL
+      console.log("UPDATE → Existing image:", product.image || "");
+      formData.append("image", product.image || ""); // old image string (always)
+
+      if (imageFile) {
+        console.log("UPDATE → New file selected:", imageFile.name);
+        formData.append("newImage", imageFile); // new file upload
       }
     } else {
-      console.log("No new file selected — image fields omitted.");
+      // ADD: send file only if selected
+      if (imageFile) {
+        console.log("ADD → File:", imageFile.name);
+        formData.append("image", imageFile);
+      }
     }
 
     // 3. 🔍 Debug: Log all FormData entries
