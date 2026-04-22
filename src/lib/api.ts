@@ -306,14 +306,13 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 4.3 (Postman Replica)");
+  console.log("[API] Product Update VERSION: 4.4 (Brute Force Mode)");
   try {
     const productId = Number(product.id || 0);
     
-    // FETCH ORIGINAL DATA TO GET AUTHENTIC AUDIT FIELDS (CreatedOn, etc.)
+    // RECOVER ORIGINAL DATA
     let originalData: any = {};
     try {
-      console.log("[API] VERSION 4.3: Recovering original audit fields...");
       const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
         headers: getAuthHeaders("GET", false),
       });
@@ -322,56 +321,75 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
         originalData = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId) || {};
       }
     } catch (e) {
-      console.warn("[API] Audit recovery failed.");
+      console.warn("[API] Mirror recovery failed.");
     }
 
     const formData = new FormData();
     
-    // CORE PASCAL CASE FIELDS
-    formData.append('ProductId', productId.toString());
-    formData.append('MemberID', (originalData.memberID || originalData.MemberID || product.memberID || 1).toString());
-    formData.append('CategoryID', (originalData.categoryID || originalData.CategoryID || product.categoryID || 0).toString());
-    formData.append('ProductName', (product.name || originalData.productName || originalData.ProductName || "").toString());
-    formData.append('Description', (product.description || originalData.description || originalData.Description || "").toString());
-    formData.append('Price', Number(product.price || originalData.price || 0).toString());
-    formData.append('Quantity', Number(product.quantity || originalData.quantity || 0).toString());
-    formData.append('Unit', (product.unit || originalData.unit || "gm").toString());
-    formData.append('IsActive', 'true');
-    
-    // PRESERVE ORIGINAL CREATED DATE OR USE VALID ISO FORMAT
-    const createdDate = originalData.createdOn || originalData.CreatedOn || '2026-04-14T00:00:00';
-    formData.append('CreatedOn', createdDate.toString());
+    // BRUTE FORCE: Send BOTH cases for every field!
+    const payload: any = {
+      // IDs
+      id: productId,
+      ProductId: productId,
+      productId: productId,
+      
+      // Category & Member (Try all variations)
+      CategoryID: Number(product.categoryID || originalData.categoryID || originalData.CategoryID || 0),
+      categoryID: Number(product.categoryID || originalData.categoryID || originalData.CategoryID || 0),
+      MemberID: Number(product.memberID || originalData.memberID || originalData.MemberID || 1),
+      memberID: Number(product.memberID || originalData.memberID || originalData.MemberID || 1),
+      
+      // Strings
+      ProductName: (product.name || originalData.productName || originalData.ProductName || "").toString(),
+      productName: (product.name || originalData.productName || originalData.ProductName || "").toString(),
+      Description: (product.description || originalData.description || originalData.Description || "").toString(),
+      description: (product.description || originalData.description || originalData.Description || "").toString(),
+      ProductDescription: (product.description || originalData.description || originalData.Description || "").toString(),
+      
+      // Numbers
+      Price: Number(product.price || originalData.price || 0),
+      price: Number(product.price || originalData.price || 0),
+      Quantity: Number(product.quantity || originalData.quantity || 0),
+      quantity: Number(product.quantity || originalData.quantity || 0),
+      
+      // Other
+      Unit: (product.unit || originalData.unit || "gm").toString(),
+      unit: (product.unit || originalData.unit || "gm").toString(),
+      IsActive: true,
+      isActive: true,
+      CreatedOn: originalData.createdOn || originalData.CreatedOn || '2026-04-14T01:31:50'
+    };
 
-    // ONLY SEND NewImage IF IT EXISTS (Many backends crash on empty string files)
+    console.log("[API] VERSION 4.4 BRUTE FORCE PAYLOAD:", payload);
+
+    Object.keys(payload).forEach(key => {
+      if (payload[key] !== undefined && payload[key] !== null) {
+        formData.append(key, payload[key].toString());
+      }
+    });
+
     if (imageFile) {
-      console.log("[API] Appending NewImage file.");
+      console.log("[API] Appending real binary file to NewImage.");
       formData.append('NewImage', imageFile);
     } else if (originalData.image || originalData.Image) {
-      // Send back the original image path to preserve it
       formData.append('Image', originalData.image || originalData.Image);
     }
 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
-    // NO ?id= IN URL - SENDING IN BODY ONLY
+    // NO URL PARAMS - PURE BODY POST
     const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
     
-    console.log("[API] Calling Update (v4.3) - Body Only ID:", url);
-
     const response = await axios.post(url, formData, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
     });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v4.3):", response.data);
+      console.log("[API] Success (v4.4):", response.data);
       return response.data;
     }
-    
-    throw new Error(`Unexpected status: ${response.status}`);
+    throw new Error(`Status: ${response.status}`);
   } catch (error: any) {
-    const errorDetail = error.response?.data || error.message;
-    console.error("Backend Error Detail (v4.3):", errorDetail);
+    console.error("Backend Error Detail (v4.4):", error.response?.data || error.message);
     throw error;
   }
 }
