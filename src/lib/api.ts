@@ -306,11 +306,11 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 4.5 (Mirror Hardened)");
+  console.log("[API] Product Update VERSION: 4.6 (The Final FormData)");
   try {
     const productId = Number(product.id || 0);
     
-    // 1. HARDENED MIRROR RECOVERY
+    // 1. RECOVER ORIGINAL DATA FOR EXACT FIELD ALIGNMENT
     let originalData: any = {};
     try {
       const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
@@ -318,74 +318,53 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
       });
       const data = await handleResponse(response);
       if (Array.isArray(data)) {
-        // Search exhaustively for the correct product object
         originalData = data.find((p: any) => 
-          (p.id == productId) || 
-          (p.productId == productId) || 
-          (p.ProductID == productId) || 
-          (p.ProductId == productId)
+          (p.id == productId) || (p.productId == productId)
         ) || {};
-        
-        if (originalData.id || originalData.productId) {
-          console.log(`[API] Mirror Success! Found ID ${productId}. Original IDs: Category=${originalData.categoryID || originalData.CategoryID}, Member=${originalData.memberID || originalData.MemberID}`);
-        } else {
-          console.warn(`[API] Mirror could not find ID ${productId} in the list.`);
-        }
       }
     } catch (e) {
       console.warn("[API] Mirror fetch failed.");
     }
 
-    // 2. CONSTRUCT PAYLOAD
-    const apiPayload: any = {
-      ProductId: productId,
-      id: productId,
-      MemberID: Number(originalData.memberID || originalData.MemberID || product.memberID || 1),
-      CategoryID: Number(originalData.categoryID || originalData.CategoryID || product.categoryID || 0),
-      ProductName: (product.name || originalData.productName || originalData.ProductName || "").toString(),
-      Description: (product.description || originalData.description || originalData.Description || "").toString(),
-      Price: Number(product.price || originalData.price || 0),
-      Quantity: Number(product.quantity || originalData.quantity || 0),
-      Unit: (product.unit || originalData.unit || "gm").toString(),
-      IsActive: true,
-      CreatedOn: originalData.createdOn || originalData.CreatedOn || '2026-04-14T01:31:50'
-    };
+    const formData = new FormData();
+    
+    // 2. STRICT LOWERCASE KEYS (Matched to server's own JSON response)
+    formData.append('id', productId.toString());
+    formData.append('productName', (product.name || originalData.productName || "").toString());
+    formData.append('productDescription', (product.description || originalData.productDescription || "").toString());
+    formData.append('description', (product.description || originalData.description || "").toString());
+    formData.append('price', Number(product.price || originalData.price || 0).toString());
+    formData.append('quantity', Number(product.quantity || originalData.quantity || 0).toString());
+    formData.append('unit', (product.unit || originalData.unit || "gm").toString());
+    formData.append('categoryID', Number(product.categoryID || originalData.categoryID || 0).toString());
+    formData.append('memberID', Number(product.memberID || originalData.memberID || 1).toString());
+    formData.append('isActive', 'true');
+    formData.append('createdOn', originalData.createdOn || originalData.CreatedOn || new Date().toISOString());
+
+    // 3. IMAGE HANDLING
+    if (imageFile) {
+      console.log("[API] Appending NewImage file.");
+      formData.append('NewImage', imageFile);
+    } else if (originalData.image) {
+      formData.append('image', originalData.image);
+    }
 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
     const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
     
-    let response;
+    console.log("[API] Calling Update (v4.6) with Exact Keys...");
 
-    // 3. HYBRID MODE: Use JSON if no image, FormData if image exists
-    if (imageFile) {
-      console.log("[API] Using FormData for Image Upload...");
-      const formData = new FormData();
-      Object.keys(apiPayload).forEach(key => {
-        formData.append(key, apiPayload[key].toString());
-      });
-      formData.append('NewImage', imageFile);
-      
-      response = await axios.post(url, formData, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-    } else {
-      console.log("[API] Using JSON for Data-only Update...");
-      // Some .NET APIs need the ID in the body as well as the object
-      response = await axios.post(url, apiPayload, {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-    }
+    const response = await axios.post(url, formData, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v4.5):", response.data);
+      console.log("[API] Success (v4.6):", response.data);
       return response.data;
     }
     throw new Error(`Status: ${response.status}`);
   } catch (error: any) {
-    console.error("Backend Error Detail (v4.5):", error.response?.data || error.message);
+    console.error("Backend Error Detail (v4.6):", error.response?.data || error.message);
     throw error;
   }
 }
