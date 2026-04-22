@@ -317,70 +317,36 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     const finalId = Number(product.id || 0);
     const now = new Date().toISOString();
 
-    // Strategy: If no new image is provided, try JSON (like the working Member API)
-    // If a new image is provided, we MUST use FormData (MultiPart)
-    if (!imageFile) {
-        const jsonPayload = {
-            id: finalId,
-            Id: finalId,
-            ProductID: finalId,
-            ProductId: finalId,
-            MemberID: Number((product as any).memberID || (product as any).memberId || 1),
-            CategoryID: Number((product as any).categoryID || (product as any).categoryId || 0),
-            ProductName: String(product.name || ""),
-            Description: String(product.description || ""),
-            ProductDescription: String(product.description || ""),
-            Price: Number(product.price || 0),
-            Quantity: Number(product.quantity || 0),
-            Unit: String(product.unit || "pcs"),
-            IsActive: product.isActive !== false,
-            Image: String(product.image || ""),
-            CreatedOn: now,
-            ModifiedOn: now
-        };
-
-        console.log(`[API] AddOrUpdateProduct (JSON MODE) - ID: ${finalId}`, jsonPayload);
-        
-        // Add ID as query param too, just like DeleteProduct
-        const url = `${BASE_URL}/Product/AddOrUpdateProduct?id=${finalId}`;
-        const response = await safeFetch(url, {
-            method: "POST",
-            headers: getAuthHeaders("POST", true), // application/json
-            body: JSON.stringify(jsonPayload),
-        });
-
-        return await handleResponse(response);
-    }
-
-    // MULTIPART MODE (For image uploads)
     const formData = new FormData();
-    console.log(`[API] AddOrUpdateProduct (MULTIPART MODE) - ID: ${finalId}`);
+    console.log(`[API] AddOrUpdateProduct (MULTIPART) - ID: ${finalId}`);
 
+    // Core ID fields - using PascalCase as proven by the "Add" operation
     formData.append("ProductID", finalId.toString());
-    formData.append("productId", finalId.toString());
     formData.append("id", finalId.toString());
-    formData.append("Id", finalId.toString());
-    formData.append("ID", finalId.toString());
     
-    const catId = (product as any).categoryID || (product as any).categoryId || 0;
-    const memId = (product as any).memberID || (product as any).memberId || 1;
-    
-    formData.append("CategoryID", catId.toString());
-    formData.append("MemberID", memId.toString());
+    formData.append("MemberID", (product.memberID || 1).toString());
+    formData.append("CategoryID", (product.categoryID || 0).toString());
     formData.append("ProductName", product.name || "");
     formData.append("Description", product.description || "");
-    formData.append("ProductDescription", product.description || "");
     formData.append("Price", (product.price || 0).toString());
     formData.append("Quantity", (product.quantity || 0).toString());
-    formData.append("IsActive", (product.isActive !== false).toString());
     formData.append("Unit", product.unit || "pcs");
+    formData.append("IsActive", (product.isActive !== false).toString());
     formData.append("CreatedOn", now);
     formData.append("ModifiedOn", now);
 
-    formData.append("NewImage", imageFile);
-    formData.append("Image", imageFile);
-    console.log(`[API] Attaching new image: ${imageFile.name}`);
+    // Image handling: 
+    // CRITICAL: If no NEW image is selected, don't send the Image/NewImage fields at all.
+    // This prevents the backend from crashing when it tries to parse a URL as a file.
+    if (imageFile) {
+        formData.append("NewImage", imageFile);
+        formData.append("Image", imageFile);
+        console.log(`[API] Attaching new image: ${imageFile.name}`);
+    } else {
+        console.log("[API] No new image selected, omitting Image fields for update safety.");
+    }
 
+    // Use query param ID as well (DeleteProduct pattern)
     const url = `${BASE_URL}/Product/AddOrUpdateProduct?id=${finalId}`;
     const response = await safeFetch(url, {
       method: "POST",
@@ -389,7 +355,6 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     });
 
     return await handleResponse(response);
-
   } catch (error) {
     console.error("API Error (AddOrUpdateProduct):", error);
     throw error;
