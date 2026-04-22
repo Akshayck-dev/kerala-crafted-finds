@@ -281,6 +281,7 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
+                          console.log("Selected file:", file);
                           if (file) {
                             setImageFile(file);
                             setFormData(prev => ({ ...prev, image: "" })); // Clear existing URL reference

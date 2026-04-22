@@ -324,10 +324,11 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
 
     // 2. 🔥 IMAGE HANDLING (IMPORTANT FIX)
     if (imageFile) {
-      console.log("[API] Appending NEW binary file to 'image' field:", imageFile.name);
+      console.log("Appending file:", imageFile);
       formData.append("image", imageFile); // only file
+    } else {
+      console.log("No file selected ❌");
     }
-    // ❌ DO NOT send image if no file
 
     // 3. 🔍 DEBUG LOGS (Verifying exactly what goes to the server)
     console.log("--- FormData Payload Debug Start (Final Version) ---");
