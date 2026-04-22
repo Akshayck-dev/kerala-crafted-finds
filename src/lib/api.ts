@@ -305,7 +305,7 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 2.0");
+  console.log("[API] Product Update VERSION: 2.1");
   try {
     const productId = Number(product.id || 0);
     const formData = new FormData();
@@ -314,61 +314,34 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     let originalData: any = {};
     if (productId > 0) {
       try {
-        console.log("[API] Attempting to fetch original product list for mirroring...");
+        console.log("[API] VERSION 2.1: Fetching original for mirror...");
         const response = await safeFetch(`${BASE_URL}/Product/GetAllProducts`, {
           headers: getAuthHeaders("GET", false),
         });
         const data = await handleResponse(response);
-        console.log(`[API] Mirror Fetch returned ${Array.isArray(data) ? data.length : "non-array"} items.`);
         
         if (Array.isArray(data)) {
           originalData = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId) || {};
-          if (!originalData.id && !originalData.productId) {
-              console.warn(`[API] Product ${productId} not found in Mirror list! Keys in first item:`, Object.keys(data[0] || {}));
-          }
-        } else if (data && typeof data === 'object') {
-          originalData = data;
+          console.log(`[API] Mirror found product ${productId}. Keys:`, Object.keys(originalData));
         }
-        console.log("[API] Successfully Mirrored Data:", originalData);
+        console.log("[API] Successfully Mirrored Data (v2.1):", originalData);
       } catch (e) {
-        console.warn("[API] Mirror Fetch failed:", e);
+        console.warn("[API] Mirror Fetch failed (v2.1):", e);
       }
     }
 
-    // BRUTE FORCE PAYLOAD - SEND EVERYTHING IN ALL CASINGS
+    // PASCAL CASE IS USUALLY BEST FOR DOTNET BACKENDS
     const payload: any = {
-      ...originalData,
-      // Product ID variations
       ProductId: productId,
-      ProductID: productId,
-      productId: productId,
-      productID: productId,
-      Id: productId,
-      id: productId,
-      
-      // Basic Info
       ProductName: product.name || originalData.productName || originalData.ProductName || "",
-      productName: product.name || originalData.productName || originalData.ProductName || "",
       ProductDescription: product.description || originalData.productDescription || originalData.ProductDescription || "",
-      productDescription: product.description || originalData.productDescription || originalData.ProductDescription || "",
-      
-      // Pricing/Stock
       Price: (product.price || originalData.price || 0).toString(),
-      price: (product.price || originalData.price || 0).toString(),
       Quantity: (product.quantity || originalData.quantity || 0).toString(),
-      quantity: (product.quantity || originalData.quantity || 0).toString(),
       Unit: product.unit || originalData.unit || "pcs",
-      unit: product.unit || originalData.unit || "pcs",
-      
-      // Status
-      IsActive: (product.isActive !== false) ? "true" : "false",
-      isActive: (product.isActive !== false) ? "true" : "false",
-      
-      // Category & Member (Use original IDs to be safe)
-      CategoryID: originalData.categoryID || originalData.CategoryID || product.categoryID || 0,
-      categoryID: originalData.categoryID || originalData.CategoryID || product.categoryID || 0,
-      MemberID: originalData.memberID || originalData.MemberID || product.memberID || 1,
-      memberID: originalData.memberID || originalData.MemberID || product.memberID || 1,
+      IsActive: "true",
+      // USE ORIGINAL IDs PRECISELY
+      CategoryID: originalData.categoryID || originalData.CategoryID || originalData.categoryId || originalData.CategoryId || product.categoryID || 0,
+      MemberID: originalData.memberID || originalData.MemberID || originalData.memberId || originalData.MemberId || product.memberID || 1,
     };
 
     console.log(`[API] BRUTE FORCE Payload for ID ${productId}:`, JSON.stringify(payload, null, 2));
