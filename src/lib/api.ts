@@ -388,9 +388,15 @@ export async function fetchMembers(): Promise<Member[]> {
     const response = await safeFetch(`${BASE_URL}/User/GetAllMembers?t=${Date.now()}`, {
       headers: getAuthHeaders("GET", false),
     });
+    console.log(`[API] GetAllMembers Response Status: ${response.status} ${response.statusText}`);
     const data = await handleResponse(response);
+    console.log(`[API] GetAllMembers Raw Data:`, data);
     
-    return (data || []).map((m: any, index: number) => ({
+    if (!Array.isArray(data)) {
+      console.warn("[API WARNING] GetAllMembers did not return an array!", typeof data, data);
+    }
+    
+    return (Array.isArray(data) ? data : []).map((m: any, index: number) => ({
       // Handle various backend casing for Member ID and provide index fallback
       id: (m.id || m.ID || m.memberId || m.MemberId || m.memberID || m.MemberID || m.Id || (index + 1)).toString(),
       name: m.name || m.Name || "N/A",
@@ -416,35 +422,34 @@ export async function fetchMembers(): Promise<Member[]> {
 export async function addOrUpdateMember(member: Partial<Member>) {
   try {
     const finalId = Number(member.id || 0);
-    // Exact mapping to the structure preferred by the Mallu Smart production backend
-    const payload = {
-      id: finalId,
-      MemberId: finalId, // Redundant for some backend versions
-      memberId: finalId, // Redundant for some backend versions
-      MemberID: finalId, // Redundant for some backend versions
-      Name: String(member.name || ""),
-      BusinessName: String(member.businessName || ""),
-      Place: String(member.place || ""),
-      District: String(member.district || "Ernakulam"),
-      Product: String(member.product || ""),
-      ContactNumber: String(member.phone || member.contactNumber || ""),
-      LicenceNumber: String(member.licenceNumber || "NA"),
-      OwnProduct: member.ownProduct ?? true,
-      IsActive: member.isActive ?? true,
-      CreatedOn: member.joinedDate || member.createdOn || new Date().toISOString(),
-      ModifiedOn: new Date().toISOString()
-    };
+    
+    // Using FormData as some endpoints in this backend prefer FromForm over FromBody
+    const formData = new FormData();
+    formData.append("id", finalId.toString());
+    formData.append("MemberId", finalId.toString());
+    formData.append("Name", String(member.name || ""));
+    formData.append("BusinessName", String(member.businessName || ""));
+    formData.append("Place", String(member.place || ""));
+    formData.append("District", String(member.district || "Ernakulam"));
+    formData.append("Product", String(member.product || ""));
+    formData.append("ContactNumber", String(member.phone || member.contactNumber || ""));
+    formData.append("LicenceNumber", String(member.licenceNumber || "NA"));
+    formData.append("OwnProduct", (member.ownProduct ?? true).toString());
+    formData.append("IsActive", (member.isActive ?? true).toString());
+    formData.append("CreatedOn", member.joinedDate || member.createdOn || new Date().toISOString());
 
-    console.log("[API] AddOrUpdateMember Payload:", payload);
+    console.log("[API] AddOrUpdateMember (FormData) Payload Debug:");
+    formData.forEach((value, key) => console.log(`  ${key}: ${value}`));
 
     const response = await safeFetch(`${BASE_URL}/User/AddOrUpdateMember`, {
       method: "POST",
-      headers: getAuthHeaders("POST", true),
-      body: JSON.stringify(payload),
+      headers: getAuthHeaders("POST"), // No JSON header for FormData
+      body: formData,
     });
     
+    console.log(`[API] AddOrUpdateMember Response Status: ${response.status} ${response.statusText}`);
     const result = await handleResponse(response);
-    console.log("[API] AddOrUpdateMember Result:", result);
+    console.log("[API] AddOrUpdateMember Result Body:", result);
     return result;
   } catch (error) {
     console.error("API Error (AddOrUpdateMember):", error);
