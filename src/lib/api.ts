@@ -331,37 +331,38 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       console.warn("[API] Mirror failed, falling back to UI IDs.");
     }
 
-    // MINIMAL PAYLOAD - VERSION 3.1 (Postman Identical)
+    // MINIMAL PAYLOAD - VERSION 3.2 (The Cleanest Payload)
     const apiPayload: any = {
-      id: productId,
-      MemberID: realMemberId,
-      CategoryID: realCategoryId,
-      ProductName: product.name || "",
-      Description: product.description || "",
+      id: productId.toString(),
+      MemberID: realMemberId.toString(),
+      CategoryID: realCategoryId.toString(),
+      ProductName: (product.name || "").toString(),
+      Description: (product.description || "").toString(),
       Price: (product.price || 0).toString(),
       Quantity: (product.quantity || 0).toString(),
-      Unit: product.unit || "pcs",
+      Unit: (product.unit || "pcs").toString(),
       IsActive: (product.isActive !== false) ? "true" : "false",
-      CreatedOn: "2026-04-14" // Added as per user example for backend audit
+      CreatedOn: "2026-04-14"
     };
 
-    console.log("[API] VERSION 3.1 PAYLOAD:", apiPayload);
+    console.log("[API] VERSION 3.2 PAYLOAD:", apiPayload);
 
     const formData = new FormData();
+    // Appending strictly as strings
     Object.keys(apiPayload).forEach(key => {
       formData.append(key, apiPayload[key]);
     });
 
-    // IMAGE HANDLING: Strictly follow user example
+    // CRITICAL: Only append NewImage if an actual file exists
     if (imageFile) {
+      console.log("[API] Appending NewImage file to FormData.");
       formData.append("NewImage", imageFile);
-      console.log("[API] Appending NewImage file.");
     }
 
     const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
     const response = await safeFetch(url, {
       method: "POST",
-      headers: getAuthHeaders("POST", false), // Let browser set Content-Type for FormData
+      headers: getAuthHeaders("POST", false),
       body: formData,
     });
 
