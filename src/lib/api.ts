@@ -306,6 +306,7 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
+  // Deployment nudge: 2026-04-22 12:42
   const productId = Number(product.id || 0);
   const isUpdate = productId > 0;
   console.log(`[API] VERSION 6.2 - ${isUpdate ? "UPDATE" : "ADD"} | id=${productId}`);
