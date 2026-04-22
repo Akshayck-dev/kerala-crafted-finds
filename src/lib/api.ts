@@ -371,13 +371,6 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
   }
 }
 
-    return await handleResponse(response);
-  } catch (error) {
-    console.error("API Error (AddOrUpdateProduct):", error);
-    throw error;
-  }
-}
-
 export async function deleteProduct(productId: number) {
   try {
     // Backend requires ProductId in BOTH query string and JSON body for POST
