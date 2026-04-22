@@ -60,11 +60,12 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-white p-0">
+        {console.log("[DEBUG] OrderDetailModal order:", order)}
         <div className="p-6 border-b bg-slate-50">
             <DialogHeader className="flex flex-row items-center justify-between space-y-0">
                 <div>
                     <div className="flex items-center gap-3">
-                        <DialogTitle className="text-xl font-bold text-slate-900">Order Details</DialogTitle>
+                        <DialogTitle className="text-xl font-bold text-slate-900">Order Details V2</DialogTitle>
                         <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${getStatusColor(order.status)}`}>
                             {order.status}
                         </span>
