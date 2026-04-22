@@ -315,7 +315,7 @@ export async function adminLogin(email: string, password: string): Promise<strin
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
   try {
     const finalId = Number(product.id || 0);
-    const now = new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString(); // Full ISO string to match Member API
 
     const formData = new FormData();
     
@@ -336,11 +336,13 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     formData.append("CreatedOn", now);
     formData.append("ModifiedOn", now);
 
-    // Image handling
-    formData.append("Image", product.image || "");
+    // Image handling: Send file in both common keys
     if (imageFile) {
         formData.append("NewImage", imageFile);
-        console.log(`[API] Attaching new image file under 'NewImage': ${imageFile.name}`);
+        formData.append("Image", imageFile); // Some backends use 'Image' for the file itself
+        console.log(`[API] Attaching new image file under 'NewImage' and 'Image': ${imageFile.name}`);
+    } else {
+        formData.append("Image", product.image || "");
     }
 
     console.log("[API] AddOrUpdateProduct FormData Payload:");
