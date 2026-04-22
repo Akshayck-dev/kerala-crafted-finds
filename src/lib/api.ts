@@ -322,17 +322,15 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     formData.append("isActive", "true");
     formData.append("unit", product.unit || "pcs");
 
-    // 2. 🔥 IMAGE HANDLING (Verified Logic)
+    // 2. 🔥 IMAGE HANDLING (IMPORTANT FIX)
     if (imageFile) {
       console.log("[API] Appending NEW binary file to 'image' field:", imageFile.name);
-      formData.append("image", imageFile);
-    } else if (product.image) {
-      console.log("[API] No new file. Appending existing URL to 'image' field:", product.image);
-      formData.append("image", product.image);
+      formData.append("image", imageFile); // only file
     }
+    // ❌ DO NOT send image if no file
 
     // 3. 🔍 DEBUG LOGS (Verifying exactly what goes to the server)
-    console.log("--- FormData Payload Debug Start (v5.2) ---");
+    console.log("--- FormData Payload Debug Start (Final Version) ---");
     for (let pair of (formData as any).entries()) {
       console.log(`${pair[0]}:`, pair[1]);
     }
