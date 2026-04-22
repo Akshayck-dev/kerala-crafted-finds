@@ -319,16 +319,31 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
 
     const formData = new FormData();
     
-    // Core fields with exhaustive casing for model binding resilience
+    console.log(`[API] AddOrUpdateProduct - Processing ID: ${finalId}`);
+
+    // EXHAUSTIVE ID keys for model binding (some backends are very picky about casing)
     formData.append("ProductID", finalId.toString());
+    formData.append("productId", finalId.toString());
+    formData.append("Productid", finalId.toString());
     formData.append("id", finalId.toString());
     formData.append("Id", finalId.toString());
+    formData.append("ID", finalId.toString());
     
-    formData.append("MemberID", (product.memberID || 1).toString());
-    formData.append("CategoryID", (product.categoryID || 0).toString());
+    // Also support redundant casing for foreign keys
+    const catId = (product as any).categoryID || (product as any).categoryId || 0;
+    const memId = (product as any).memberID || (product as any).memberId || 1;
+    
+    formData.append("CategoryID", catId.toString());
+    formData.append("categoryID", catId.toString());
+    formData.append("categoryid", catId.toString());
+    
+    formData.append("MemberID", memId.toString());
+    formData.append("memberID", memId.toString());
+    formData.append("memberid", memId.toString());
+
     formData.append("ProductName", product.name || "");
     formData.append("Description", product.description || "");
-    formData.append("ProductDescription", product.description || ""); // Redundant key
+    formData.append("ProductDescription", product.description || "");
     formData.append("Price", (product.price || 0).toString());
     formData.append("Quantity", (product.quantity || 0).toString());
     formData.append("IsActive", (product.isActive !== false).toString());
