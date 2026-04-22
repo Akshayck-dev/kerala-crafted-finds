@@ -315,17 +315,20 @@ export async function adminLogin(email: string, password: string): Promise<strin
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
   try {
     const finalId = Number(product.id || 0);
-    const now = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD to match Postman collection exactly
+    const now = new Date().toISOString().split('T')[0];
 
     const formData = new FormData();
     
-    // Core fields with exact casing as per Postman collection (PASCAL_CASE)
-    // NOTE: 'id' remains lowercase as seen in Postman Trace
+    // Core fields with exhaustive casing for model binding resilience
+    formData.append("ProductID", finalId.toString());
     formData.append("id", finalId.toString());
+    formData.append("Id", finalId.toString());
+    
     formData.append("MemberID", (product.memberID || 1).toString());
     formData.append("CategoryID", (product.categoryID || 0).toString());
     formData.append("ProductName", product.name || "");
     formData.append("Description", product.description || "");
+    formData.append("ProductDescription", product.description || ""); // Redundant key
     formData.append("Price", (product.price || 0).toString());
     formData.append("Quantity", (product.quantity || 0).toString());
     formData.append("IsActive", (product.isActive !== false).toString());
@@ -333,21 +336,21 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     formData.append("CreatedOn", now);
     formData.append("ModifiedOn", now);
 
-    // Image handling: Postman uses 'Image' for the current path/null and 'NewImage' for the file
-    // We send the existing path in 'Image' and the new file in 'NewImage'
+    // Image handling
     formData.append("Image", product.image || "");
-    
     if (imageFile) {
         formData.append("NewImage", imageFile);
         console.log(`[API] Attaching new image file under 'NewImage': ${imageFile.name}`);
     }
 
-    const headers = getAuthHeaders("POST", false); // false = Don't set application/json for FormData
+    console.log("[API] AddOrUpdateProduct FormData Payload:");
+    formData.forEach((value, key) => {
+      if (typeof value === 'string') console.log(`  ${key}: ${value}`);
+      else console.log(`  ${key}: [File: ${value.name}]`);
+    });
 
-    console.log(`[API] Saving product via MultiPart (PASCAL_CASE): ${product.name}`);
-    const response = await safeFetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
-      method: "POST",
-      headers,
+    const headers = getAuthHeaders("POST", false);
+    console.log(`[API] calling ${BASE_URL}/Product/AddOrUpdateProduct POST`);
       body: formData,
     });
 
