@@ -306,13 +306,15 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 5.2 (Image-Focused Version)");
+  const productId = Number(product.id || 0);
+  const isUpdate = productId > 0;
+  console.log(`[API] VERSION 6.0 - ${isUpdate ? "UPDATE (newImage)" : "ADD (image)"} | id=${productId}`);
   
   try {
     const formData = new FormData();
 
-    // 1. Core Fields Mapping
-    formData.append("id", (product.id || 0).toString());
+    // 1. Core Fields
+    formData.append("id", productId.toString());
     formData.append("memberID", (product.memberID || 1).toString());
     formData.append("categoryID", (product.categoryID || 1).toString());
     formData.append("productName", product.name || product.productName || "");
@@ -322,38 +324,43 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     formData.append("isActive", "true");
     formData.append("unit", product.unit || "pcs");
 
-    // 2. 🔥 IMAGE HANDLING (IMPORTANT FIX)
+    // 2. 🔥 CRITICAL IMAGE FIX
+    // Add  (id = 0) → field name: "image"
+    // Update (id > 0) → field name: "newImage"
     if (imageFile) {
-      console.log("Appending file:", imageFile);
-      formData.append("image", imageFile); // only file
+      if (isUpdate) {
+        console.log("UPDATE mode → Appending file as 'newImage':", imageFile.name);
+        formData.append("newImage", imageFile);
+      } else {
+        console.log("ADD mode → Appending file as 'image':", imageFile.name);
+        formData.append("image", imageFile);
+      }
     } else {
-      console.log("No file selected ❌");
+      console.log("No file selected — image field omitted.");
     }
 
-    // 3. 🔍 DEBUG LOGS (Verifying exactly what goes to the server)
-    console.log("--- FormData Payload Debug Start (Final Version) ---");
+    // 3. 🔍 Debug: Log all FormData entries
+    console.log("--- FormData Payload ---");
     for (let pair of (formData as any).entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
+      console.log(`  ${pair[0]}:`, pair[1]);
     }
-    console.log("--- FormData Payload Debug End ---");
+    console.log("------------------------");
 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
     const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
 
     const response = await axios.post(url, formData, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
     });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v5.2):", response.data);
+      console.log("[API] Success (v6.0):", response.data);
       return response.data;
     }
-    throw new Error(`Status: ${response.status}`);
+    throw new Error(`Unexpected status: ${response.status}`);
   } catch (error: any) {
     const errorDetail = error.response?.data || error.message;
-    console.error("Backend Error Detail (v5.2):", errorDetail);
+    console.error("[API] Error (v6.0):", errorDetail);
     throw error;
   }
 }
