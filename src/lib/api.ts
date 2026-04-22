@@ -390,10 +390,9 @@ export async function fetchMembers(): Promise<Member[]> {
     });
     console.log(`[API] GetAllMembers Response Status: ${response.status} ${response.statusText}`);
     const data = await handleResponse(response);
-    console.log(`[API] GetAllMembers Raw Data:`, data);
-    
-    if (!Array.isArray(data)) {
-      console.warn("[API WARNING] GetAllMembers did not return an array!", typeof data, data);
+    if (Array.isArray(data) && data.length > 0) {
+      console.log("[API] First Member Keys:", Object.keys(data[0]));
+      console.log("[API] First Member Data:", data[0]);
     }
     
     return (Array.isArray(data) ? data : []).map((m: any, index: number) => ({
@@ -423,28 +422,31 @@ export async function addOrUpdateMember(member: Partial<Member>) {
   try {
     const finalId = Number(member.id || 0);
     
-    // Using FormData as some endpoints in this backend prefer FromForm over FromBody
-    const formData = new FormData();
-    formData.append("id", finalId.toString());
-    formData.append("MemberId", finalId.toString());
-    formData.append("Name", String(member.name || ""));
-    formData.append("BusinessName", String(member.businessName || ""));
-    formData.append("Place", String(member.place || ""));
-    formData.append("District", String(member.district || "Ernakulam"));
-    formData.append("Product", String(member.product || ""));
-    formData.append("ContactNumber", String(member.phone || member.contactNumber || ""));
-    formData.append("LicenceNumber", String(member.licenceNumber || "NA"));
-    formData.append("OwnProduct", (member.ownProduct ?? true).toString());
-    formData.append("IsActive", (member.isActive ?? true).toString());
-    formData.append("CreatedOn", member.joinedDate || member.createdOn || new Date().toISOString());
+    // Reverting to JSON as FormData returned 415 Unsupported Media Type
+    // Adding both casing for ID to be safe
+    const payload = {
+      id: finalId,
+      Id: finalId,
+      MemberId: finalId,
+      MemberID: finalId,
+      Name: String(member.name || ""),
+      BusinessName: String(member.businessName || ""),
+      Place: String(member.place || ""),
+      District: String(member.district || "Ernakulam"),
+      Product: String(member.product || ""),
+      ContactNumber: String(member.phone || member.contactNumber || ""),
+      LicenceNumber: String(member.licenceNumber || "NA"),
+      OwnProduct: member.ownProduct ?? true,
+      IsActive: member.isActive ?? true,
+      CreatedOn: member.joinedDate || member.createdOn || new Date().toISOString(),
+    };
 
-    console.log("[API] AddOrUpdateMember (FormData) Payload Debug:");
-    formData.forEach((value, key) => console.log(`  ${key}: ${value}`));
+    console.log("[API] AddOrUpdateMember (JSON) Payload:", payload);
 
     const response = await safeFetch(`${BASE_URL}/User/AddOrUpdateMember`, {
       method: "POST",
-      headers: getAuthHeaders("POST"), // No JSON header for FormData
-      body: formData,
+      headers: getAuthHeaders("POST", true), // application/json
+      body: JSON.stringify(payload),
     });
     
     console.log(`[API] AddOrUpdateMember Response Status: ${response.status} ${response.statusText}`);
