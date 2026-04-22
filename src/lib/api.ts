@@ -309,7 +309,7 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
   // Deployment nudge: 2026-04-22 12:42
   const productId = Number(product.id || 0);
   const isUpdate = productId > 0;
-  console.log(`[API] VERSION 6.3 - ${isUpdate ? "UPDATE" : "ADD"} | id=${productId}`);
+  console.log(`[API] VERSION 6.4 - ${isUpdate ? "UPDATE" : "ADD"} | id=${productId}`);
   
   try {
     const formData = new FormData();
@@ -325,19 +325,16 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     formData.append("isActive", "true");
     formData.append("unit", product.unit || "pcs");
 
-    // 2. 🔥 FINAL IMAGE LOGIC (v6.3 - Mandatory newImage fallback)
+    // 2. 🔥 FINAL IMAGE LOGIC (v6.4 - User Confirmed Correct)
     if (isUpdate) {
       // UPDATE: Always send existing image URL in "image"
-      console.log("UPDATE → Existing image (ref):", product.image || "");
+      console.log("UPDATE → Existing image:", product.image || "");
       formData.append("image", product.image || "");
 
       if (imageFile) {
+        // ONLY send if new file exists
         console.log("UPDATE → New file selected for 'newImage':", imageFile.name);
         formData.append("newImage", imageFile);
-      } else {
-        // 🔥 FALLBACK (CRITICAL): Backend requires newImage always
-        console.log("UPDATE → No new file. Sending existing URL as fallback in 'newImage'");
-        formData.append("newImage", product.image || "");
       }
     } else {
       // ADD: send file only if selected
