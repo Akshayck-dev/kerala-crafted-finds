@@ -331,35 +331,34 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       console.warn("[API] Mirror failed, falling back to UI IDs.");
     }
 
-    // MINIMAL PAYLOAD - VERSION 3.2 (The Cleanest Payload)
+    // MINIMAL PAYLOAD - VERSION 3.3 (URL-Clean Version)
     const apiPayload: any = {
-      id: productId.toString(),
-      MemberID: realMemberId.toString(),
-      CategoryID: realCategoryId.toString(),
-      ProductName: (product.name || "").toString(),
-      Description: (product.description || "").toString(),
-      Price: (product.price || 0).toString(),
-      Quantity: (product.quantity || 0).toString(),
-      Unit: (product.unit || "pcs").toString(),
+      id: productId,
+      MemberID: realMemberId,
+      CategoryID: realCategoryId,
+      ProductName: product.name || "",
+      Description: product.description || "",
+      Price: Number(product.price || 0),
+      Quantity: Number(product.quantity || 0),
+      Unit: product.unit || "pcs",
       IsActive: (product.isActive !== false) ? "true" : "false",
       CreatedOn: "2026-04-14"
     };
 
-    console.log("[API] VERSION 3.2 PAYLOAD:", apiPayload);
+    console.log("[API] VERSION 3.3 PAYLOAD (No URL ID):", apiPayload);
 
     const formData = new FormData();
-    // Appending strictly as strings
     Object.keys(apiPayload).forEach(key => {
-      formData.append(key, apiPayload[key]);
+      formData.append(key, apiPayload[key].toString());
     });
 
-    // CRITICAL: Only append NewImage if an actual file exists
     if (imageFile) {
-      console.log("[API] Appending NewImage file to FormData.");
+      console.log("[API] Appending NewImage file.");
       formData.append("NewImage", imageFile);
     }
 
-    const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
+    // REMOVED ?id= FROM URL AS PER USER SUGGESTION
+    const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
     const response = await safeFetch(url, {
       method: "POST",
       headers: getAuthHeaders("POST", false),
