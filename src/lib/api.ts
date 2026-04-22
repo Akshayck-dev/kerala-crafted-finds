@@ -307,29 +307,44 @@ export async function adminLogin(email: string, password: string): Promise<strin
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
   try {
     const productId = Number(product.id || 0);
-    const categoryId = Number(product.categoryID || 0);
-    const memberId = Number(product.memberID || 1);
-    
-    console.log(`[API] Product Update Diagnostic:`, {
-        productId,
-        categoryId,
-        memberId,
-        name: product.name,
-        hasImage: !!imageFile || !!product.image
-    });
-
     const formData = new FormData();
     
-    // Using ProductId (lower 'd') as seen in Delete/Member APIs
-    formData.append("ProductId", productId.toString());
-    formData.append("ProductName", product.name || "");
-    formData.append("ProductDescription", product.description || "");
-    formData.append("Price", (product.price || 0).toString());
-    formData.append("Quantity", (product.quantity || 0).toString());
-    formData.append("Unit", product.unit || "pcs");
-    formData.append("IsActive", "true");
-    formData.append("CategoryID", categoryId.toString());
-    formData.append("MemberID", memberId.toString());
+    // FETCH ORIGINAL DATA TO MIRROR EXACT BACKEND EXPECTATIONS
+    let originalData: any = {};
+    if (productId > 0) {
+      try {
+        const response = await safeFetch(`${BASE_URL}/Product/GetAllProducts?id=${productId}`);
+        const allProducts = await handleResponse(response);
+        originalData = Array.isArray(allProducts) ? allProducts.find((p: any) => (p.id || p.productId || p.ProductID) == productId) : {};
+        console.log("[API] Mirroring Original Product Data:", originalData);
+      } catch (e) {
+        console.warn("[API] Could not fetch original product for mirroring, proceeding with form data.");
+      }
+    }
+
+    // BASE PAYLOAD FROM ORIGINAL OR DEFAULTS
+    const payload: any = {
+      ...originalData,
+      ProductId: productId,
+      ProductName: product.name || originalData.productName || originalData.ProductName || "",
+      ProductDescription: product.description || originalData.productDescription || originalData.ProductDescription || "",
+      Price: (product.price || originalData.price || 0).toString(),
+      Quantity: (product.quantity || originalData.quantity || 0).toString(),
+      Unit: product.unit || originalData.unit || "pcs",
+      IsActive: (product.isActive !== false) ? "true" : "false",
+      // CRITICAL: Use original IDs if available to avoid UI mapping mismatches (like 4 vs 15)
+      CategoryID: (product.categoryID && product.categoryID < 100) ? product.categoryID : (originalData.categoryID || originalData.CategoryID || product.categoryID || 0),
+      MemberID: (product.memberID && product.memberID < 100) ? product.memberID : (originalData.memberID || originalData.MemberID || product.memberID || 1),
+    };
+
+    console.log(`[API] Final Mirror Payload for ID ${productId}:`, payload);
+
+    // Build FormData from mirror payload
+    Object.keys(payload).forEach(key => {
+        if (payload[key] !== undefined && payload[key] !== null) {
+            formData.append(key, payload[key].toString());
+        }
+    });
 
     if (imageFile) {
       formData.append("Image", imageFile);
@@ -338,7 +353,6 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       formData.append("Image", product.image);
     }
 
-    // Attempting WITHOUT the query param first, as it's cleaner
     const response = await safeFetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
       method: "POST",
       headers: getAuthHeaders("POST", false),
