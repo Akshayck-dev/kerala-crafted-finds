@@ -305,7 +305,7 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 2.3 (Typo Fixed)");
+  console.log("[API] Product Update VERSION: 2.4 (Exact Mirroring)");
   try {
     const productId = Number(product.id || 0);
     const formData = new FormData();
@@ -314,8 +314,7 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     let originalData: any = {};
     if (productId > 0) {
       try {
-        console.log("[API] VERSION 2.3: Mirroring through typoed endpoint...");
-        // MATCH THE TYPO IN THE BACKEND: GetAllProdutcs
+        console.log("[API] VERSION 2.4: Mirroring through typoed endpoint...");
         const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
           headers: getAuthHeaders("GET", false),
         });
@@ -323,29 +322,47 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
         
         if (Array.isArray(data)) {
           originalData = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId) || {};
-          console.log(`[API] Mirror found product ${productId}. Keys:`, Object.keys(originalData));
         }
-        console.log("[API] Successfully Mirrored Data (v2.3):", originalData);
+        console.log("[API] Successfully Mirrored Data (v2.4):", originalData);
       } catch (e) {
-        console.warn("[API] Mirror Fetch failed (v2.3):", e);
+        console.warn("[API] Mirror Fetch failed (v2.4):", e);
       }
     }
 
-    // PASCAL CASE PAYLOAD
+    // MERGE UPDATES INTO ORIGINAL DATA (EXACT MIRRORING)
     const payload: any = {
+      ...originalData, // Keep all original hidden fields!
+      
+      // Basic Info (Dual Case for safety)
       ProductId: productId,
+      productId: productId,
       ProductName: product.name || originalData.productName || originalData.ProductName || "",
-      ProductDescription: product.description || originalData.productDescription || originalData.ProductDescription || "",
-      Price: (product.price || originalData.price || 0).toString(),
-      Quantity: (product.quantity || originalData.quantity || 0).toString(),
+      productName: product.name || originalData.productName || originalData.ProductName || "",
+      ProductDescription: product.description || originalData.description || originalData.ProductDescription || "",
+      productDescription: product.description || originalData.description || originalData.ProductDescription || "",
+      description: product.description || originalData.description || originalData.ProductDescription || "",
+      Description: product.description || originalData.description || originalData.ProductDescription || "",
+      
+      // Pricing/Stock
+      Price: Number(product.price || originalData.price || 0),
+      price: Number(product.price || originalData.price || 0),
+      Quantity: Number(product.quantity || originalData.quantity || 0),
+      quantity: Number(product.quantity || originalData.quantity || 0),
       Unit: product.unit || originalData.unit || "pcs",
-      IsActive: "true",
-      // CRITICAL: Preserve real IDs from mirror
-      CategoryID: originalData.categoryID || originalData.CategoryID || originalData.categoryId || originalData.CategoryId || product.categoryID || 0,
-      MemberID: originalData.memberID || originalData.MemberID || originalData.memberId || originalData.MemberId || product.memberID || 1,
+      unit: product.unit || originalData.unit || "pcs",
+      
+      // Status
+      IsActive: true,
+      isActive: true,
+      
+      // Category & Member (Use original IDs strictly)
+      CategoryID: originalData.categoryID || originalData.CategoryID || product.categoryID || 0,
+      categoryID: originalData.categoryID || originalData.CategoryID || product.categoryID || 0,
+      MemberID: originalData.memberID || originalData.MemberID || product.memberID || 1,
+      memberID: originalData.memberID || originalData.MemberID || product.memberID || 1,
     };
 
-    console.log(`[API] Final Payload for ID ${productId}:`, JSON.stringify(payload, null, 2));
+    console.log(`[API] Final Mirror Payload (v2.4):`, JSON.stringify(payload, null, 2));
 
     Object.keys(payload).forEach(key => {
         if (payload[key] !== undefined && payload[key] !== null) {
@@ -361,8 +378,6 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     }
 
     const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
-    console.log("[API] Calling Update:", url);
-
     const response = await safeFetch(url, {
       method: "POST",
       headers: getAuthHeaders("POST", false),
