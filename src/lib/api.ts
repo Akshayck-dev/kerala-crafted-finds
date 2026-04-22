@@ -313,7 +313,9 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     let originalData: any = {};
     if (productId > 0) {
       try {
-        const response = await safeFetch(`${BASE_URL}/Product/GetAllProducts?id=${productId}`);
+        const response = await safeFetch(`${BASE_URL}/Product/GetAllProducts?id=${productId}`, {
+          headers: getAuthHeaders("GET", false),
+        });
         const allProducts = await handleResponse(response);
         originalData = Array.isArray(allProducts) ? allProducts.find((p: any) => (p.id || p.productId || p.ProductID) == productId) : {};
         console.log("[API] Mirroring Original Product Data:", originalData);
