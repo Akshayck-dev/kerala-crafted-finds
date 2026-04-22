@@ -462,17 +462,22 @@ export async function addOrUpdateMember(member: Partial<Member>) {
 
 export async function deleteMember(memberId: number) {
   try {
-    // Sending triple-redundant ID keys to ensure    // Added memberId (camelCase) for exhaustive compatibility
-    const response = await safeFetch(`${BASE_URL}/User/DeleteMember?MemberId=${memberId}&memberId=${memberId}`, {
+    console.log(`[API] Deleting Member ID: ${memberId}`);
+    
+    // Sending redundant ID keys in both query and body for exhaustive compatibility
+    const response = await safeFetch(`${BASE_URL}/User/DeleteMember?MemberId=${memberId}&memberId=${memberId}&id=${memberId}`, {
       method: "POST",
       headers: getAuthHeaders("POST", true), 
       body: JSON.stringify({ 
         MemberId: memberId,
         MemberID: memberId,
         memberId: memberId,
+        Id: memberId,
         id: memberId
       }),
     });
+    
+    console.log(`[API] DeleteMember Response Status: ${response.status} ${response.statusText}`);
     
     // Add a short delay to ensure the backend database/index is updated before the refresh happens
     if (response.ok) {
