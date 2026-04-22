@@ -306,11 +306,11 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 4.4 (Brute Force Mode)");
+  console.log("[API] Product Update VERSION: 4.5 (Mirror Hardened)");
   try {
     const productId = Number(product.id || 0);
     
-    // RECOVER ORIGINAL DATA
+    // 1. HARDENED MIRROR RECOVERY
     let originalData: any = {};
     try {
       const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
@@ -318,78 +318,74 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
       });
       const data = await handleResponse(response);
       if (Array.isArray(data)) {
-        originalData = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId) || {};
+        // Search exhaustively for the correct product object
+        originalData = data.find((p: any) => 
+          (p.id == productId) || 
+          (p.productId == productId) || 
+          (p.ProductID == productId) || 
+          (p.ProductId == productId)
+        ) || {};
+        
+        if (originalData.id || originalData.productId) {
+          console.log(`[API] Mirror Success! Found ID ${productId}. Original IDs: Category=${originalData.categoryID || originalData.CategoryID}, Member=${originalData.memberID || originalData.MemberID}`);
+        } else {
+          console.warn(`[API] Mirror could not find ID ${productId} in the list.`);
+        }
       }
     } catch (e) {
-      console.warn("[API] Mirror recovery failed.");
+      console.warn("[API] Mirror fetch failed.");
     }
 
-    const formData = new FormData();
-    
-    // BRUTE FORCE: Send BOTH cases for every field!
-    const payload: any = {
-      // IDs
-      id: productId,
+    // 2. CONSTRUCT PAYLOAD
+    const apiPayload: any = {
       ProductId: productId,
-      productId: productId,
-      
-      // Category & Member (Try all variations)
-      CategoryID: Number(product.categoryID || originalData.categoryID || originalData.CategoryID || 0),
-      categoryID: Number(product.categoryID || originalData.categoryID || originalData.CategoryID || 0),
-      MemberID: Number(product.memberID || originalData.memberID || originalData.MemberID || 1),
-      memberID: Number(product.memberID || originalData.memberID || originalData.MemberID || 1),
-      
-      // Strings
+      id: productId,
+      MemberID: Number(originalData.memberID || originalData.MemberID || product.memberID || 1),
+      CategoryID: Number(originalData.categoryID || originalData.CategoryID || product.categoryID || 0),
       ProductName: (product.name || originalData.productName || originalData.ProductName || "").toString(),
-      productName: (product.name || originalData.productName || originalData.ProductName || "").toString(),
       Description: (product.description || originalData.description || originalData.Description || "").toString(),
-      description: (product.description || originalData.description || originalData.Description || "").toString(),
-      ProductDescription: (product.description || originalData.description || originalData.Description || "").toString(),
-      
-      // Numbers
       Price: Number(product.price || originalData.price || 0),
-      price: Number(product.price || originalData.price || 0),
       Quantity: Number(product.quantity || originalData.quantity || 0),
-      quantity: Number(product.quantity || originalData.quantity || 0),
-      
-      // Other
       Unit: (product.unit || originalData.unit || "gm").toString(),
-      unit: (product.unit || originalData.unit || "gm").toString(),
       IsActive: true,
-      isActive: true,
       CreatedOn: originalData.createdOn || originalData.CreatedOn || '2026-04-14T01:31:50'
     };
 
-    console.log("[API] VERSION 4.4 BRUTE FORCE PAYLOAD:", payload);
-
-    Object.keys(payload).forEach(key => {
-      if (payload[key] !== undefined && payload[key] !== null) {
-        formData.append(key, payload[key].toString());
-      }
-    });
-
-    if (imageFile) {
-      console.log("[API] Appending real binary file to NewImage.");
-      formData.append('NewImage', imageFile);
-    } else if (originalData.image || originalData.Image) {
-      formData.append('Image', originalData.image || originalData.Image);
-    }
-
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
-    // NO URL PARAMS - PURE BODY POST
     const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
     
-    const response = await axios.post(url, formData, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    let response;
+
+    // 3. HYBRID MODE: Use JSON if no image, FormData if image exists
+    if (imageFile) {
+      console.log("[API] Using FormData for Image Upload...");
+      const formData = new FormData();
+      Object.keys(apiPayload).forEach(key => {
+        formData.append(key, apiPayload[key].toString());
+      });
+      formData.append('NewImage', imageFile);
+      
+      response = await axios.post(url, formData, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } else {
+      console.log("[API] Using JSON for Data-only Update...");
+      // Some .NET APIs need the ID in the body as well as the object
+      response = await axios.post(url, apiPayload, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v4.4):", response.data);
+      console.log("[API] Success (v4.5):", response.data);
       return response.data;
     }
     throw new Error(`Status: ${response.status}`);
   } catch (error: any) {
-    console.error("Backend Error Detail (v4.4):", error.response?.data || error.message);
+    console.error("Backend Error Detail (v4.5):", error.response?.data || error.message);
     throw error;
   }
 }
