@@ -316,9 +316,17 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
         const response = await safeFetch(`${BASE_URL}/Product/GetAllProducts?id=${productId}`, {
           headers: getAuthHeaders("GET", false),
         });
-        const allProducts = await handleResponse(response);
-        originalData = Array.isArray(allProducts) ? allProducts.find((p: any) => (p.id || p.productId || p.ProductID) == productId) : {};
-        console.log("[API] Mirroring Original Product Data:", originalData);
+        const data = await handleResponse(response);
+        if (Array.isArray(data)) {
+          originalData = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId) || {};
+        } else if (data && typeof data === 'object') {
+          // If it's a single object, check if it's the right one
+          const dataId = data.id || data.productId || data.ProductID || data.ProductId;
+          if (dataId == productId || !dataId) {
+            originalData = data;
+          }
+        }
+        console.log("[API] Successfully Mirrored Data:", originalData);
       } catch (e) {
         console.warn("[API] Could not fetch original product for mirroring.");
       }
