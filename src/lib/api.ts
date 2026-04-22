@@ -305,7 +305,7 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 2.2 (Proxy Optimized)");
+  console.log("[API] Product Update VERSION: 2.3 (Typo Fixed)");
   try {
     const productId = Number(product.id || 0);
     const formData = new FormData();
@@ -314,9 +314,9 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     let originalData: any = {};
     if (productId > 0) {
       try {
-        console.log("[API] VERSION 2.2: Mirroring through proxy...");
-        // Fetch all products and find the specific one to be extra safe
-        const response = await safeFetch(`${BASE_URL}/Product/GetAllProducts`, {
+        console.log("[API] VERSION 2.3: Mirroring through typoed endpoint...");
+        // MATCH THE TYPO IN THE BACKEND: GetAllProdutcs
+        const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
           headers: getAuthHeaders("GET", false),
         });
         const data = await handleResponse(response);
@@ -325,9 +325,9 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
           originalData = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId) || {};
           console.log(`[API] Mirror found product ${productId}. Keys:`, Object.keys(originalData));
         }
-        console.log("[API] Successfully Mirrored Data (v2.2):", originalData);
+        console.log("[API] Successfully Mirrored Data (v2.3):", originalData);
       } catch (e) {
-        console.warn("[API] Mirror Fetch failed (v2.2):", e);
+        console.warn("[API] Mirror Fetch failed (v2.3):", e);
       }
     }
 
