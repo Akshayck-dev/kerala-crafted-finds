@@ -418,17 +418,17 @@ export async function addOrUpdateMember(member: Partial<Member>) {
     // Exact mapping to the structure preferred by the Mallu Smart production backend
     const payload = {
       id: Number(member.id || 0),
-      name: String(member.name || ""),
-      businessName: String(member.businessName || ""),
-      place: String(member.place || ""),
-      district: String(member.district || "Ernakulam"),
-      product: String(member.product || ""),
-      contactNumber: String(member.phone || member.contactNumber || ""),
-      licenceNumber: String(member.licenceNumber || "NA"),
-      ownProduct: member.ownProduct ?? true,
-      isActive: member.isActive ?? true,
-      createdOn: member.joinedDate || member.createdOn || new Date().toISOString(),
-      modifiedOn: new Date().toISOString()
+      Name: String(member.name || ""),
+      BusinessName: String(member.businessName || ""),
+      Place: String(member.place || ""),
+      District: String(member.district || "Ernakulam"),
+      Product: String(member.product || ""),
+      ContactNumber: String(member.phone || member.contactNumber || ""),
+      LicenceNumber: String(member.licenceNumber || "NA"),
+      OwnProduct: member.ownProduct ?? true,
+      IsActive: member.isActive ?? true,
+      CreatedOn: member.joinedDate || member.createdOn || new Date().toISOString(),
+      ModifiedOn: new Date().toISOString()
     };
 
     const response = await safeFetch(`${BASE_URL}/User/AddOrUpdateMember`, {

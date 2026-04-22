@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import React, { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { fetchMembers, deleteMember } from "@/lib/api";
+import { toast } from "sonner";
 import { type Member } from "@/lib/data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, UserPlus, Mail, Phone, Calendar, Trash2, MapPin, Building2, UserX, Edit } from "lucide-react";
@@ -88,11 +89,12 @@ function AdminMembers() {
     setIsDeleting(true);
     try {
       await deleteMember(Number(memberToDelete));
+      toast.success("Member deleted successfully.");
       await loadMembers();
       setIsDeleteOpen(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Delete member error:", err);
-      alert("Failed to delete member.");
+      toast.error(err.message || "Failed to delete member.");
     } finally {
       setIsDeleting(false);
       setMemberToDelete(null);
@@ -254,7 +256,10 @@ function AdminMembers() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         member={selectedMember}
-        onSuccess={loadMembers}
+        onSuccess={() => {
+            toast.success(selectedMember?.id ? "Member updated successfully." : "Member added successfully.");
+            loadMembers();
+        }}
       />
 
       {/* Delete/Block Confirmation */}

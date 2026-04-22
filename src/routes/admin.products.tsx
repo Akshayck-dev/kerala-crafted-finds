@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import React, { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { fetchProducts, deleteProduct } from "@/lib/api";
+import { toast } from "sonner";
 import { type Product } from "@/lib/data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Edit, Trash2, AlertCircle } from "lucide-react";
@@ -79,11 +80,12 @@ function AdminProducts() {
     setIsDeleting(true);
     try {
       await deleteProduct(Number(productToDelete));
+      toast.success("Product deleted successfully.");
       await loadProducts();
       setIsDeleteOpen(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Delete error:", err);
-      alert("Failed to delete product.");
+      toast.error(err.message || "Failed to delete product.");
     } finally {
       setIsDeleting(false);
       setProductToDelete(null);
