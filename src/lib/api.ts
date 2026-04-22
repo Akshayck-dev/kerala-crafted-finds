@@ -464,17 +464,10 @@ export async function deleteMember(memberId: number) {
   try {
     console.log(`[API] Deleting Member ID: ${memberId}`);
     
-    // Sending redundant ID keys in both query and body for exhaustive compatibility
-    const response = await safeFetch(`${BASE_URL}/User/DeleteMember?MemberId=${memberId}&memberId=${memberId}&id=${memberId}`, {
+    // Aligning with DeleteProduct pattern: POST with query param, no body
+    const response = await safeFetch(`${BASE_URL}/User/DeleteMember?id=${memberId}&memberId=${memberId}&MemberId=${memberId}`, {
       method: "POST",
-      headers: getAuthHeaders("POST", true), 
-      body: JSON.stringify({ 
-        MemberId: memberId,
-        MemberID: memberId,
-        memberId: memberId,
-        Id: memberId,
-        id: memberId
-      }),
+      headers: getAuthHeaders("POST"), // No JSON body needed
     });
     
     console.log(`[API] DeleteMember Response Status: ${response.status} ${response.statusText}`);
