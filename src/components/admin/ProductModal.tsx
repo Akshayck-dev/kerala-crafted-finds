@@ -298,7 +298,6 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                     </div>
                   </div>
                 </div>
->
 
                 {/* Preview */}
                 {(previewUrl || formData.image) && (
