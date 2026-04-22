@@ -56,8 +56,6 @@ function AdminMembers() {
     setError(null);
     try {
       const data = await fetchMembers();
-      console.log(`[ADMIN] Loaded ${data.length} members:`);
-      console.table(data);
       setMembers(data);
     } catch (err: any) {
       console.error("Members load error:", err);
@@ -110,8 +108,9 @@ function AdminMembers() {
         (m.phone && m.phone.includes(searchTerm));
       
       const matchesDistrict = districtFilter === "All Districts" || m.district === districtFilter;
+      const isActive = m.isActive !== false;
       
-      return matchesSearch && matchesDistrict;
+      return matchesSearch && matchesDistrict && isActive;
     });
 
   return (
