@@ -6,7 +6,7 @@ import { useLoadingStore } from "./loading-store";
 // BASE_URL is set directly to the production domain as requested.
 // NOTE: This may require CORS configuration on the backend.
 // Use the Vite proxy to avoid CORS issues and standardize headers.
-const BASE_URL = "https://mallusmart.com";
+const BASE_URL = "/api";
 
 console.log("[API] Module loaded. Version: 1.0.2 - PASCAL_CASE_VALIDATION");
 
@@ -305,7 +305,7 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 2.1");
+  console.log("[API] Product Update VERSION: 2.2 (Proxy Optimized)");
   try {
     const productId = Number(product.id || 0);
     const formData = new FormData();
@@ -314,7 +314,8 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     let originalData: any = {};
     if (productId > 0) {
       try {
-        console.log("[API] VERSION 2.1: Fetching original for mirror...");
+        console.log("[API] VERSION 2.2: Mirroring through proxy...");
+        // Fetch all products and find the specific one to be extra safe
         const response = await safeFetch(`${BASE_URL}/Product/GetAllProducts`, {
           headers: getAuthHeaders("GET", false),
         });
@@ -324,13 +325,13 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
           originalData = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId) || {};
           console.log(`[API] Mirror found product ${productId}. Keys:`, Object.keys(originalData));
         }
-        console.log("[API] Successfully Mirrored Data (v2.1):", originalData);
+        console.log("[API] Successfully Mirrored Data (v2.2):", originalData);
       } catch (e) {
-        console.warn("[API] Mirror Fetch failed (v2.1):", e);
+        console.warn("[API] Mirror Fetch failed (v2.2):", e);
       }
     }
 
-    // PASCAL CASE IS USUALLY BEST FOR DOTNET BACKENDS
+    // PASCAL CASE PAYLOAD
     const payload: any = {
       ProductId: productId,
       ProductName: product.name || originalData.productName || originalData.ProductName || "",
@@ -339,12 +340,12 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       Quantity: (product.quantity || originalData.quantity || 0).toString(),
       Unit: product.unit || originalData.unit || "pcs",
       IsActive: "true",
-      // USE ORIGINAL IDs PRECISELY
+      // CRITICAL: Preserve real IDs from mirror
       CategoryID: originalData.categoryID || originalData.CategoryID || originalData.categoryId || originalData.CategoryId || product.categoryID || 0,
       MemberID: originalData.memberID || originalData.MemberID || originalData.memberId || originalData.MemberId || product.memberID || 1,
     };
 
-    console.log(`[API] BRUTE FORCE Payload for ID ${productId}:`, JSON.stringify(payload, null, 2));
+    console.log(`[API] Final Payload for ID ${productId}:`, JSON.stringify(payload, null, 2));
 
     Object.keys(payload).forEach(key => {
         if (payload[key] !== undefined && payload[key] !== null) {
@@ -359,9 +360,8 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       formData.append("Image", product.image);
     }
 
-    // Using /api proxy and id query param for maximum stability
-    const url = `${BASE_URL.replace('https://mallusmart.com', '/api')}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
-    console.log("[API] Calling Update via Proxy:", url);
+    const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
+    console.log("[API] Calling Update:", url);
 
     const response = await safeFetch(url, {
       method: "POST",
