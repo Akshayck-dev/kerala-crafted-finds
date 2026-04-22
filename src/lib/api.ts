@@ -305,17 +305,17 @@ export async function adminLogin(email: string, password: string): Promise<strin
   }
 }
 
-export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 4.1 (Strict Conversion)");
+export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
+  console.log("[API] Product Update VERSION: 4.2 (Pascal Perfect)");
   try {
     const productId = Number(product.id || 0);
     
-    // WE STILL NEED THE REAL IDs
-    let realCategoryId = product.categoryID || 0;
-    let realMemberId = product.memberID || 1;
+    // WE STILL NEED THE REAL IDs FROM THE SERVER
+    let realCategoryId = Number(product.categoryID || 0);
+    let realMemberId = Number(product.memberID || 1);
 
     try {
-      console.log("[API] VERSION 4.1: Mirror Fetching real IDs...");
+      console.log("[API] VERSION 4.2: Mirroring real IDs...");
       const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
         headers: getAuthHeaders("GET", false),
       });
@@ -323,27 +323,27 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       if (Array.isArray(data)) {
         const original = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId);
         if (original) {
-          realCategoryId = original.categoryID || original.CategoryID || realCategoryId;
-          realMemberId = original.memberID || original.MemberID || realMemberId;
+          realCategoryId = Number(original.categoryID || original.CategoryID || realCategoryId);
+          realMemberId = Number(original.memberID || original.MemberID || realMemberId);
           console.log(`[API] Mirror Success: Category=${realCategoryId}, Member=${realMemberId}`);
         }
       }
     } catch (e) {
-      console.warn("[API] Mirror failed.");
+      console.warn("[API] ID Mirror failed.");
     }
 
     const formData = new FormData();
     
-    // 1. Strictly mapping as per user's "handleUpdate" logic
+    // STRICT PASCAL CASE ONLY - AS REQUESTED
     formData.append('id', productId.toString());
     formData.append('MemberID', realMemberId.toString());
     formData.append('CategoryID', realCategoryId.toString());
-    formData.append('ProductName', (product.name || "").toString());
-    formData.append('Description', (product.description || "").toString());
-    formData.append('Price', parseInt((product.price || 0).toString()).toString());
-    formData.append('Quantity', parseInt((product.quantity || 0).toString()).toString());
+    formData.append('ProductName', (product.name || product.ProductName || "").toString());
+    formData.append('Description', (product.description || product.Description || "").toString());
+    formData.append('Price', Number(product.price || 0).toString());
+    formData.append('Quantity', Number(product.quantity || 0).toString());
     formData.append('Unit', (product.unit || "gm").toString());
-    formData.append('IsActive', "true"); // Strict boolean string
+    formData.append('IsActive', 'true');
     formData.append('CreatedOn', '2026-04-14');
 
     if (imageFile) {
@@ -357,7 +357,7 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
     const url = `${BASE_URL}/Product/AddOrUpdateProduct?id=${productId}`;
     
-    console.log("[API] Calling Update (v4.1):", url);
+    console.log("[API] Calling Update (v4.2):", url);
 
     const response = await axios.post(url, formData, {
       headers: {
@@ -366,15 +366,14 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v4.1):", response.data);
-      // Optional: alert("Product Updated Successfully!"); 
+      console.log("[API] Success (v4.2):", response.data);
       return response.data;
     }
     
     throw new Error(`Unexpected status: ${response.status}`);
   } catch (error: any) {
     const errorDetail = error.response?.data || error.message;
-    console.error("Backend Error Detail (v4.1):", errorDetail);
+    console.error("Backend Error Detail (v4.2):", errorDetail);
     throw error;
   }
 }
