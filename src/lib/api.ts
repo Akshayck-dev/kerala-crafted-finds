@@ -202,7 +202,7 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
 
 export async function fetchCategories(): Promise<Category[]> {
   try {
-    const response = await safeFetch(`${BASE_URL}/Category/GetAllCategories`, {
+    const response = await safeFetch(`${BASE_URL}/Product/GetAllCategories`, {
       headers: getAuthHeaders("GET", false),
     });
     const data = await handleResponse(response);
