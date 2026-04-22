@@ -306,11 +306,11 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 4.7 (The \"Add\" Clone)");
+  console.log("[API] Product Update VERSION: 4.8 (Verified Structure)");
   try {
     const productId = Number(product.id || 0);
     
-    // FETCH ORIGINAL DATA TO PRESERVE CATEGORY/MEMBER INTEGRITY
+    // RECOVER ORIGINAL DATA FOR AUDIT FIELDS
     let originalData: any = {};
     try {
       const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
@@ -323,22 +323,25 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
         ) || {};
       }
     } catch (e) {
-      console.warn("[API] Mirror fetch failed.");
+      console.warn("[API] Audit recovery failed.");
     }
 
     const formData = new FormData();
     
-    // USING PASCAL CASE (Assuming this is what works for "Add")
-    // Note: We are NOT adding 'id' or 'ProductId' to the body here
-    formData.append('ProductName', (product.name || originalData.productName || originalData.ProductName || "").toString());
-    formData.append('Description', (product.description || originalData.description || originalData.Description || "").toString());
-    formData.append('Price', Number(product.price || originalData.price || 0).toString());
-    formData.append('Quantity', Number(product.quantity || originalData.quantity || 0).toString());
-    formData.append('Unit', (product.unit || originalData.unit || "gm").toString());
-    formData.append('CategoryID', (product.categoryID || originalData.categoryID || originalData.CategoryID || 0).toString());
-    formData.append('MemberID', (product.memberID || originalData.memberID || originalData.MemberID || 1).toString());
-    formData.append('IsActive', 'true');
-    formData.append('CreatedOn', originalData.createdOn || originalData.CreatedOn || '2026-04-14T01:31:50');
+    // VERIFIED KEYS FROM BROWSER DIAGNOSTIC
+    // No 'id' or 'ProductId' in body to avoid 500 model binding conflict
+    formData.append('productName', (product.name || originalData.productName || originalData.ProductName || "").toString());
+    formData.append('description', (product.description || originalData.description || originalData.Description || "").toString());
+    formData.append('price', Number(product.price || originalData.price || 0).toString());
+    formData.append('quantity', Number(product.quantity || originalData.quantity || 0).toString());
+    formData.append('unit', (product.unit || originalData.unit || "gm").toString());
+    
+    // Verified Casing: lowercase start, uppercase 'ID'
+    formData.append('categoryID', (product.categoryID || originalData.categoryID || originalData.CategoryID || 0).toString());
+    formData.append('memberID', (product.memberID || originalData.memberID || originalData.MemberID || 1).toString());
+    
+    formData.append('isActive', 'true');
+    formData.append('createdOn', originalData.createdOn || originalData.CreatedOn || new Date().toISOString());
 
     if (imageFile) {
       console.log("[API] Appending file to NewImage.");
@@ -346,22 +349,22 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     }
 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
-    // PUTTING ID IN URL ONLY (Common for .NET AddOrUpdate endpoints)
+    // VERIFIED: id must be in URL for updates
     const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
     
-    console.log("[API] Calling Update (v4.7) - URL ID Only:", url);
+    console.log("[API] Calling Update (v4.8) - Verified Format:", url);
 
     const response = await axios.post(url, formData, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v4.7):", response.data);
+      console.log("[API] Success (v4.8):", response.data);
       return response.data;
     }
     throw new Error(`Status: ${response.status}`);
   } catch (error: any) {
-    console.error("Backend Error Detail (v4.7):", error.response?.data || error.message);
+    console.error("Backend Error Detail (v4.8):", error.response?.data || error.message);
     throw error;
   }
 }
