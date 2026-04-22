@@ -331,9 +331,13 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       console.warn("[API] Mirror failed, falling back to UI IDs.");
     }
 
-    // MINIMAL PAYLOAD - VERSION 3.3 (URL-Clean Version)
+    // MINIMAL PAYLOAD - VERSION 3.4 (Triple-ID Version)
     const apiPayload: any = {
+      // Triple-ID for maximum model binder compatibility
       id: productId,
+      ProductId: productId,
+      productID: productId,
+      
       MemberID: realMemberId,
       CategoryID: realCategoryId,
       ProductName: product.name || "",
@@ -345,7 +349,7 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       CreatedOn: "2026-04-14"
     };
 
-    console.log("[API] VERSION 3.3 PAYLOAD (No URL ID):", apiPayload);
+    console.log("[API] VERSION 3.4 PAYLOAD (Restored URL ID):", apiPayload);
 
     const formData = new FormData();
     Object.keys(apiPayload).forEach(key => {
@@ -357,8 +361,8 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       formData.append("NewImage", imageFile);
     }
 
-    // REMOVED ?id= FROM URL AS PER USER SUGGESTION
-    const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
+    // RESTORED ?id= TO URL FOR STABILITY
+    const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
     const response = await safeFetch(url, {
       method: "POST",
       headers: getAuthHeaders("POST", false),
