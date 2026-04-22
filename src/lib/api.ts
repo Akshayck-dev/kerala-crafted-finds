@@ -306,12 +306,12 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 5.1 (User-Spec FormData)");
+  console.log("[API] Product Update VERSION: 5.2 (Image-Focused Version)");
   
   try {
     const formData = new FormData();
 
-    // 1. Map exactly to your provided structure
+    // 1. Core Fields Mapping
     formData.append("id", (product.id || 0).toString());
     formData.append("memberID", (product.memberID || 1).toString());
     formData.append("categoryID", (product.categoryID || 1).toString());
@@ -322,11 +322,21 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     formData.append("isActive", "true");
     formData.append("unit", product.unit || "pcs");
 
-    // 2. Handle file upload as "image" (User-Spec)
+    // 2. 🔥 IMAGE HANDLING (Verified Logic)
     if (imageFile) {
-      console.log("[API] Appending file to 'image' field...");
+      console.log("[API] Appending NEW binary file to 'image' field:", imageFile.name);
       formData.append("image", imageFile);
+    } else if (product.image) {
+      console.log("[API] No new file. Appending existing URL to 'image' field:", product.image);
+      formData.append("image", product.image);
     }
+
+    // 3. 🔍 DEBUG LOGS (Verifying exactly what goes to the server)
+    console.log("--- FormData Payload Debug Start (v5.2) ---");
+    for (let pair of (formData as any).entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
+    console.log("--- FormData Payload Debug End ---");
 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
     const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
@@ -338,13 +348,13 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v5.1):", response.data);
+      console.log("[API] Success (v5.2):", response.data);
       return response.data;
     }
     throw new Error(`Status: ${response.status}`);
   } catch (error: any) {
     const errorDetail = error.response?.data || error.message;
-    console.error("Backend Error Detail (v5.1):", errorDetail);
+    console.error("Backend Error Detail (v5.2):", errorDetail);
     throw error;
   }
 }
