@@ -318,28 +318,48 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
         originalData = Array.isArray(allProducts) ? allProducts.find((p: any) => (p.id || p.productId || p.ProductID) == productId) : {};
         console.log("[API] Mirroring Original Product Data:", originalData);
       } catch (e) {
-        console.warn("[API] Could not fetch original product for mirroring, proceeding with form data.");
+        console.warn("[API] Could not fetch original product for mirroring.");
       }
     }
 
-    // BASE PAYLOAD FROM ORIGINAL OR DEFAULTS
+    // BRUTE FORCE PAYLOAD - SEND EVERYTHING IN ALL CASINGS
     const payload: any = {
       ...originalData,
+      // Product ID variations
       ProductId: productId,
+      ProductID: productId,
+      productId: productId,
+      productID: productId,
+      Id: productId,
+      id: productId,
+      
+      // Basic Info
       ProductName: product.name || originalData.productName || originalData.ProductName || "",
+      productName: product.name || originalData.productName || originalData.ProductName || "",
       ProductDescription: product.description || originalData.productDescription || originalData.ProductDescription || "",
+      productDescription: product.description || originalData.productDescription || originalData.ProductDescription || "",
+      
+      // Pricing/Stock
       Price: (product.price || originalData.price || 0).toString(),
+      price: (product.price || originalData.price || 0).toString(),
       Quantity: (product.quantity || originalData.quantity || 0).toString(),
+      quantity: (product.quantity || originalData.quantity || 0).toString(),
       Unit: product.unit || originalData.unit || "pcs",
+      unit: product.unit || originalData.unit || "pcs",
+      
+      // Status
       IsActive: (product.isActive !== false) ? "true" : "false",
-      // CRITICAL: Use original IDs if available to avoid UI mapping mismatches (like 4 vs 15)
-      CategoryID: (product.categoryID && product.categoryID < 100) ? product.categoryID : (originalData.categoryID || originalData.CategoryID || product.categoryID || 0),
-      MemberID: (product.memberID && product.memberID < 100) ? product.memberID : (originalData.memberID || originalData.MemberID || product.memberID || 1),
+      isActive: (product.isActive !== false) ? "true" : "false",
+      
+      // Category & Member (Use original IDs to be safe)
+      CategoryID: originalData.categoryID || originalData.CategoryID || product.categoryID || 0,
+      categoryID: originalData.categoryID || originalData.CategoryID || product.categoryID || 0,
+      MemberID: originalData.memberID || originalData.MemberID || product.memberID || 1,
+      memberID: originalData.memberID || originalData.MemberID || product.memberID || 1,
     };
 
-    console.log(`[API] Final Mirror Payload for ID ${productId}:`, payload);
+    console.log(`[API] BRUTE FORCE Payload for ID ${productId}:`, JSON.stringify(payload, null, 2));
 
-    // Build FormData from mirror payload
     Object.keys(payload).forEach(key => {
         if (payload[key] !== undefined && payload[key] !== null) {
             formData.append(key, payload[key].toString());
@@ -353,7 +373,11 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       formData.append("Image", product.image);
     }
 
-    const response = await safeFetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
+    // Using /api proxy and id query param for maximum stability
+    const url = `${BASE_URL.replace('https://mallusmart.com', '/api')}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
+    console.log("[API] Calling Update via Proxy:", url);
+
+    const response = await safeFetch(url, {
       method: "POST",
       headers: getAuthHeaders("POST", false),
       body: formData,
