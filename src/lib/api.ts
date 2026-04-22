@@ -305,6 +305,7 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
+  console.log("[API] Product Update VERSION: 2.0");
   try {
     const productId = Number(product.id || 0);
     const formData = new FormData();
@@ -313,22 +314,24 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     let originalData: any = {};
     if (productId > 0) {
       try {
-        const response = await safeFetch(`${BASE_URL}/Product/GetAllProducts?id=${productId}`, {
+        console.log("[API] Attempting to fetch original product list for mirroring...");
+        const response = await safeFetch(`${BASE_URL}/Product/GetAllProducts`, {
           headers: getAuthHeaders("GET", false),
         });
         const data = await handleResponse(response);
+        console.log(`[API] Mirror Fetch returned ${Array.isArray(data) ? data.length : "non-array"} items.`);
+        
         if (Array.isArray(data)) {
           originalData = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId) || {};
-        } else if (data && typeof data === 'object') {
-          // If it's a single object, check if it's the right one
-          const dataId = data.id || data.productId || data.ProductID || data.ProductId;
-          if (dataId == productId || !dataId) {
-            originalData = data;
+          if (!originalData.id && !originalData.productId) {
+              console.warn(`[API] Product ${productId} not found in Mirror list! Keys in first item:`, Object.keys(data[0] || {}));
           }
+        } else if (data && typeof data === 'object') {
+          originalData = data;
         }
         console.log("[API] Successfully Mirrored Data:", originalData);
       } catch (e) {
-        console.warn("[API] Could not fetch original product for mirroring.");
+        console.warn("[API] Mirror Fetch failed:", e);
       }
     }
 
