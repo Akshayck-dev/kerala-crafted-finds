@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { addOrUpdateProduct, fetchCategories, fetchMembers } from "@/lib/api";
 import { type Product, type Category, type Member } from "@/lib/data";
-import { Loader2, Upload, Link as LinkIcon } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 
 interface ProductModalProps {
   product: Partial<Product> | null;
@@ -271,10 +271,9 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
               <Label>Product Image</Label>
               <div className="flex flex-col gap-4">
                 {/* File Upload */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="image-file" className="text-[10px] text-slate-500 uppercase">Option 1: Upload File</Label>
-                    <div className="relative group cursor-pointer border-2 border-dashed border-slate-200 rounded-lg p-4 hover:border-blue-500 transition-colors bg-slate-50/50">
+                    <div className="relative group cursor-pointer border-2 border-dashed border-slate-200 rounded-lg p-6 hover:border-blue-500 transition-colors bg-slate-50/50">
                       <input
                         id="image-file"
                         type="file"
@@ -284,37 +283,22 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                           const file = e.target.files?.[0];
                           if (file) {
                             setImageFile(file);
-                            setFormData(prev => ({ ...prev, image: "" })); // Clear URL if file is chosen
+                            setFormData(prev => ({ ...prev, image: "" })); // Clear existing URL reference
                             setPreviewUrl(URL.createObjectURL(file));
                           }
                         }}
                       />
-                      <div className="flex flex-col items-center gap-1 text-center">
-                        <Upload className="h-6 w-6 text-slate-400 group-hover:text-blue-500 transition-colors" />
-                        <span className="text-xs font-medium text-slate-600">
-                          {imageFile ? imageFile.name : "Choose or drop image"}
+                      <div className="flex flex-col items-center gap-2 text-center">
+                        <Upload className="h-8 w-8 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                        <span className="text-sm font-medium text-slate-600">
+                          {imageFile ? imageFile.name : "Choose or drop product image"}
                         </span>
+                        <p className="text-[10px] text-slate-400">PNG, JPG or WEBP (Max 2MB)</p>
                       </div>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="image" className="text-[10px] text-slate-500 uppercase">Option 2: Image URL</Label>
-                    <div className="relative">
-                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input
-                        id="image"
-                        value={formData.image || ""}
-                        onChange={(e) => {
-                          setFormData({ ...formData, image: e.target.value });
-                          if (!imageFile) setPreviewUrl(e.target.value);
-                        }}
-                        placeholder="https://..."
-                        className="pl-9 border-slate-200 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
                 </div>
+>
 
                 {/* Preview */}
                 {(previewUrl || formData.image) && (
