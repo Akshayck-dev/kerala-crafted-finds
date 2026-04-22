@@ -301,26 +301,15 @@ export async function adminLogin(email: string, password: string): Promise<strin
     return token.toString().trim().replace(/^"|"$/g, '');
   } catch (error) {
     console.error("API Error (AdminLogin):", error);
-    throw error;
-  }
-}
-
-// Helper to convert URL to File object for backend IFormFile compatibility
-async function urlToFile(url: string, filename: string = "image.jpg"): Promise<File> {
-  const res = await fetch(url);
-  const blob = await res.blob();
-  return new File([blob], filename, { type: blob.type });
-}
-
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
   const productId = Number(product.id || 0);
   const isUpdate = productId > 0;
-  console.log(`[API] VERSION 7.0 - ${isUpdate ? "UPDATE (Mandatory Binary)" : "ADD"} | id=${productId}`);
+  console.log(`[API] VERSION 8.0 - FINAL | Mode: ${isUpdate ? "UPDATE (NewImage)" : "ADD (image)"} | id=${productId}`);
   
   try {
     const formData = new FormData();
 
-    // 1. Core Fields
+    // 1. Core Fields Mapping (Required by backend)
     formData.append("id", productId.toString());
     formData.append("memberID", (product.memberID || 1).toString());
     formData.append("categoryID", (product.categoryID || 1).toString());
@@ -331,43 +320,27 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     formData.append("isActive", "true");
     formData.append("unit", product.unit || "pcs");
 
-    // 2. 🔥 REAL WORKING FIX (v7.0)
-    if (isUpdate) {
-      // UPDATE: Always send existing image URL string in "image"
-      formData.append("image", product.image || "");
-      
-      let fileToSend: File | null = null;
-      
-      if (imageFile) {
-        console.log("UPDATE → Using new binary file");
-        fileToSend = imageFile;
-      } else if (product.image) {
-        // 🔥 CRITICAL: Convert existing URL to File to satisfy backend IFormFile requirement
-        console.log("UPDATE → Converting existing URL to binary file fallback:", product.image);
-        try {
-          fileToSend = await urlToFile(product.image);
-        } catch (err) {
-          console.error("Failed to convert existing image to file:", err);
-        }
-      }
-
-      if (fileToSend) {
-        formData.append("newImage", fileToSend);
-      }
-    } else {
-      // ADD: send file only if selected
-      if (imageFile) {
-        console.log("ADD → Binary File in 'image':", imageFile.name);
+    // 2. 🔥 FINAL IMAGE LOGIC (v8.0)
+    // ADD: send "image" as file
+    // UPDATE: send "NewImage" (Capital N) as file
+    if (imageFile) {
+      if (isUpdate) {
+        console.log("UPDATE → Appending 'NewImage' (Binary)");
+        formData.append("NewImage", imageFile);
+      } else {
+        console.log("ADD → Appending 'image' (Binary)");
         formData.append("image", imageFile);
       }
+    } else {
+      console.log("No new file selected — Image field omitted.");
     }
 
-    // 3. 🔍 Debug: Log all FormData entries
-    console.log("--- FormData Payload ---");
+    // 3. 🔍 Debug: Verify EXACT FormData keys before sending
+    console.log("--- FINAL FormData Payload ---");
     for (let pair of (formData as any).entries()) {
       console.log(`  ${pair[0]}:`, pair[1]);
     }
-    console.log("------------------------");
+    console.log("------------------------------");
 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
     const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
@@ -377,13 +350,13 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v6.0):", response.data);
+      console.log("[API] Success (v8.0):", response.data);
       return response.data;
     }
     throw new Error(`Unexpected status: ${response.status}`);
   } catch (error: any) {
     const errorDetail = error.response?.data || error.message;
-    console.error("[API] Error (v6.0):", errorDetail);
+    console.error("[API] Error (v8.0):", errorDetail);
     throw error;
   }
 }
