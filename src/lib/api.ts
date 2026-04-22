@@ -304,7 +304,7 @@ export async function adminLogin(email: string, password: string): Promise<strin
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
   const productId = Number(product.id || 0);
   const isUpdate = productId > 0;
-  console.log(`[API] VERSION 8.0 - FINAL | Mode: ${isUpdate ? "UPDATE (NewImage)" : "ADD (image)"} | id=${productId}`);
+  console.log(`[API] VERSION 8.1 - FINAL_CLEAN | Mode: ${isUpdate ? "UPDATE (NewImage)" : "ADD (image)"} | id=${productId}`);
   
   try {
     const formData = new FormData();
@@ -320,7 +320,7 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     formData.append("isActive", "true");
     formData.append("unit", product.unit || "pcs");
 
-    // 2. 🔥 FINAL IMAGE LOGIC (v8.0)
+    // 2. 🔥 FINAL IMAGE LOGIC (v8.1 - FINAL_CLEAN)
     // ADD: send "image" as file
     // UPDATE: send "NewImage" (Capital N) as file
     if (imageFile) {
@@ -332,7 +332,7 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
         formData.append("image", imageFile);
       }
     } else {
-      console.log("No new file selected — Image field omitted.");
+      console.log("No new file selected — Image field omitted completely.");
     }
 
     // 3. 🔍 Debug: Verify EXACT FormData keys before sending
@@ -350,13 +350,13 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v8.0):", response.data);
+      console.log("[API] Success (v8.1):", response.data);
       return response.data;
     }
     throw new Error(`Unexpected status: ${response.status}`);
   } catch (error: any) {
     const errorDetail = error.response?.data || error.message;
-    console.error("[API] Error (v8.0):", errorDetail);
+    console.error("[API] Error (v8.1):", errorDetail);
     throw error;
   }
 }
