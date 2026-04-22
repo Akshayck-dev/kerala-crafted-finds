@@ -314,76 +314,39 @@ export async function adminLogin(email: string, password: string): Promise<strin
 
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
   try {
-    const finalId = Number(product.id || 0);
-    const now = new Date().toISOString();
-
+    const productId = Number(product.id || 0);
     const formData = new FormData();
-    console.log(`[API] AddOrUpdateProduct - Exhaustive Payload for ID: ${finalId}`);
-
-    // ID VARIATIONS
-    formData.append("ProductID", finalId.toString());
-    formData.append("ProductId", finalId.toString());
-    formData.append("productId", finalId.toString());
-    formData.append("id", finalId.toString());
-    formData.append("Id", finalId.toString());
     
-    // NAME VARIATIONS
+    console.log(`[API] AddOrUpdateProduct - Attempting Update for ID: ${productId}`);
+
+    // Core fields (PascalCase - proven by Add operation)
+    formData.append("ProductID", productId.toString());
     formData.append("ProductName", product.name || "");
-    formData.append("productName", product.name || "");
-    formData.append("Name", product.name || "");
-    formData.append("name", product.name || "");
-    
-    // DESCRIPTION VARIATIONS
-    formData.append("Description", product.description || "");
-    formData.append("description", product.description || "");
-    formData.append("ProductDescription", product.description || "");
-    formData.append("productDescription", product.description || "");
-    
-    // PRICE/QTY VARIATIONS
+    formData.append("ProductDescription", product.description || product.description || "");
     formData.append("Price", (product.price || 0).toString());
-    formData.append("price", (product.price || 0).toString());
     formData.append("Quantity", (product.quantity || 0).toString());
-    formData.append("quantity", (product.quantity || 0).toString());
     formData.append("Unit", product.unit || "pcs");
-    formData.append("unit", product.unit || "pcs");
+    formData.append("IsActive", (product.isActive !== false) ? "true" : "false");
     
-    // STATUS VARIATIONS
-    const active = product.isActive !== false;
-    formData.append("IsActive", active.toString());
-    formData.append("isActive", active.toString());
-    formData.append("Status", active ? "1" : "0");
-    
-    // FOREIGN KEYS
-    const catId = (product as any).categoryID || (product as any).categoryId || 0;
-    const memId = (product as any).memberID || (product as any).memberId || 1;
-    formData.append("CategoryID", catId.toString());
-    formData.append("categoryID", catId.toString());
-    formData.append("MemberID", memId.toString());
-    formData.append("memberID", memId.toString());
+    // Category & Member (Use simple integers)
+    const categoryId = product.categoryID || 0;
+    const memberId = product.memberID || 1;
+    formData.append("CategoryID", categoryId.toString());
+    formData.append("MemberID", memberId.toString());
 
-    // DATES
-    formData.append("CreatedOn", now);
-    formData.append("ModifiedOn", now);
-    formData.append("createdOn", now);
-    formData.append("modifiedOn", now);
-
-    // IMAGE HANDLING
+    // Image handling
     if (imageFile) {
-        formData.append("NewImage", imageFile);
-        formData.append("Image", imageFile);
-        console.log(`[API] Sending new file: ${imageFile.name}`);
+      formData.append("Image", imageFile);
+      formData.append("NewImage", imageFile);
     } else if (product.image) {
-        formData.append("Image", product.image);
-        formData.append("image", product.image);
-        formData.append("ImagePath", product.image);
-        console.log(`[API] Sending existing image URL: ${product.image}`);
+      // For updates without a new file, some backends expect the current URL in the 'Image' field
+      formData.append("Image", product.image);
     }
 
-    // AUTH & TRACE
-    formData.append("ModifiedBy", "1");
-    formData.append("CreatedBy", "1");
-
-    const response = await safeFetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
+    // Backend pattern for updates often requires ID in query string too
+    const url = `${BASE_URL}/Product/AddOrUpdateProduct?id=${productId}`;
+    
+    const response = await safeFetch(url, {
       method: "POST",
       headers: getAuthHeaders("POST", false),
       body: formData,
