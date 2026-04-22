@@ -21,6 +21,7 @@ import { Switch } from "@/components/ui/switch";
 import { addOrUpdateMember } from "@/lib/api";
 import { type Member } from "@/lib/data";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface MemberModalProps {
   member: Partial<Member> | null;
@@ -64,6 +65,7 @@ export function MemberModal({ member, isOpen, onClose, onSuccess }: MemberModalP
         contactNumber: member.contactNumber ?? "",
         licenceNumber: member.licenceNumber ?? "",
         ownProduct: member.ownProduct ?? true,
+        isActive: member.isActive !== false,
       });
     } else {
       setFormData({
@@ -90,9 +92,9 @@ export function MemberModal({ member, isOpen, onClose, onSuccess }: MemberModalP
       await addOrUpdateMember(formData);
       onSuccess();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Save member error:", error);
-      alert("Failed to save member.");
+      toast.error(error.message || "Failed to save member.");
     } finally {
       setLoading(false);
     }

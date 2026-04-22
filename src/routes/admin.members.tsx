@@ -257,8 +257,12 @@ function AdminMembers() {
         onClose={() => setIsModalOpen(false)}
         member={selectedMember}
         onSuccess={() => {
-            toast.success(selectedMember?.id ? "Member updated successfully." : "Member added successfully.");
-            loadMembers();
+            const isUpdate = !!selectedMember?.id;
+            toast.success(isUpdate ? "Member updated successfully." : "Member added successfully.");
+            // Delay refresh slightly to ensure database stability
+            setTimeout(() => {
+                loadMembers();
+            }, 1000);
         }}
       />
 

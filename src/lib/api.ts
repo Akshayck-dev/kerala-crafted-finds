@@ -415,9 +415,13 @@ export async function fetchMembers(): Promise<Member[]> {
 
 export async function addOrUpdateMember(member: Partial<Member>) {
   try {
+    const finalId = Number(member.id || 0);
     // Exact mapping to the structure preferred by the Mallu Smart production backend
     const payload = {
-      id: Number(member.id || 0),
+      id: finalId,
+      MemberId: finalId, // Redundant for some backend versions
+      memberId: finalId, // Redundant for some backend versions
+      MemberID: finalId, // Redundant for some backend versions
       Name: String(member.name || ""),
       BusinessName: String(member.businessName || ""),
       Place: String(member.place || ""),
@@ -431,13 +435,17 @@ export async function addOrUpdateMember(member: Partial<Member>) {
       ModifiedOn: new Date().toISOString()
     };
 
+    console.log("[API] AddOrUpdateMember Payload:", payload);
+
     const response = await safeFetch(`${BASE_URL}/User/AddOrUpdateMember`, {
       method: "POST",
       headers: getAuthHeaders("POST", true),
       body: JSON.stringify(payload),
     });
     
-    return await handleResponse(response);
+    const result = await handleResponse(response);
+    console.log("[API] AddOrUpdateMember Result:", result);
+    return result;
   } catch (error) {
     console.error("API Error (AddOrUpdateMember):", error);
     throw error;
