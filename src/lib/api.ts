@@ -351,6 +351,9 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
 
     const headers = getAuthHeaders("POST", false);
     console.log(`[API] calling ${BASE_URL}/Product/AddOrUpdateProduct POST`);
+    const response = await safeFetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
+      method: "POST",
+      headers,
       body: formData,
     });
 
