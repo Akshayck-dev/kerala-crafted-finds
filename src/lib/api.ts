@@ -306,58 +306,56 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 4.2 (Pascal Perfect)");
+  console.log("[API] Product Update VERSION: 4.3 (Postman Replica)");
   try {
     const productId = Number(product.id || 0);
     
-    // WE STILL NEED THE REAL IDs FROM THE SERVER
-    let realCategoryId = Number(product.categoryID || 0);
-    let realMemberId = Number(product.memberID || 1);
-
+    // FETCH ORIGINAL DATA TO GET AUTHENTIC AUDIT FIELDS (CreatedOn, etc.)
+    let originalData: any = {};
     try {
-      console.log("[API] VERSION 4.2: Mirroring real IDs...");
+      console.log("[API] VERSION 4.3: Recovering original audit fields...");
       const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
         headers: getAuthHeaders("GET", false),
       });
       const data = await handleResponse(response);
       if (Array.isArray(data)) {
-        const original = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId);
-        if (original) {
-          realCategoryId = Number(original.categoryID || original.CategoryID || realCategoryId);
-          realMemberId = Number(original.memberID || original.MemberID || realMemberId);
-          console.log(`[API] Mirror Success: Category=${realCategoryId}, Member=${realMemberId}`);
-        }
+        originalData = data.find((p: any) => (p.id || p.productId || p.ProductID || p.ProductId) == productId) || {};
       }
     } catch (e) {
-      console.warn("[API] ID Mirror failed.");
+      console.warn("[API] Audit recovery failed.");
     }
 
     const formData = new FormData();
     
-    // STRICT PASCAL CASE ONLY - AS REQUESTED
-    formData.append('id', productId.toString());
-    formData.append('MemberID', realMemberId.toString());
-    formData.append('CategoryID', realCategoryId.toString());
-    formData.append('ProductName', (product.name || product.ProductName || "").toString());
-    formData.append('Description', (product.description || product.Description || "").toString());
-    formData.append('Price', Number(product.price || 0).toString());
-    formData.append('Quantity', Number(product.quantity || 0).toString());
-    formData.append('Unit', (product.unit || "gm").toString());
+    // CORE PASCAL CASE FIELDS
+    formData.append('ProductId', productId.toString());
+    formData.append('MemberID', (originalData.memberID || originalData.MemberID || product.memberID || 1).toString());
+    formData.append('CategoryID', (originalData.categoryID || originalData.CategoryID || product.categoryID || 0).toString());
+    formData.append('ProductName', (product.name || originalData.productName || originalData.ProductName || "").toString());
+    formData.append('Description', (product.description || originalData.description || originalData.Description || "").toString());
+    formData.append('Price', Number(product.price || originalData.price || 0).toString());
+    formData.append('Quantity', Number(product.quantity || originalData.quantity || 0).toString());
+    formData.append('Unit', (product.unit || originalData.unit || "gm").toString());
     formData.append('IsActive', 'true');
-    formData.append('CreatedOn', '2026-04-14');
+    
+    // PRESERVE ORIGINAL CREATED DATE OR USE VALID ISO FORMAT
+    const createdDate = originalData.createdOn || originalData.CreatedOn || '2026-04-14T00:00:00';
+    formData.append('CreatedOn', createdDate.toString());
 
+    // ONLY SEND NewImage IF IT EXISTS (Many backends crash on empty string files)
     if (imageFile) {
       console.log("[API] Appending NewImage file.");
       formData.append('NewImage', imageFile);
-    } else {
-      console.log("[API] Appending empty string for NewImage.");
-      formData.append('NewImage', "");
+    } else if (originalData.image || originalData.Image) {
+      // Send back the original image path to preserve it
+      formData.append('Image', originalData.image || originalData.Image);
     }
 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
-    const url = `${BASE_URL}/Product/AddOrUpdateProduct?id=${productId}`;
+    // NO ?id= IN URL - SENDING IN BODY ONLY
+    const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
     
-    console.log("[API] Calling Update (v4.2):", url);
+    console.log("[API] Calling Update (v4.3) - Body Only ID:", url);
 
     const response = await axios.post(url, formData, {
       headers: {
@@ -366,14 +364,14 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v4.2):", response.data);
+      console.log("[API] Success (v4.3):", response.data);
       return response.data;
     }
     
     throw new Error(`Unexpected status: ${response.status}`);
   } catch (error: any) {
     const errorDetail = error.response?.data || error.message;
-    console.error("Backend Error Detail (v4.2):", errorDetail);
+    console.error("Backend Error Detail (v4.3):", errorDetail);
     throw error;
   }
 }
