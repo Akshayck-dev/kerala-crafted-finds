@@ -306,66 +306,58 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 4.8 (Verified Structure)");
+  console.log("[API] Product Update VERSION: 5.0 (JSON Standard)");
+  
   try {
-    const productId = Number(product.id || 0);
-    
-    // RECOVER ORIGINAL DATA FOR AUDIT FIELDS
-    let originalData: any = {};
-    try {
-      const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
-        headers: getAuthHeaders("GET", false),
-      });
-      const data = await handleResponse(response);
-      if (Array.isArray(data)) {
-        originalData = data.find((p: any) => 
-          (p.id == productId) || (p.productId == productId) || (p.ProductId == productId)
-        ) || {};
-      }
-    } catch (e) {
-      console.warn("[API] Audit recovery failed.");
-    }
+    // 1. Helper to convert File to Base64 (Required for JSON payload)
+    const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
 
-    const formData = new FormData();
-    
-    // VERIFIED KEYS FROM BROWSER DIAGNOSTIC
-    // No 'id' or 'ProductId' in body to avoid 500 model binding conflict
-    formData.append('productName', (product.name || originalData.productName || originalData.ProductName || "").toString());
-    formData.append('description', (product.description || originalData.description || originalData.Description || "").toString());
-    formData.append('price', Number(product.price || originalData.price || 0).toString());
-    formData.append('quantity', Number(product.quantity || originalData.quantity || 0).toString());
-    formData.append('unit', (product.unit || originalData.unit || "gm").toString());
-    
-    // Verified Casing: lowercase start, uppercase 'ID'
-    formData.append('categoryID', (product.categoryID || originalData.categoryID || originalData.CategoryID || 0).toString());
-    formData.append('memberID', (product.memberID || originalData.memberID || originalData.MemberID || 1).toString());
-    
-    formData.append('isActive', 'true');
-    formData.append('createdOn', originalData.createdOn || originalData.CreatedOn || new Date().toISOString());
-
+    let imageString = product.image || "";
     if (imageFile) {
-      console.log("[API] Appending file to NewImage.");
-      formData.append('NewImage', imageFile);
+      console.log("[API] Converting image to Base64...");
+      imageString = await toBase64(imageFile);
     }
+
+    // 2. Map exactly to the User's requested JSON structure (camelCase strictly)
+    const apiPayload = {
+      id: Number(product.id || 0),
+      memberID: Number(product.memberID || 1),
+      categoryID: Number(product.categoryID || 1),
+      productName: String(product.name || product.productName || ""),
+      description: String(product.description || ""),
+      image: imageString,
+      price: Number(product.price || 0),
+      quantity: Number(product.quantity || 0),
+      isActive: Boolean(product.isActive !== false),
+      unit: String(product.unit || "gm")
+    };
+
+    console.log("[API] Sending JSON Payload (v5.0):", apiPayload);
 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
-    // VERIFIED: id must be in URL for updates
-    const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
-    
-    console.log("[API] Calling Update (v4.8) - Verified Format:", url);
+    const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
 
-    const response = await axios.post(url, formData, {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const response = await axios.post(url, apiPayload, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
     });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v4.8):", response.data);
+      console.log("[API] Success (v5.0):", response.data);
       return response.data;
     }
-    throw new Error(`Status: ${response.status}`);
+    throw new Error(`Unexpected status: ${response.status}`);
   } catch (error: any) {
-    console.error("Backend Error Detail (v4.8):", error.response?.data || error.message);
-    throw error;
+    const errorDetail = error.response?.data || error.message;
+    console.error("Backend Error Detail (v5.0):", errorDetail);
+    throw new Error(typeof errorDetail === 'string' ? errorDetail : JSON.stringify(errorDetail));
   }
 }
 
