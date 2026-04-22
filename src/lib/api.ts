@@ -306,58 +306,46 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 5.0 (JSON Standard)");
+  console.log("[API] Product Update VERSION: 5.1 (User-Spec FormData)");
   
   try {
-    // 1. Helper to convert File to Base64 (Required for JSON payload)
-    const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
+    const formData = new FormData();
 
-    let imageString = product.image || "";
+    // 1. Map exactly to your provided structure
+    formData.append("id", (product.id || 0).toString());
+    formData.append("memberID", (product.memberID || 1).toString());
+    formData.append("categoryID", (product.categoryID || 1).toString());
+    formData.append("productName", product.name || product.productName || "");
+    formData.append("description", product.description || "");
+    formData.append("price", Number(product.price || 0).toString());
+    formData.append("quantity", Number(product.quantity || 0).toString());
+    formData.append("isActive", "true");
+    formData.append("unit", product.unit || "pcs");
+
+    // 2. Handle file upload as "image" (User-Spec)
     if (imageFile) {
-      console.log("[API] Converting image to Base64...");
-      imageString = await toBase64(imageFile);
+      console.log("[API] Appending file to 'image' field...");
+      formData.append("image", imageFile);
     }
-
-    // 2. Map exactly to the User's requested JSON structure (camelCase strictly)
-    const apiPayload = {
-      id: Number(product.id || 0),
-      memberID: Number(product.memberID || 1),
-      categoryID: Number(product.categoryID || 1),
-      productName: String(product.name || product.productName || ""),
-      description: String(product.description || ""),
-      image: imageString,
-      price: Number(product.price || 0),
-      quantity: Number(product.quantity || 0),
-      isActive: Boolean(product.isActive !== false),
-      unit: String(product.unit || "gm")
-    };
-
-    console.log("[API] Sending JSON Payload (v5.0):", apiPayload);
 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
     const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
 
-    const response = await axios.post(url, apiPayload, {
+    const response = await axios.post(url, formData, {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${token}`
       }
     });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v5.0):", response.data);
+      console.log("[API] Success (v5.1):", response.data);
       return response.data;
     }
-    throw new Error(`Unexpected status: ${response.status}`);
+    throw new Error(`Status: ${response.status}`);
   } catch (error: any) {
     const errorDetail = error.response?.data || error.message;
-    console.error("Backend Error Detail (v5.0):", errorDetail);
-    throw new Error(typeof errorDetail === 'string' ? errorDetail : JSON.stringify(errorDetail));
+    console.error("Backend Error Detail (v5.1):", errorDetail);
+    throw error;
   }
 }
 
