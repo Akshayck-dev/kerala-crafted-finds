@@ -136,6 +136,14 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[Modal] Submitting Product Data:", {
+      id: product?.id,
+      name: formData.name,
+      categoryID: formData.categoryID,
+      memberID: formData.memberID,
+      hasFile: !!imageFile,
+      hasUrl: !!formData.image
+    });
     
     // Prevent 500 error by validating category selection with descriptive feedback
     // Improved validation with automatic fallback for missing IDs
