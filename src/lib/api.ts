@@ -315,38 +315,39 @@ export async function adminLogin(email: string, password: string): Promise<strin
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
   try {
     const productId = Number(product.id || 0);
+    const categoryId = Number(product.categoryID || 0);
+    const memberId = Number(product.memberID || 1);
+    
+    console.log(`[API] Product Update Diagnostic:`, {
+        productId,
+        categoryId,
+        memberId,
+        name: product.name,
+        hasImage: !!imageFile || !!product.image
+    });
+
     const formData = new FormData();
     
-    console.log(`[API] AddOrUpdateProduct - Attempting Update for ID: ${productId}`);
-
-    // Core fields (PascalCase - proven by Add operation)
-    formData.append("ProductID", productId.toString());
+    // Using ProductId (lower 'd') as seen in Delete/Member APIs
+    formData.append("ProductId", productId.toString());
     formData.append("ProductName", product.name || "");
-    formData.append("ProductDescription", product.description || product.description || "");
+    formData.append("ProductDescription", product.description || "");
     formData.append("Price", (product.price || 0).toString());
     formData.append("Quantity", (product.quantity || 0).toString());
     formData.append("Unit", product.unit || "pcs");
-    formData.append("IsActive", (product.isActive !== false) ? "true" : "false");
-    
-    // Category & Member (Use simple integers)
-    const categoryId = product.categoryID || 0;
-    const memberId = product.memberID || 1;
+    formData.append("IsActive", "true");
     formData.append("CategoryID", categoryId.toString());
     formData.append("MemberID", memberId.toString());
 
-    // Image handling
     if (imageFile) {
       formData.append("Image", imageFile);
       formData.append("NewImage", imageFile);
     } else if (product.image) {
-      // For updates without a new file, some backends expect the current URL in the 'Image' field
       formData.append("Image", product.image);
     }
 
-    // Backend pattern for updates often requires ID in query string too
-    const url = `${BASE_URL}/Product/AddOrUpdateProduct?id=${productId}`;
-    
-    const response = await safeFetch(url, {
+    // Attempting WITHOUT the query param first, as it's cleaner
+    const response = await safeFetch(`${BASE_URL}/Product/AddOrUpdateProduct`, {
       method: "POST",
       headers: getAuthHeaders("POST", false),
       body: formData,
