@@ -331,35 +331,31 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       console.warn("[API] Mirror failed, falling back to UI IDs.");
     }
 
-    // MINIMAL PAYLOAD - ONLY 10-11 KEYS FROM POSTMAN
+    // MINIMAL PAYLOAD - VERSION 3.1 (Postman Identical)
     const apiPayload: any = {
       id: productId,
-      ProductName: product.name || "",
-      ProductDescription: product.description || "",
-      Description: product.description || "", // Send both just in case
-      Price: Number(product.price || 0),
-      Quantity: Number(product.quantity || 0),
-      Unit: product.unit || "pcs",
-      IsActive: "true",
+      MemberID: realMemberId,
       CategoryID: realCategoryId,
-      MemberID: realMemberId
+      ProductName: product.name || "",
+      Description: product.description || "",
+      Price: (product.price || 0).toString(),
+      Quantity: (product.quantity || 0).toString(),
+      Unit: product.unit || "pcs",
+      IsActive: (product.isActive !== false) ? "true" : "false",
+      CreatedOn: "2026-04-14" // Added as per user example for backend audit
     };
 
-    console.log("[API] POSTMAN STRICT PAYLOAD:", apiPayload);
+    console.log("[API] VERSION 3.1 PAYLOAD:", apiPayload);
 
     const formData = new FormData();
     Object.keys(apiPayload).forEach(key => {
-      formData.append(key, apiPayload[key].toString());
+      formData.append(key, apiPayload[key]);
     });
 
-    // IMAGE HANDLING: Only send NewImage if it's a new file
+    // IMAGE HANDLING: Strictly follow user example
     if (imageFile) {
       formData.append("NewImage", imageFile);
       console.log("[API] Appending NewImage file.");
-    } else if (product.image) {
-      // If no new file, but existing image URL exists, 
-      // some APIs expect the existing path in "Image" field
-      formData.append("Image", product.image);
     }
 
     const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
