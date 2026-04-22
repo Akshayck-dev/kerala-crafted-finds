@@ -301,6 +301,10 @@ export async function adminLogin(email: string, password: string): Promise<strin
     return token.toString().trim().replace(/^"|"$/g, '');
   } catch (error) {
     console.error("API Error (AdminLogin):", error);
+    throw error;
+  }
+}
+
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
   const productId = Number(product.id || 0);
   const isUpdate = productId > 0;
