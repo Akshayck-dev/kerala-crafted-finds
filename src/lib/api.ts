@@ -306,7 +306,7 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 4.0 (Axios Powered)");
+  console.log("[API] Product Update VERSION: 4.1 (Strict Conversion)");
   try {
     const productId = Number(product.id || 0);
     
@@ -315,7 +315,7 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     let realMemberId = product.memberID || 1;
 
     try {
-      console.log("[API] VERSION 4.0: Getting real IDs from mirror...");
+      console.log("[API] VERSION 4.1: Mirror Fetching real IDs...");
       const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
         headers: getAuthHeaders("GET", false),
       });
@@ -325,7 +325,7 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
         if (original) {
           realCategoryId = original.categoryID || original.CategoryID || realCategoryId;
           realMemberId = original.memberID || original.MemberID || realMemberId;
-          console.log(`[API] Success! Using Real IDs: Category=${realCategoryId}, Member=${realMemberId}`);
+          console.log(`[API] Mirror Success: Category=${realCategoryId}, Member=${realMemberId}`);
         }
       }
     } catch (e) {
@@ -333,29 +333,31 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
     }
 
     const formData = new FormData();
+    
+    // 1. Strictly mapping as per user's "handleUpdate" logic
     formData.append('id', productId.toString());
     formData.append('MemberID', realMemberId.toString());
     formData.append('CategoryID', realCategoryId.toString());
     formData.append('ProductName', (product.name || "").toString());
     formData.append('Description', (product.description || "").toString());
-    formData.append('Price', (product.price || 0).toString());
-    formData.append('Quantity', (product.quantity || 0).toString());
-    formData.append('Unit', (product.unit || "pcs").toString());
-    formData.append('IsActive', (product.isActive !== false) ? "true" : "false");
+    formData.append('Price', parseInt((product.price || 0).toString()).toString());
+    formData.append('Quantity', parseInt((product.quantity || 0).toString()).toString());
+    formData.append('Unit', (product.unit || "gm").toString());
+    formData.append('IsActive', "true"); // Strict boolean string
     formData.append('CreatedOn', '2026-04-14');
 
     if (imageFile) {
       console.log("[API] Appending NewImage file.");
       formData.append('NewImage', imageFile);
     } else {
-      console.log("[API] Appending empty string to NewImage.");
+      console.log("[API] Appending empty string for NewImage.");
       formData.append('NewImage', "");
     }
 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
-    const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
+    const url = `${BASE_URL}/Product/AddOrUpdateProduct?id=${productId}`;
     
-    console.log("[API] Calling Update with Axios (v4.0):", url);
+    console.log("[API] Calling Update (v4.1):", url);
 
     const response = await axios.post(url, formData, {
       headers: {
@@ -363,10 +365,16 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
       }
     });
 
-    console.log("[API] Success (Axios v4.0):", response.data);
-    return response.data;
+    if (response.status === 200 || response.status === 201) {
+      console.log("[API] Success (v4.1):", response.data);
+      // Optional: alert("Product Updated Successfully!"); 
+      return response.data;
+    }
+    
+    throw new Error(`Unexpected status: ${response.status}`);
   } catch (error: any) {
-    console.error("Still failing (Axios v4.0):", error.response?.data || error.message);
+    const errorDetail = error.response?.data || error.message;
+    console.error("Backend Error Detail (v4.1):", errorDetail);
     throw error;
   }
 }
