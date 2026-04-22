@@ -202,31 +202,23 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
 
 export async function fetchCategories(): Promise<Category[]> {
   try {
-    const response = await safeFetch(`${BASE_URL}/Product/GetAllCategories`);
+    const response = await safeFetch(`${BASE_URL}/Category/GetAllCategories`, {
+      headers: getAuthHeaders("GET", false),
+    });
     const data = await handleResponse(response);
- 
-    if (!Array.isArray(data)) {
-        throw new Error("API did not return an array of categories");
-    }
-
-    return data
-      .map((c: any, index: number) => {
-        // IMPORTANT: The original API omits IDs in the category list but expects numeric IDs (1, 2, 3...) for saves.
-        // We use (index + 1) to reconstruct those missing IDs based on the server's list order.
-        const dbId = (index + 1).toString();
-        
-        return {
-          id: dbId,
-          name: c.name ?? "N/A",
-          slug: (c.name || "category").toLowerCase().trim().replace(/\s+/g, "-"),
-          icon: getCategoryIcon(c.name || ""),
-          image: "",
-        };
-      })
-      .filter((c) => c.name.toLowerCase() !== "uncategorized");
+    console.log("[API] GetAllCategories Raw Data (First Item):", data[0]);
+    
+    return (Array.isArray(data) ? data : []).map((c: any, index: number) => ({
+      // Prioritize actual database IDs from the backend
+      id: (c.categoryID || c.CategoryID || c.id || c.ID || (index + 1)).toString(),
+      name: c.categoryName || c.name || "N/A",
+      slug: (c.categoryName || c.name || "category").toLowerCase().trim().replace(/\s+/g, "-"),
+      icon: getCategoryIcon(c.categoryName || c.name || ""),
+      image: c.image || "",
+    }));
   } catch (error) {
-    console.error("API Error (Categories):", error);
-    throw error;
+    console.error("API Error (FetchCategories):", error);
+    return [];
   }
 }
 
@@ -388,16 +380,11 @@ export async function fetchMembers(): Promise<Member[]> {
     const response = await safeFetch(`${BASE_URL}/User/GetAllMembers?t=${Date.now()}`, {
       headers: getAuthHeaders("GET", false),
     });
-    console.log(`[API] GetAllMembers Response Status: ${response.status} ${response.statusText}`);
     const data = await handleResponse(response);
-    if (Array.isArray(data) && data.length > 0) {
-      console.log("[API] First Member Keys:", Object.keys(data[0]));
-      console.log("[API] First Member Data:", data[0]);
-    }
+    console.log("[API] GetAllMembers Raw Data (First Item):", data[0]);
     
     return (Array.isArray(data) ? data : []).map((m: any, index: number) => ({
-      // Handle various backend casing for Member ID and provide index fallback
-      id: (m.id || m.ID || m.memberId || m.MemberId || m.memberID || m.MemberID || m.Id || (index + 1)).toString(),
+      id: (m.memberID || m.MemberID || m.memberId || m.MemberId || m.id || m.ID || (index + 1)).toString(),
       name: m.name || m.Name || "N/A",
       email: m.email || m.Email || "No email",
       phone: m.contactNumber || m.ContactNumber || m.phone || m.Phone || "N/A",
