@@ -306,11 +306,11 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 4.6 (The Final FormData)");
+  console.log("[API] Product Update VERSION: 4.7 (The \"Add\" Clone)");
   try {
     const productId = Number(product.id || 0);
     
-    // 1. RECOVER ORIGINAL DATA FOR EXACT FIELD ALIGNMENT
+    // FETCH ORIGINAL DATA TO PRESERVE CATEGORY/MEMBER INTEGRITY
     let originalData: any = {};
     try {
       const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
@@ -319,7 +319,7 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
       const data = await handleResponse(response);
       if (Array.isArray(data)) {
         originalData = data.find((p: any) => 
-          (p.id == productId) || (p.productId == productId)
+          (p.id == productId) || (p.productId == productId) || (p.ProductId == productId)
         ) || {};
       }
     } catch (e) {
@@ -328,43 +328,40 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
 
     const formData = new FormData();
     
-    // 2. STRICT LOWERCASE KEYS (Matched to server's own JSON response)
-    formData.append('id', productId.toString());
-    formData.append('productName', (product.name || originalData.productName || "").toString());
-    formData.append('productDescription', (product.description || originalData.productDescription || "").toString());
-    formData.append('description', (product.description || originalData.description || "").toString());
-    formData.append('price', Number(product.price || originalData.price || 0).toString());
-    formData.append('quantity', Number(product.quantity || originalData.quantity || 0).toString());
-    formData.append('unit', (product.unit || originalData.unit || "gm").toString());
-    formData.append('categoryID', Number(product.categoryID || originalData.categoryID || 0).toString());
-    formData.append('memberID', Number(product.memberID || originalData.memberID || 1).toString());
-    formData.append('isActive', 'true');
-    formData.append('createdOn', originalData.createdOn || originalData.CreatedOn || new Date().toISOString());
+    // USING PASCAL CASE (Assuming this is what works for "Add")
+    // Note: We are NOT adding 'id' or 'ProductId' to the body here
+    formData.append('ProductName', (product.name || originalData.productName || originalData.ProductName || "").toString());
+    formData.append('Description', (product.description || originalData.description || originalData.Description || "").toString());
+    formData.append('Price', Number(product.price || originalData.price || 0).toString());
+    formData.append('Quantity', Number(product.quantity || originalData.quantity || 0).toString());
+    formData.append('Unit', (product.unit || originalData.unit || "gm").toString());
+    formData.append('CategoryID', (product.categoryID || originalData.categoryID || originalData.CategoryID || 0).toString());
+    formData.append('MemberID', (product.memberID || originalData.memberID || originalData.MemberID || 1).toString());
+    formData.append('IsActive', 'true');
+    formData.append('CreatedOn', originalData.createdOn || originalData.CreatedOn || '2026-04-14T01:31:50');
 
-    // 3. IMAGE HANDLING
     if (imageFile) {
-      console.log("[API] Appending NewImage file.");
+      console.log("[API] Appending file to NewImage.");
       formData.append('NewImage', imageFile);
-    } else if (originalData.image) {
-      formData.append('image', originalData.image);
     }
 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
-    const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
+    // PUTTING ID IN URL ONLY (Common for .NET AddOrUpdate endpoints)
+    const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
     
-    console.log("[API] Calling Update (v4.6) with Exact Keys...");
+    console.log("[API] Calling Update (v4.7) - URL ID Only:", url);
 
     const response = await axios.post(url, formData, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v4.6):", response.data);
+      console.log("[API] Success (v4.7):", response.data);
       return response.data;
     }
     throw new Error(`Status: ${response.status}`);
   } catch (error: any) {
-    console.error("Backend Error Detail (v4.6):", error.response?.data || error.message);
+    console.error("Backend Error Detail (v4.7):", error.response?.data || error.message);
     throw error;
   }
 }
