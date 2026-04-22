@@ -1,4 +1,5 @@
 import { fixImagePath } from "./utils";
+import axios from "axios";
 import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
 import { useLoadingStore } from "./loading-store";
@@ -305,16 +306,16 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: File | null) {
-  console.log("[API] Product Update VERSION: 3.0 (Postman Strict)");
+  console.log("[API] Product Update VERSION: 4.0 (Axios Powered)");
   try {
     const productId = Number(product.id || 0);
     
-    // WE STILL NEED THE REAL IDs, BUT WE WON'T SEND THE WHOLE MIRROR OBJECT
+    // WE STILL NEED THE REAL IDs
     let realCategoryId = product.categoryID || 0;
     let realMemberId = product.memberID || 1;
 
     try {
-      console.log("[API] VERSION 3.0: Getting real IDs from background mirror...");
+      console.log("[API] VERSION 4.0: Getting real IDs from mirror...");
       const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs`, {
         headers: getAuthHeaders("GET", false),
       });
@@ -328,47 +329,47 @@ export async function addOrUpdateProduct(product: Partial<Product>, imageFile?: 
         }
       }
     } catch (e) {
-      console.warn("[API] Mirror failed, falling back to UI IDs.");
+      console.warn("[API] Mirror failed.");
     }
-
-    // MINIMAL PAYLOAD - VERSION 3.5 (Mandatory Empty Image Version)
-    const apiPayload: any = {
-      id: productId,
-      ProductId: productId,
-      productID: productId,
-      MemberID: realMemberId,
-      CategoryID: realCategoryId,
-      ProductName: product.name || "",
-      Description: product.description || "",
-      Price: Number(product.price || 0),
-      Quantity: Number(product.quantity || 0),
-      Unit: product.unit || "pcs",
-      IsActive: (product.isActive !== false) ? "true" : "false",
-      CreatedOn: "2026-04-14"
-    };
-
-    console.log("[API] VERSION 3.5 PAYLOAD (Always NewImage):", apiPayload);
 
     const formData = new FormData();
-    Object.keys(apiPayload).forEach(key => {
-      formData.append(key, apiPayload[key].toString());
-    });
+    formData.append('id', productId.toString());
+    formData.append('MemberID', realMemberId.toString());
+    formData.append('CategoryID', realCategoryId.toString());
+    formData.append('ProductName', (product.name || "").toString());
+    formData.append('Description', (product.description || "").toString());
+    formData.append('Price', (product.price || 0).toString());
+    formData.append('Quantity', (product.quantity || 0).toString());
+    formData.append('Unit', (product.unit || "pcs").toString());
+    formData.append('IsActive', (product.isActive !== false) ? "true" : "false");
+    formData.append('CreatedOn', '2026-04-14');
 
-    // ALWAYS APPEND NewImage, send empty string if no file
     if (imageFile) {
-      console.log("[API] Appending real file to NewImage.");
-      formData.append("NewImage", imageFile);
+      console.log("[API] Appending NewImage file.");
+      formData.append('NewImage', imageFile);
     } else {
-      console.log("[API] Appending empty string to NewImage to avoid null crash.");
-      formData.append("NewImage", "");
+      console.log("[API] Appending empty string to NewImage.");
+      formData.append('NewImage', "");
     }
 
+    const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
     const url = `${BASE_URL}/Product/AddOrUpdateProduct${productId > 0 ? `?id=${productId}` : ''}`;
-    const response = await safeFetch(url, {
-      method: "POST",
-      headers: getAuthHeaders("POST", false),
-      body: formData,
+    
+    console.log("[API] Calling Update with Axios (v4.0):", url);
+
+    const response = await axios.post(url, formData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
+
+    console.log("[API] Success (Axios v4.0):", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("Still failing (Axios v4.0):", error.response?.data || error.message);
+    throw error;
+  }
+}
 
     return await handleResponse(response);
   } catch (error) {
