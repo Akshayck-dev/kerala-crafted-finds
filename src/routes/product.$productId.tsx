@@ -167,7 +167,7 @@ function ProductDetailPage() {
                 </Avatar>
                 <div className="space-y-0.5">
                   <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
-                    Artisan Master
+                    Seller
                   </span>
                   <p className="text-lg font-bold text-foreground">
                     {product.sellerName || product.artisan || "Independent Artisan"}
