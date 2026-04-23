@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import React, { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { Link } from "@tanstack/react-router";
 import { fetchProducts, fetchMembers, fetchOrders } from "@/lib/api";
 import { type Product, type Member, type Order } from "@/lib/data";
 import { Package, ShoppingCart, Users, BadgeDollarSign, AlertTriangle, Clock, ArrowUpRight, TrendingUp } from "lucide-react";
@@ -123,6 +124,19 @@ function AdminDashboard() {
       default: return 'bg-blue-100 text-blue-700 border-blue-200';
     }
   };
+  
+  const resolveOrderSeller = (order: Order) => {
+    if (!order.products || order.products.length === 0) return { name: "N/A", business: "N/A" };
+    const firstProductId = order.products[0].productId.toString();
+    const firstProduct = products.find(p => p.id === firstProductId);
+    if (!firstProduct) return { name: "N/A", business: "N/A" };
+    
+    const member = members.find(m => Number(m.id) === firstProduct.memberID);
+    return {
+      name: firstProduct.sellerName || member?.name || "N/A",
+      business: firstProduct.businessName || member?.businessName || "N/A"
+    };
+  };
 
   return (
     <AdminLayout>
@@ -161,7 +175,7 @@ function AdminDashboard() {
           <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col">
             <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Recent Fulfillment Activity</h3>
-              <button className="text-[10px] font-bold text-blue-600 uppercase hover:underline">View All Orders</button>
+              <Link to="/admin/orders" className="text-[10px] font-bold text-blue-600 uppercase hover:underline">View All Orders</Link>
             </div>
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-sm text-left">
@@ -169,6 +183,8 @@ function AdminDashboard() {
                   <tr>
                     <th className="px-6 py-4">ID</th>
                     <th className="px-6 py-4">Customer</th>
+                    <th className="px-6 py-4">Seller</th>
+                    <th className="px-6 py-4">Business</th>
                     <th className="px-6 py-4 text-center">Status</th>
                     <th className="px-6 py-4 text-right">Revenue</th>
                   </tr>
@@ -176,34 +192,43 @@ function AdminDashboard() {
                 <tbody className="divide-y divide-slate-100 italic font-medium">
                   {isLoading ? (
                      Array.from({length: 5}).map((_, i) => (
-                        <tr key={i}><td colSpan={4} className="px-6 py-4"><Skeleton className="h-8 w-full" /></td></tr>
+                        <tr key={i}><td colSpan={6} className="px-6 py-4"><Skeleton className="h-8 w-full" /></td></tr>
                      ))
-                  ) : orders.slice(0, 8).map((order) => (
-                    <tr key={order.id} className="hover:bg-slate-50/50 transition-colors group cursor-default">
-                      <td className="px-6 py-4">
-                          <span className="font-mono text-[11px] text-slate-400 group-hover:text-slate-900 font-bold">#{order.id}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                            <span className="text-slate-900 font-bold">{order.customerName ?? "Guest User"}</span>
-                            <span className="text-[10px] text-slate-400 font-bold uppercase">{new Date(order.createdOn || order.date).toLocaleDateString()}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter border ${getStatusColor(order.status)}`}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1 font-black text-slate-900">
-                            <span>₹{order.totalPrice}</span>
-                            <ArrowUpRight className="h-3 w-3 text-emerald-500" />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {!isLoading && orders.length === 0 && (
-                     <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">No transaction history detected.</td></tr>
+                  ) : orders.slice(0, 8).map((order) => {
+                    const sellerInfo = resolveOrderSeller(order);
+                    return (
+                      <tr key={order.id} className="hover:bg-slate-50/50 transition-colors group cursor-default">
+                        <td className="px-6 py-4">
+                            <span className="font-mono text-[11px] text-slate-400 group-hover:text-slate-900 font-bold">#{order.id}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                              <span className="text-slate-900 font-bold">{order.customerName ?? "Guest User"}</span>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase">{new Date(order.createdOn || order.date).toLocaleDateString()}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                            <span className="text-[10px] font-bold text-blue-600 uppercase">{sellerInfo.name}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                            <span className="text-[10px] text-slate-500 uppercase">{sellerInfo.business}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter border ${getStatusColor(order.status)}`}>
+                            {order.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-1 font-black text-slate-900">
+                              <span>₹{order.totalPrice}</span>
+                              <ArrowUpRight className="h-3 w-3 text-emerald-500" />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                   {!isLoading && orders.length === 0 && (
+                     <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">No transaction history detected.</td></tr>
                   )}
                 </tbody>
               </table>
