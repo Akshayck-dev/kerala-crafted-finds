@@ -238,7 +238,7 @@ function AdminDashboard() {
           {/* Low Stock Panel */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col">
             <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Inventory Warnings</h3>
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Low Stock Alerts</h3>
               <div className="h-2 w-2 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50" />
             </div>
             <div className="flex-1 overflow-y-auto max-h-[500px]">
