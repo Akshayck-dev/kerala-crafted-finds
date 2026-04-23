@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
-import { addOrUpdateMember } from "@/lib/api";
-import { type Member } from "@/lib/data";
+import { addOrUpdateMember, fetchCategories } from "@/lib/api";
+import { type Member, type Category } from "@/lib/data";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -38,6 +38,7 @@ const DISTRICTS = [
 
 export function MemberModal({ member, isOpen, onClose, onSuccess }: MemberModalProps) {
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   
   const [formData, setFormData] = useState<Partial<Member>>({
     id: "0",
@@ -52,6 +53,21 @@ export function MemberModal({ member, isOpen, onClose, onSuccess }: MemberModalP
     ownProduct: true,
     isActive: true,
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      loadCategories();
+    }
+  }, [isOpen]);
+
+  async function loadCategories() {
+    try {
+      const cats = await fetchCategories();
+      setCategories(cats);
+    } catch (err) {
+      console.error("Failed to load categories for member modal:", err);
+    }
+  }
 
   useEffect(() => {
     if (member) {
@@ -187,13 +203,25 @@ export function MemberModal({ member, isOpen, onClose, onSuccess }: MemberModalP
 
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="m_product">Main Product Category</Label>
-              <Input
-                id="m_product"
-                value={formData.product || ""}
-                onChange={(e) => setFormData({ ...formData, product: e.target.value })}
-                placeholder="e.g., Handicrafts, Spices"
-                required
-              />
+              <Select 
+                value={formData.product || ""} 
+                onValueChange={(val) => setFormData({ ...formData, product: val })}
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                    {categories.length > 0 ? (
+                        categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                        ))
+                    ) : (
+                        <SelectItem value={formData.product || "Other"} disabled>
+                            {formData.product || "Loading categories..."}
+                        </SelectItem>
+                    )}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
