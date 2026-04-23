@@ -174,7 +174,7 @@ function AdminDashboard() {
           {/* Recent Orders Table */}
           <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col">
             <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Recent Fulfillment Activity</h3>
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Recent Sales Activity</h3>
               <Link to="/admin/orders" className="text-[10px] font-bold text-blue-600 uppercase hover:underline">View All Orders</Link>
             </div>
             <div className="overflow-x-auto flex-1">
