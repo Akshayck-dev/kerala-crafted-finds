@@ -325,24 +325,48 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     const formData = new FormData();
     const now = new Date().toISOString();
 
-    // 1. Core Fields Mapping
+    // 1. Core Fields Mapping (Robust PascalCase Injection)
+    const pName = product.name || product.productName || "";
     formData.append("id", productId.toString());
-    formData.append("memberID", (product.memberID || 1).toString());
-    formData.append("categoryID", (product.categoryID || 1).toString());
-    formData.append("productName", product.name || product.productName || "");
+    formData.append("Id", productId.toString());
+    formData.append("ProductId", productId.toString());
+    formData.append("ProductID", productId.toString());
+    
+    formData.append("productName", pName);
+    formData.append("ProductName", pName);
+    
     formData.append("description", product.description || "");
+    formData.append("Description", product.description || "");
+    
     formData.append("price", Number(product.price || 0).toString());
+    formData.append("Price", Number(product.price || 0).toString());
+    
     formData.append("quantity", Number(product.quantity || 0).toString());
-    formData.append("isActive", "true");
+    formData.append("Quantity", Number(product.quantity || 0).toString());
+    
     formData.append("unit", product.unit || "pcs");
+    formData.append("Unit", product.unit || "pcs");
+    
+    formData.append("categoryID", (product.categoryID || 1).toString());
+    formData.append("CategoryID", (product.categoryID || 1).toString());
+    
+    formData.append("memberID", (product.memberID || 1).toString());
+    formData.append("MemberID", (product.memberID || 1).toString());
+
+    formData.append("isActive", "true");
+    formData.append("IsActive", "true");
 
     // 2. 🔥 NEW MANDATORY FIELDS (v10.0)
     formData.append("createdOn", product.createdOn || now);
+    formData.append("CreatedOn", product.createdOn || now);
     formData.append("modifiedOn", now);
+    formData.append("ModifiedOn", now);
+    formData.append("categoryName", product.categoryName || "");
     formData.append("categoryName", product.categoryName || "");
     formData.append("memberName", product.memberName || "");
+    formData.append("MemberName", product.memberName || "");
 
-    // 3. 🔥 IMAGE LOGIC (v10.0)
+    // 3. 🔥 IMAGE LOGIC (Robust Injection)
     let fileToSend: File | null = null;
 
     if (imageFile) {
@@ -359,15 +383,20 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     }
 
     if (fileToSend) {
-      // Unified field name as per latest "FULL FINAL CODE"
+      // Unified field name as per latest "FULL FINAL CODE" PLUS variations for safety
       formData.append("NewImage", fileToSend);
+      formData.append("Image", fileToSend);
+      formData.append("image", fileToSend);
+      formData.append("File", fileToSend);
     }
 
     // 4. 🔥 OTHER IMAGES (NEW)
     if (otherImages && otherImages.length > 0) {
       console.log(`IMAGE → Appending ${otherImages.length} additional images`);
-      otherImages.forEach((file, index) => {
+      otherImages.forEach((file) => {
         formData.append("OtherImages", file);
+        formData.append("otherImages", file);
+        formData.append("Images", file);
       });
     }
 
