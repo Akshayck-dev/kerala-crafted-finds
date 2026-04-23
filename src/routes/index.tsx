@@ -125,7 +125,7 @@ function HomePage() {
                         </Button>
                       </Link>
                       <Link to="/shop">
-                        <Button size="lg" variant="outline" className="h-12 sm:h-14 rounded-full border-2 border-white/30 px-8 sm:px-10 text-base sm:text-lg font-bold text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/10 active:scale-95">
+                        <Button size="lg" className="h-12 sm:h-14 rounded-full bg-white px-8 sm:px-10 text-base sm:text-lg font-bold text-black ring-offset-black transition-all hover:scale-105 hover:bg-white/90 active:scale-95">
                           Start Selling
                         </Button>
                       </Link>
