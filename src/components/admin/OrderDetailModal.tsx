@@ -29,7 +29,7 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
   async function loadProducts() {
     setIsLoading(true);
     try {
-      const data = await fetchProducts();
+      const data = await fetchProducts(false);
       setProducts(data);
     } catch (err) {
       console.error("Failed to load products for order details:", err);
@@ -146,10 +146,17 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <span className="font-medium text-slate-900 block">{p ? p.name : `Product #${item.productId}`}</span>
-                                                        <span className="text-[10px] text-slate-500 uppercase tracking-tight">
-                                                            {p?.sellerName || "Kerala Crafted"} {p?.businessName ? `(${p.businessName})` : ""}
-                                                        </span>
+                                                        <span className="font-bold text-slate-900 block">{p ? p.name : `Product #${item.productId}`}</span>
+                                                        <div className="flex flex-col mt-0.5">
+                                                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                                                                {p?.sellerName || "Mallu Smart Seller"}
+                                                            </span>
+                                                            {p?.businessName && (
+                                                                <span className="text-[10px] text-slate-400 uppercase font-medium">
+                                                                    {p.businessName}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
