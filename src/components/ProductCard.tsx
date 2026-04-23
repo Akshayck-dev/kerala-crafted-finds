@@ -26,19 +26,7 @@ export function ProductCard({ product }: { product: Product }) {
           />
         </Link>
         
-        {/* Badges */}
-        <div className="absolute left-2 top-2 sm:left-4 sm:top-4 flex flex-col gap-1.5 sm:gap-2">
-          {product.badge && (
-            <Badge className="bg-black/80 px-1.5 py-0.5 sm:px-3 sm:py-1 text-[7px] min-[400px]:text-[8px] sm:text-[10px] font-bold tracking-widest uppercase text-white backdrop-blur-md border-none whitespace-nowrap">
-              {product.badge}
-            </Badge>
-          )}
-          {discount > 0 && (
-            <Badge className="bg-destructive/90 px-1.5 py-0.5 sm:px-3 sm:py-1 text-[7px] min-[400px]:text-[8px] sm:text-[10px] font-bold tracking-widest uppercase text-white backdrop-blur-md border-none w-fit">
-              -{discount}%
-            </Badge>
-          )}
-        </div>
+
 
         {/* Hover Action Bar (Desktop) */}
         <div className="absolute inset-x-4 bottom-4 translate-y-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 hidden md:block">
