@@ -449,6 +449,7 @@ export async function addOrUpdateMember(member: Partial<Member>) {
       MemberId: finalId,
       MemberID: finalId,
       Name: String(member.name || ""),
+      Email: String(member.email || ""),
       BusinessName: String(member.businessName || ""),
       Place: String(member.place || ""),
       District: String(member.district || "Ernakulam"),

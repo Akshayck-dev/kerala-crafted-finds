@@ -42,6 +42,7 @@ export function MemberModal({ member, isOpen, onClose, onSuccess }: MemberModalP
   const [formData, setFormData] = useState<Partial<Member>>({
     id: "0",
     name: "",
+    email: "",
     businessName: "",
     place: "",
     district: "Ernakulam",
@@ -58,6 +59,7 @@ export function MemberModal({ member, isOpen, onClose, onSuccess }: MemberModalP
         ...member,
         id: member.id || "0",
         name: member.name ?? "",
+        email: member.email ?? "",
         businessName: member.businessName ?? "",
         place: member.place ?? "",
         district: member.district ?? "Ernakulam",
@@ -71,6 +73,7 @@ export function MemberModal({ member, isOpen, onClose, onSuccess }: MemberModalP
       setFormData({
         id: "0",
         name: "",
+        email: "",
         businessName: "",
         place: "",
         district: "Ernakulam",
@@ -118,6 +121,18 @@ export function MemberModal({ member, isOpen, onClose, onSuccess }: MemberModalP
                 value={formData.name || ""}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Member name"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="m_email">Email Address</Label>
+              <Input
+                id="m_email"
+                type="email"
+                value={formData.email || ""}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="email@example.com"
                 required
               />
             </div>
