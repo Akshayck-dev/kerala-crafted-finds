@@ -126,18 +126,6 @@ export function MemberModal({ member, isOpen, onClose, onSuccess }: MemberModalP
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="m_email">Email Address</Label>
-              <Input
-                id="m_email"
-                type="email"
-                value={formData.email || ""}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="email@example.com"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="m_business">Business Name</Label>
               <Input
                 id="m_business"
