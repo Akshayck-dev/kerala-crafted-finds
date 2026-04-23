@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function fixImagePath(path?: string | null) {
-  const fallback = "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=600&h=600&fit=crop";
+  const fallback = "https://placehold.co/600x600/f1f5f9/94a3b8?text=Product+Image";
   
   if (!path || typeof path !== 'string' || path.trim() === '') {
     return fallback;

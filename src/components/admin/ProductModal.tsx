@@ -173,12 +173,19 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
     }
 
     // 🔥 IMAGE VALIDATION (Final Fix)
-    if (product && Number(product.id) > 0) {
-      if (!formData.image && !imageFile) {
+    const isUpdate = product && Number(product.id) > 0;
+    if (!isUpdate && !imageFile) {
+        toast.error("Main product image is required for new products ❌");
+        return;
+    }
+    
+    if (isUpdate && !formData.image && !imageFile) {
         toast.error("Product image is required for update ❌");
         return;
-      }
-      console.log("Existing Image URL for Update:", formData.image);
+    }
+    
+    if (isUpdate) {
+        console.log("Existing Image URL for Update:", formData.image);
     }
 
     const toastId = toast.loading("Saving product to Mallu Smart API...");
