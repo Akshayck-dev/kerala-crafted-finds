@@ -176,6 +176,9 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
         name: p.productName || p.ProductName || "N/A",
         price: Number(p.price || p.Price || 0),
         image: fixImagePath(p.image || p.Image),
+        images: (Array.isArray(p.images || p.Images || p.otherImages || p.OtherImages) 
+          ? (p.images || p.Images || p.otherImages || p.OtherImages) 
+          : []).map((img: any) => fixImagePath(img)),
         category: (p.categoryName || p.CategoryName || "all").toLowerCase().trim().replace(/\s+/g, "-"),
         categoryName: p.categoryName || p.CategoryName || "Uncategorized",
         sellerName: p.memberName || p.MemberName || "Mallu Smart",
@@ -312,7 +315,7 @@ async function urlToFile(url: string, filename: string = "image.jpg"): Promise<F
   return new File([blob], filename, { type: blob.type });
 }
 
-export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
+export async function addOrUpdateProduct(product: any, imageFile?: File | null, otherImages: File[] = []) {
   const productId = Number(product.id || 0);
   const isUpdate = productId > 0;
   console.log(`[API] VERSION 10.0 - FULL | Mode: ${isUpdate ? "UPDATE" : "ADD"} | id=${productId}`);
@@ -359,7 +362,15 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
       formData.append("NewImage", fileToSend);
     }
 
-    // 4. 🔍 Debug: Verify EXACT FormData keys before sending
+    // 4. 🔥 OTHER IMAGES (NEW)
+    if (otherImages && otherImages.length > 0) {
+      console.log(`IMAGE → Appending ${otherImages.length} additional images`);
+      otherImages.forEach((file, index) => {
+        formData.append("OtherImages", file);
+      });
+    }
+
+    // 5. 🔍 Debug: Verify EXACT FormData keys before sending
     console.log("--- FINAL FormData Payload (v10.0) ---");
     for (let pair of (formData as any).entries()) {
       console.log(`  ${pair[0]}:`, pair[1]);

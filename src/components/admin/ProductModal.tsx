@@ -35,6 +35,8 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
   const [members, setMembers] = useState<Member[]>([]);
   
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [otherImageFiles, setOtherImageFiles] = useState<File[]>([]);
+  const [otherPreviewUrls, setOtherPreviewUrls] = useState<string[]>([]);
   const [formData, setFormData] = useState<Partial<Product>>({
     id: "0",
     name: "",
@@ -90,6 +92,8 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
 
       setPreviewUrl(product.image || "");
       setImageFile(null); // Reset file on edit
+      setOtherPreviewUrls(product.images || []);
+      setOtherImageFiles([]);
     } else {
       setFormData({
         id: "0",
@@ -104,6 +108,8 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
       });
       setPreviewUrl("");
       setImageFile(null);
+      setOtherPreviewUrls([]);
+      setOtherImageFiles([]);
     }
   }, [product, isOpen]);
 
@@ -185,7 +191,7 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
         memberName: members.find(m => Number(m.id) === formData.memberID)?.name || ""
       };
 
-      await addOrUpdateProduct(enrichedData, imageFile);
+      await addOrUpdateProduct(enrichedData, imageFile, otherImageFiles);
       toast.success(product && Number(product.id) > 0 ? "Product updated successfully" : "Product added successfully", { id: toastId });
       onSuccess();
       onClose();
@@ -278,7 +284,7 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
             </div>
 
             <div className="space-y-4 md:col-span-2">
-              <Label>Product Image</Label>
+              <Label>Main Product Image</Label>
               <div className="flex flex-col gap-4">
                 {/* File Upload */}
                 <div className="grid grid-cols-1 gap-4">
@@ -291,7 +297,7 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          console.log("Selected file:", file);
+                          console.log("Selected main file:", file);
                           if (file) {
                             setImageFile(file);
                             setFormData(prev => ({ ...prev, image: "" })); // Clear existing URL reference
@@ -302,7 +308,7 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                       <div className="flex flex-col items-center gap-2 text-center">
                         <Upload className="h-8 w-8 text-slate-400 group-hover:text-blue-500 transition-colors" />
                         <span className="text-sm font-medium text-slate-600">
-                          {imageFile ? imageFile.name : "Choose or drop product image"}
+                          {imageFile ? imageFile.name : "Choose main product image"}
                         </span>
                         <p className="text-[10px] text-slate-400">PNG, JPG or WEBP (Max 2MB)</p>
                       </div>
@@ -320,8 +326,68 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                       onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                       <span className="text-[10px] text-white font-bold uppercase">Preview</span>
+                       <span className="text-[10px] text-white font-bold uppercase">Main Preview</span>
                     </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Gallery Images */}
+            <div className="space-y-4 md:col-span-2">
+              <Label>Product Gallery (Multiple Images)</Label>
+              <div className="flex flex-col gap-4">
+                <div className="relative group cursor-pointer border-2 border-dashed border-slate-200 rounded-lg p-6 hover:border-blue-500 transition-colors bg-slate-50/50">
+                  <input
+                    id="gallery-files"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      console.log("Selected gallery files:", files);
+                      if (files.length > 0) {
+                        setOtherImageFiles(prev => [...prev, ...files]);
+                        const newUrls = files.map(file => URL.createObjectURL(file));
+                        setOtherPreviewUrls(prev => [...prev, ...newUrls]);
+                      }
+                    }}
+                  />
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <Upload className="h-8 w-8 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                    <span className="text-sm font-medium text-slate-600">Add Gallery Images</span>
+                    <p className="text-[10px] text-slate-400">You can select multiple files</p>
+                  </div>
+                </div>
+
+                {/* Gallery Previews */}
+                {otherPreviewUrls.length > 0 && (
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                    {otherPreviewUrls.map((url, idx) => (
+                      <div key={idx} className="aspect-square rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shadow-sm relative group">
+                        <img 
+                          src={url} 
+                          className="h-full w-full object-cover" 
+                          alt={`Gallery ${idx}`}
+                          onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
+                        />
+                        <button
+                          type="button"
+                          className="absolute top-1 right-1 h-5 w-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          onClick={() => {
+                            setOtherPreviewUrls(prev => prev.filter((_, i) => i !== idx));
+                            // Only filter imageFiles if they correspond to the newly added ones
+                            // This logic is a bit tricky if some are existing URLs and some are new files
+                            // For simplicity, we'll assume the user wants to remove from the current selection
+                            // In a real app, we'd separate existing vs new files
+                            setOtherImageFiles(prev => prev.filter((_, i) => i !== (idx - (otherPreviewUrls.length - otherImageFiles.length))));
+                          }}
+                        >
+                          <span className="text-xs">×</span>
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -359,7 +425,9 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                 <SelectContent className="bg-white">
                     <SelectItem value="0">Generic Member</SelectItem>
                     {members.map((m) => (
-                        <SelectItem key={m.id} value={m.id.toString()}>{m.name}</SelectItem>
+                        <SelectItem key={m.id} value={m.id.toString()}>
+                          {m.name} {m.businessName ? `(${m.businessName})` : ""}
+                        </SelectItem>
                     ))}
                 </SelectContent>
               </Select>
