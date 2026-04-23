@@ -305,15 +305,22 @@ export async function adminLogin(email: string, password: string): Promise<strin
   }
 }
 
+// Helper to convert URL to File object for backend IFormFile compatibility
+async function urlToFile(url: string, filename: string = "image.jpg"): Promise<File> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return new File([blob], filename, { type: blob.type });
+}
+
 export async function addOrUpdateProduct(product: any, imageFile?: File | null) {
   const productId = Number(product.id || 0);
   const isUpdate = productId > 0;
-  console.log(`[API] VERSION 8.1 - FINAL_CLEAN | Mode: ${isUpdate ? "UPDATE (NewImage)" : "ADD (image)"} | id=${productId}`);
+  console.log(`[API] VERSION 9.0 - DEFINITIVE | Mode: ${isUpdate ? "UPDATE (NewImage mandatory binary)" : "ADD (image)"} | id=${productId}`);
   
   try {
     const formData = new FormData();
 
-    // 1. Core Fields Mapping (Required by backend)
+    // 1. Core Fields Mapping
     formData.append("id", productId.toString());
     formData.append("memberID", (product.memberID || 1).toString());
     formData.append("categoryID", (product.categoryID || 1).toString());
@@ -324,27 +331,42 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     formData.append("isActive", "true");
     formData.append("unit", product.unit || "pcs");
 
-    // 2. 🔥 FINAL IMAGE LOGIC (v8.1 - FINAL_CLEAN)
-    // ADD: send "image" as file
-    // UPDATE: send "NewImage" (Capital N) as file
-    if (imageFile) {
-      if (isUpdate) {
-        console.log("UPDATE → Appending 'NewImage' (Binary)");
-        formData.append("NewImage", imageFile);
-      } else {
-        console.log("ADD → Appending 'image' (Binary)");
+    // 2. 🔥 FINAL IMAGE FIX (v9.0)
+    if (!isUpdate) {
+      // ADD MODE
+      if (imageFile) {
+        console.log("ADD → Appending 'image' (Binary File)");
         formData.append("image", imageFile);
       }
     } else {
-      console.log("No new file selected — Image field omitted completely.");
+      // UPDATE MODE
+      // 🔥 MANDATORY: Backend expects "NewImage" to be a File
+      let fileToSend: File | null = null;
+
+      if (imageFile) {
+        console.log("UPDATE → Using selected new file for 'NewImage'");
+        fileToSend = imageFile;
+      } else if (product.image) {
+        // 🔥 CONVERT EXISTING URL → FILE
+        console.log("UPDATE → No new file. Converting existing URL to File for 'NewImage':", product.image);
+        try {
+          fileToSend = await urlToFile(product.image);
+        } catch (err) {
+          console.error("Failed to convert image URL to File:", err);
+        }
+      }
+
+      if (fileToSend) {
+        formData.append("NewImage", fileToSend);
+      }
     }
 
     // 3. 🔍 Debug: Verify EXACT FormData keys before sending
-    console.log("--- FINAL FormData Payload ---");
+    console.log("--- FINAL FormData Payload (v9.0) ---");
     for (let pair of (formData as any).entries()) {
       console.log(`  ${pair[0]}:`, pair[1]);
     }
-    console.log("------------------------------");
+    console.log("-------------------------------------");
 
     const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
     const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
@@ -354,13 +376,13 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null) 
     });
 
     if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v8.1):", response.data);
+      console.log("[API] Success (v9.0):", response.data);
       return response.data;
     }
     throw new Error(`Unexpected status: ${response.status}`);
   } catch (error: any) {
     const errorDetail = error.response?.data || error.message;
-    console.error("[API] Error (v8.1):", errorDetail);
+    console.error("[API] Error (v9.0):", errorDetail);
     throw error;
   }
 }
