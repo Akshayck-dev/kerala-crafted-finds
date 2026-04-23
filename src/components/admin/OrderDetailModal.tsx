@@ -40,10 +40,9 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
 
   if (!order) return null;
 
-  // Resolve product name from ID
-  const resolveProductName = (id: string | number) => {
-    const prod = products.find(p => p.id === id.toString() || p.id === id);
-    return prod ? prod.name : `Product #${id}`;
+  // Resolve product from ID
+  const resolveProduct = (id: string | number) => {
+    return products.find(p => p.id === id.toString() || p.id === id);
   };
 
   const getStatusColor = (status: string) => {
@@ -92,6 +91,7 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
                     <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
                         <p className="font-semibold text-slate-900">{order.customerName}</p>
                         <p className="text-sm text-slate-500 mt-1">{order.phone || "No contact info"}</p>
+                        <p className="text-xs text-blue-600 mt-1 font-medium">{order.email}</p>
                     </div>
                 </div>
                 <div className="space-y-3">
@@ -127,21 +127,40 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
                                     <td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No item details available</td>
                                 </tr>
                             ) : (
-                                order.products.map((item, idx) => (
-                                    <tr key={idx}>
-                                        <td className="px-4 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded bg-slate-100 shrink-0 flex items-center justify-center">
-                                                    <Package className="h-5 w-5 text-slate-400" />
+                                order.products.map((item, idx) => {
+                                    const p = resolveProduct(item.productId);
+                                    return (
+                                        <tr key={idx}>
+                                            <td className="px-4 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-12 w-12 rounded bg-slate-100 shrink-0 border overflow-hidden flex items-center justify-center">
+                                                        {p && p.image ? (
+                                                            <img 
+                                                                src={p.image} 
+                                                                alt={p.name} 
+                                                                className="h-full w-full object-cover"
+                                                                onError={(e) => (e.currentTarget.style.display = 'none')}
+                                                            />
+                                                        ) : (
+                                                            <Package className="h-5 w-5 text-slate-400" />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <span className="font-medium text-slate-900 block">{p ? p.name : `Product #${item.productId}`}</span>
+                                                        <span className="text-[10px] text-slate-500 uppercase tracking-tight">
+                                                            {p?.sellerName || "Kerala Crafted"} {p?.businessName ? `(${p.businessName})` : ""}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <span className="font-medium text-slate-900">{resolveProductName(item.productId)}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-4 text-center font-medium">{item.quantity}</td>
-                                        <td className="px-4 py-4 text-right">--</td>
-                                        <td className="px-4 py-4 text-right font-bold text-slate-900">--</td>
-                                    </tr>
-                                ))
+                                            </td>
+                                            <td className="px-4 py-4 text-center font-medium">{item.quantity}</td>
+                                            <td className="px-4 py-4 text-right">₹{p?.price || '--'}</td>
+                                            <td className="px-4 py-4 text-right font-bold text-slate-900">
+                                                {p ? `₹${p.price * item.quantity}` : '--'}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                         <tfoot className="bg-slate-50/50">

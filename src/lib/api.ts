@@ -182,6 +182,7 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
         category: (p.categoryName || p.CategoryName || "all").toLowerCase().trim().replace(/\s+/g, "-"),
         categoryName: p.categoryName || p.CategoryName || "Uncategorized",
         sellerName: p.memberName || p.MemberName || "Mallu Smart",
+        businessName: p.businessName || p.BusinessName || "",
         description: p.description || p.Description || "Authentic Kerala handmade product.",
         originalPrice: Number(p.price || p.Price || 0) * 1.25,
         badge: "Authentic",

@@ -11,6 +11,7 @@ export interface Product {
   badge?: string;
   artisan?: string;
   sellerName?: string;
+  businessName?: string;
   sellerAvatar?: string;
   ingredients?: string;
   quantity?: number;
