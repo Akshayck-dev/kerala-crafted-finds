@@ -145,18 +145,14 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
                                                             <Package className="h-5 w-5 text-slate-400" />
                                                         )}
                                                     </div>
-                                                    <div>
-                                                        <span className="font-bold text-slate-900 block">{p ? p.name : `Product #${item.productId}`}</span>
-                                                        <div className="flex flex-col mt-0.5">
-                                                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                                                                {p?.sellerName || "Mallu Smart Seller"}
-                                                            </span>
-                                                            {p?.businessName && (
-                                                                <span className="text-[10px] text-slate-400 uppercase font-medium">
-                                                                    {p.businessName}
-                                                                </span>
-                                                            )}
-                                                        </div>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span className="font-bold text-slate-900 text-sm">{p ? p.name : `Product #${item.productId}`}</span>
+                                                        <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                                                            {p?.sellerName || "Seller Name N/A"}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-500 uppercase font-medium">
+                                                            {p?.businessName || "Business Name N/A"}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </td>
