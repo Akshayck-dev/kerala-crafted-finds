@@ -9,13 +9,19 @@ import { OrderDetailModal } from "@/components/admin/OrderDetailModal";
 
 export const Route = createFileRoute("/admin/orders")({
   component: AdminOrders,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      seller: (search.seller as string) || undefined,
+    }
+  },
 });
 
 function AdminOrders() {
+  const search = Route.useSearch();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(search.seller || "");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
@@ -43,7 +49,11 @@ function AdminOrders() {
 
   const filteredOrders = orders.filter(o => 
     (o.customerName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (o.id.toString()).includes(searchTerm)
+    (o.id.toString()).includes(searchTerm) ||
+    // Search in seller names if provided by the product lookup (though orders don't have them directly, 
+    // it helps if the admin types the business name manually)
+    (o as any).businessName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (o as any).sellerName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusColor = (status: string) => {

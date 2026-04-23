@@ -252,19 +252,20 @@ function AdminAnalytics() {
                   <th className="px-6 py-4 cursor-pointer hover:text-blue-600 transition-colors" onClick={() => handleSort('totalProductsSold')}>
                     <div className="flex items-center gap-1">Items Sold <ArrowUpDown className="h-3 w-3" /></div>
                   </th>
-                  <th className="px-6 py-4">Performance</th>
+                  <th className="px-6 py-4">Volume</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={5} className="px-6 py-4"><Skeleton className="h-12 w-full rounded-xl" /></td>
+                      <td colSpan={6} className="px-6 py-4"><Skeleton className="h-12 w-full rounded-xl" /></td>
                     </tr>
                   ))
                 ) : filteredStats.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-20 text-center text-slate-400">
+                    <td colSpan={6} className="px-6 py-20 text-center text-slate-400">
                       No matching sellers found for this period.
                     </td>
                   </tr>
@@ -294,9 +295,8 @@ function AdminAnalytics() {
                         {stat.totalProductsSold} Units
                       </td>
                       <td className="px-6 py-5">
-                         <div className="flex flex-col gap-1 w-32">
+                         <div className="flex flex-col gap-1 w-24">
                             <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase">
-                               <span>Volume</span>
                                <span>{Math.min(100, Math.round((stat.totalRevenue / (topSeller?.totalRevenue || 1)) * 100))}%</span>
                             </div>
                             <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -305,6 +305,26 @@ function AdminAnalytics() {
                                 style={{ width: `${Math.min(100, Math.round((stat.totalRevenue / (topSeller?.totalRevenue || 1)) * 100))}%` }}
                                />
                             </div>
+                         </div>
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                         <div className="flex items-center justify-end gap-2">
+                            <Link 
+                              to="/admin/orders" 
+                              search={{ seller: stat.businessName }}
+                              className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                              title="View Seller Orders"
+                            >
+                               <ShoppingBag className="h-4 w-4" />
+                            </Link>
+                            <Link 
+                              to="/admin/products" 
+                              search={{ seller: stat.businessName }}
+                              className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                              title="View Seller Products"
+                            >
+                               <Package className="h-4 w-4" />
+                            </Link>
                          </div>
                       </td>
                     </tr>

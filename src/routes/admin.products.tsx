@@ -20,13 +20,19 @@ import {
 
 export const Route = createFileRoute("/admin/products")({
   component: AdminProducts,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      seller: (search.seller as string) || undefined,
+    }
+  },
 });
 
 function AdminProducts() {
+  const search = Route.useSearch();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(search.seller || "");
   const [showInactive, setShowInactive] = useState(false);
   
   // Modal states
@@ -94,7 +100,9 @@ function AdminProducts() {
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = (p.name ?? "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (p.categoryName ?? "").toLowerCase().includes(searchTerm.toLowerCase());
+                          (p.categoryName ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (p.sellerName ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (p.businessName ?? "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesActivity = showInactive ? true : p.isActive !== false;
     return matchesSearch && matchesActivity;
   });
