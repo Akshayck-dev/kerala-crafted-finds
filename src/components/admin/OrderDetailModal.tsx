@@ -5,8 +5,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { type Order, type Product } from "@/lib/data";
-import { fetchProducts } from "@/lib/api";
+import { type Order, type Product, type Member } from "@/lib/data";
+import { fetchProducts, fetchMembers } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Package, User, MapPin, Calendar, Clock, CreditCard } from "lucide-react";
 
@@ -18,6 +18,7 @@ interface OrderDetailModalProps {
 
 export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalProps) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -29,8 +30,12 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
   async function loadProducts() {
     setIsLoading(true);
     try {
-      const data = await fetchProducts(false);
-      setProducts(data);
+      const [productData, memberData] = await Promise.all([
+        fetchProducts(false),
+        fetchMembers()
+      ]);
+      setProducts(productData);
+      setMembers(memberData);
     } catch (err) {
       console.error("Failed to load products for order details:", err);
     } finally {
@@ -153,12 +158,12 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
                                             <td className="px-4 py-4 text-center font-medium">{item.quantity}</td>
                                             <td className="px-4 py-4">
                                                 <span className="text-[10px] font-bold text-blue-600 uppercase tracking-tight">
-                                                    {p?.sellerName || "N/A"}
+                                                    {p?.sellerName || members.find(m => Number(m.id) === p?.memberID)?.name || "N/A"}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-4">
                                                 <span className="text-[10px] text-slate-500 uppercase font-medium">
-                                                    {p?.businessName || "N/A"}
+                                                    {p?.businessName || members.find(m => Number(m.id) === p?.memberID)?.businessName || "N/A"}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-4 text-right text-xs">₹{p?.price || '--'}</td>
