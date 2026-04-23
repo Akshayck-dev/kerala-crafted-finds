@@ -415,22 +415,27 @@ export async function fetchMembers(): Promise<Member[]> {
     const data = await handleResponse(response);
     console.log("[API] GetAllMembers Full Raw Data:", data);
     
-    return (Array.isArray(data) ? data : []).map((m: any, index: number) => ({
-      id: (m.memberID || m.MemberID || m.memberId || m.MemberId || m.id || m.ID || (index + 1)).toString(),
-      name: m.name || m.Name || "N/A",
-      email: m.email || m.Email || "No email",
-      phone: m.contactNumber || m.ContactNumber || m.phone || m.Phone || "N/A",
-      contactNumber: m.contactNumber || m.ContactNumber || "N/A",
-      businessName: m.businessName || m.BusinessName || "N/A",
-      district: m.district || m.District || "All Kerala",
-      place: m.place || m.Place || "",
-      product: m.product || m.Product || "",
-      licenceNumber: m.licenceNumber || m.LicenceNumber || "NA",
-      ownProduct: m.ownProduct ?? m.OwnProduct ?? true,
-      isActive: m.isActive ?? m.IsActive ?? true,
-      joinedDate: m.createdOn || m.CreatedOn || new Date().toISOString(),
-      modifiedOn: m.modifiedOn || m.ModifiedOn || new Date().toISOString(),
-    }));
+    return (Array.isArray(data) ? data : []).map((m: any, index: number) => {
+      const mid = (m.memberID || m.MemberID || m.memberId || m.MemberId || m.id || m.ID || (index + 1)).toString();
+      const isActiveValue = m.isActive ?? m.IsActive ?? m.active ?? m.Active ?? true;
+      
+      return {
+        id: mid,
+        name: m.name || m.Name || "N/A",
+        email: m.email || m.Email || m.mail || m.Mail || m.emailID || m.EmailID || "No email",
+        phone: m.contactNumber || m.ContactNumber || m.phone || m.Phone || "N/A",
+        contactNumber: m.contactNumber || m.ContactNumber || "N/A",
+        businessName: m.businessName || m.BusinessName || "N/A",
+        district: m.district || m.District || "All Kerala",
+        place: m.place || m.Place || "",
+        product: m.product || m.Product || "",
+        licenceNumber: m.licenceNumber || m.LicenceNumber || "NA",
+        ownProduct: m.ownProduct ?? m.OwnProduct ?? true,
+        isActive: isActiveValue === true || isActiveValue === 1 || isActiveValue === "true",
+        joinedDate: m.createdOn || m.CreatedOn || m.joinedDate || m.JoinedDate || new Date().toISOString(),
+        modifiedOn: m.modifiedOn || m.ModifiedOn || new Date().toISOString(),
+      };
+    });
   } catch (error) {
     console.error("API Error (Members):", error);
     return [];
@@ -440,16 +445,21 @@ export async function fetchMembers(): Promise<Member[]> {
 export async function addOrUpdateMember(member: Partial<Member>) {
   try {
     const finalId = Number(member.id || 0);
+    const emailStr = String(member.email || "");
     
-    // Reverting to JSON as FormData returned 415 Unsupported Media Type
-    // Adding both casing for ID to be safe
+    // Payload with multiple casing and variations to satisfy backend model binding
     const payload = {
       id: finalId,
       Id: finalId,
       MemberId: finalId,
       MemberID: finalId,
       Name: String(member.name || ""),
-      Email: String(member.email || ""),
+      Email: emailStr,
+      Mail: emailStr,
+      email: emailStr,
+      mail: emailStr,
+      EmailId: emailStr,
+      EmailID: emailStr,
       BusinessName: String(member.businessName || ""),
       Place: String(member.place || ""),
       District: String(member.district || "Ernakulam"),
@@ -461,17 +471,21 @@ export async function addOrUpdateMember(member: Partial<Member>) {
       CreatedOn: member.joinedDate || member.createdOn || new Date().toISOString(),
     };
 
-    console.log("[API] AddOrUpdateMember (JSON) Payload:", payload);
+    console.log("[API] AddOrUpdateMember Payload:", payload);
 
-    const response = await safeFetch(`${BASE_URL}/User/AddOrUpdateMember`, {
+    // Send ID in query string too for updates, as some backends require it to identify the record
+    const url = finalId > 0 
+      ? `${BASE_URL}/User/AddOrUpdateMember?id=${finalId}&memberId=${finalId}&MemberId=${finalId}`
+      : `${BASE_URL}/User/AddOrUpdateMember`;
+
+    const response = await safeFetch(url, {
       method: "POST",
       headers: getAuthHeaders("POST", true), // application/json
       body: JSON.stringify(payload),
     });
     
-    console.log(`[API] AddOrUpdateMember Response Status: ${response.status} ${response.statusText}`);
+    console.log(`[API] AddOrUpdateMember Status: ${response.status}`);
     const result = await handleResponse(response);
-    console.log("[API] AddOrUpdateMember Result Body:", result);
     return result;
   } catch (error) {
     console.error("API Error (AddOrUpdateMember):", error);
