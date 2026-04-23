@@ -422,7 +422,7 @@ export async function fetchMembers(): Promise<Member[]> {
       return {
         id: mid,
         name: m.name || m.Name || "N/A",
-        email: m.email || m.Email || m.mail || m.Mail || m.emailID || m.EmailID || "No email",
+        email: m.email || m.Email || m.mail || m.Mail || m.emailID || m.EmailID || m.emailAddress || m.EmailAddress || "No email",
         phone: m.contactNumber || m.ContactNumber || m.phone || m.Phone || "N/A",
         contactNumber: m.contactNumber || m.ContactNumber || "N/A",
         businessName: m.businessName || m.BusinessName || "N/A",
@@ -460,6 +460,8 @@ export async function addOrUpdateMember(member: Partial<Member>) {
       mail: emailStr,
       EmailId: emailStr,
       EmailID: emailStr,
+      EmailAddress: emailStr,
+      emailAddress: emailStr,
       BusinessName: String(member.businessName || ""),
       Place: String(member.place || ""),
       District: String(member.district || "Ernakulam"),
@@ -473,10 +475,8 @@ export async function addOrUpdateMember(member: Partial<Member>) {
 
     console.log("[API] AddOrUpdateMember Payload:", payload);
 
-    // Send ID in query string too for updates, as some backends require it to identify the record
-    const url = finalId > 0 
-      ? `${BASE_URL}/User/AddOrUpdateMember?id=${finalId}&memberId=${finalId}&MemberId=${finalId}`
-      : `${BASE_URL}/User/AddOrUpdateMember`;
+    // Reverting to clean URL as query params might be confusing the backend into a delete/error state
+    const url = `${BASE_URL}/User/AddOrUpdateMember`;
 
     const response = await safeFetch(url, {
       method: "POST",
