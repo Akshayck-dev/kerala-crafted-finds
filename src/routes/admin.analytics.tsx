@@ -14,7 +14,12 @@ import {
   ExternalLink,
   Store,
   Award,
-  Package
+  Package,
+  Eye,
+  X,
+  Phone,
+  Mail,
+  MapPin
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +47,8 @@ function AdminAnalytics() {
     key: 'totalRevenue',
     direction: 'desc'
   });
+  const [selectedStat, setSelectedStat] = useState<SellerStat | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -309,6 +316,13 @@ function AdminAnalytics() {
                       </td>
                       <td className="px-6 py-5 text-right">
                          <div className="flex items-center justify-end gap-2">
+                            <button 
+                              onClick={() => { setSelectedStat(stat); setIsModalOpen(true); }}
+                              className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                              title="View Full Analytics"
+                            >
+                               <Eye className="h-4 w-4" />
+                            </button>
                             <Link 
                               to="/admin/orders" 
                               search={{ seller: stat.businessName }}
@@ -335,6 +349,15 @@ function AdminAnalytics() {
           </div>
         </div>
       </div>
+
+      {isModalOpen && selectedStat && (
+        <SellerAnalyticsModal 
+          stat={selectedStat} 
+          onClose={() => setIsModalOpen(false)} 
+          member={members.find(m => m.id.toString() === selectedStat.memberId)}
+          products={products.filter(p => p.memberID?.toString() === selectedStat.memberId)}
+        />
+      )}
     </AdminLayout>
   );
 }
@@ -369,6 +392,123 @@ function SummaryCard({ title, value, icon: Icon, color, isLoading }: {
       ) : (
         <h3 className="text-2xl font-black text-slate-900 tracking-tight">{value}</h3>
       )}
+    </div>
+  );
+}
+
+function SellerAnalyticsModal({ stat, onClose, member, products }: { 
+  stat: SellerStat; 
+  onClose: () => void; 
+  member?: Member;
+  products: Product[];
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        {/* Header */}
+        <div className="bg-slate-900 px-6 py-8 text-white relative">
+           <button 
+            onClick={onClose}
+            className="absolute right-4 top-4 p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
+           >
+             <X className="h-5 w-5" />
+           </button>
+           <div className="flex items-center gap-5">
+              <div className="h-16 w-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-2xl font-black border border-white/20">
+                {stat.businessName.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h3 className="text-2xl font-black tracking-tight">{stat.businessName}</h3>
+                <div className="flex items-center gap-3 text-slate-400 mt-1 text-sm">
+                   <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {stat.name}</span>
+                   <span className="h-1 w-1 rounded-full bg-slate-600" />
+                   <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest">ID: {stat.memberId}</span>
+                </div>
+              </div>
+           </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-8 max-h-[70vh] overflow-y-auto">
+           {/* Stats Row */}
+           <div className="grid grid-cols-3 gap-4">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Revenue</p>
+                 <p className="text-xl font-black text-slate-900">₹{stat.totalRevenue.toLocaleString()}</p>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Orders</p>
+                 <p className="text-xl font-black text-slate-900">{stat.totalOrders}</p>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Units Sold</p>
+                 <p className="text-xl font-black text-slate-900">{stat.totalProductsSold}</p>
+              </div>
+           </div>
+
+           {/* Details Sections */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                 <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] border-l-2 border-blue-600 pl-3">Business Profile</h4>
+                 <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                       <MapPin className="h-4 w-4 text-slate-400 mt-0.5" />
+                       <div>
+                          <p className="text-xs font-bold text-slate-900">{member?.district || "N/A"}</p>
+                          <p className="text-[10px] text-slate-500">{member?.place || "Kerala"}</p>
+                       </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                       <Phone className="h-4 w-4 text-slate-400" />
+                       <p className="text-xs font-bold text-slate-900">{member?.phone || "N/A"}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                       <Mail className="h-4 w-4 text-slate-400" />
+                       <p className="text-xs font-bold text-slate-900 leading-tight break-all">{member?.email || "N/A"}</p>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="space-y-4">
+                 <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] border-l-2 border-blue-600 pl-3">Top Products</h4>
+                 <div className="space-y-2">
+                    {products.slice(0, 3).length > 0 ? products.slice(0, 3).map(p => (
+                       <div key={p.id} className="flex items-center justify-between p-2 rounded-xl border border-slate-100 bg-slate-50/50">
+                          <div className="flex items-center gap-2 overflow-hidden">
+                             <div className="h-8 w-8 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                                <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
+                             </div>
+                             <span className="text-[10px] font-bold text-slate-700 truncate">{p.name}</span>
+                          </div>
+                          <span className="text-[10px] font-black text-slate-900 shrink-0 ml-2">₹{p.price}</span>
+                       </div>
+                    )) : <p className="text-xs text-slate-400 italic">No products listed.</p>}
+                 </div>
+              </div>
+           </div>
+
+           {/* Footer Action */}
+           <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
+              <Link 
+                to="/admin/orders" 
+                search={{ seller: stat.businessName }}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-3 rounded-xl transition-all text-center flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20"
+                onClick={onClose}
+              >
+                <ShoppingBag className="h-3.5 w-3.5" /> View All Orders
+              </Link>
+              <Link 
+                to="/admin/products" 
+                search={{ seller: stat.businessName }}
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-900 text-xs font-bold py-3 rounded-xl transition-all text-center flex items-center justify-center gap-2"
+                onClick={onClose}
+              >
+                <Package className="h-3.5 w-3.5" /> View Products
+              </Link>
+           </div>
+        </div>
+      </div>
     </div>
   );
 }
