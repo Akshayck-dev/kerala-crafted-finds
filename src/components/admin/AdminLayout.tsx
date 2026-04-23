@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Menu, X, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -20,6 +20,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { name: "Products", href: "/admin/products", icon: Package },
     { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
     { name: "Members", href: "/admin/members", icon: Users },
+    { name: "Analytics", href: "/admin/analytics", icon: BarChart2 },
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ];
 
