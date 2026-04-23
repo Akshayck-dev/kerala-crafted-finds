@@ -417,8 +417,14 @@ export async function fetchMembers(): Promise<Member[]> {
     
     return (Array.isArray(data) ? data : []).map((m: any, index: number) => {
       const mid = (m.memberID || m.MemberID || m.memberId || m.MemberId || m.id || m.ID || (index + 1)).toString();
-      const isActiveValue = m.isActive ?? m.IsActive ?? m.active ?? m.Active ?? true;
       
+      // More robust isActive detection
+      const rawActive = m.isActive ?? m.IsActive ?? m.active ?? m.Active ?? true;
+      let isActiveValue = true;
+      if (typeof rawActive === "boolean") isActiveValue = rawActive;
+      else if (typeof rawActive === "number") isActiveValue = rawActive === 1;
+      else if (typeof rawActive === "string") isActiveValue = rawActive.toLowerCase() === "true";
+
       return {
         id: mid,
         name: m.name || m.Name || "N/A",
@@ -431,7 +437,7 @@ export async function fetchMembers(): Promise<Member[]> {
         product: m.product || m.Product || "",
         licenceNumber: m.licenceNumber || m.LicenceNumber || "NA",
         ownProduct: m.ownProduct ?? m.OwnProduct ?? true,
-        isActive: isActiveValue === true || isActiveValue === 1 || isActiveValue === "true",
+        isActive: isActiveValue,
         joinedDate: m.createdOn || m.CreatedOn || m.joinedDate || m.JoinedDate || new Date().toISOString(),
         modifiedOn: m.modifiedOn || m.ModifiedOn || new Date().toISOString(),
       };
@@ -446,6 +452,7 @@ export async function addOrUpdateMember(member: Partial<Member>) {
   try {
     const finalId = Number(member.id || 0);
     const emailStr = String(member.email || "");
+    const activeStatus = member.isActive ?? true;
     
     // Payload with multiple casing and variations to satisfy backend model binding
     const payload = {
@@ -469,7 +476,9 @@ export async function addOrUpdateMember(member: Partial<Member>) {
       ContactNumber: String(member.phone || member.contactNumber || ""),
       LicenceNumber: String(member.licenceNumber || "NA"),
       OwnProduct: member.ownProduct ?? true,
-      IsActive: member.isActive ?? true,
+      IsActive: activeStatus,
+      isActive: activeStatus,
+      Active: activeStatus,
       CreatedOn: member.joinedDate || member.createdOn || new Date().toISOString(),
     };
 

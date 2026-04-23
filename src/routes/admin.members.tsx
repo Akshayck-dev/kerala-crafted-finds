@@ -108,7 +108,8 @@ function AdminMembers() {
         (m.phone && m.phone.includes(searchTerm));
       
       const matchesDistrict = districtFilter === "All Districts" || m.district === districtFilter;
-      const isActive = m.isActive !== false;
+      // Temporarily allowing all members to show to verify data persistence
+      const isActive = true; // m.isActive !== false;
       
       return matchesSearch && matchesDistrict && isActive;
     });
