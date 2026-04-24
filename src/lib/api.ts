@@ -1,5 +1,4 @@
 import { fixImagePath } from "./utils";
-import axios from "axios";
 import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
 import { useLoadingStore } from "./loading-store";
@@ -18,6 +17,28 @@ function getAuthToken() {
   return token.toString().trim().replace(/^"|"$/g, '');
 }
 
+/**
+ * Standardized header generator for API requests.
+ * Ensures the token is always cleaned and Bearer is correctly formatted.
+ */
+function getAuthHeaders(method: string = "GET", isJson: boolean = true) {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
+  };
+
+  if (token && token.length > 10) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  if (isJson && method !== 'GET') {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  return headers;
+}
+
 function startLoading() {
   useLoadingStore.getState().startLoading();
 }
@@ -32,7 +53,7 @@ function stopLoading() {
 async function safeFetch(url: string, options: RequestInit = {}, retry = true): Promise<Response> {
   startLoading();
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s Timeout
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased to 30s for large image uploads
 
   const method = options.method || 'GET';
   const token = getAuthToken();
@@ -293,7 +314,13 @@ export async function adminLogin(email: string, password: string): Promise<strin
 
 // Helper to convert URL to File object for backend IFormFile compatibility
 async function urlToFile(url: string, filename: string = "image.jpg"): Promise<File> {
-  const res = await fetch(url);
+  const token = getAuthToken();
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!res.ok) throw new Error(`Failed to fetch image: ${res.statusText}`);
   const blob = await res.blob();
   return new File([blob], filename, { type: blob.type });
 }
