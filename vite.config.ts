@@ -20,7 +20,10 @@ export default defineConfig({
         secure: false, // Ignore SSL issues for the proxy target
         timeout: 60000, // Wait up to 60s for server response
         proxyTimeout: 60000, // Wait up to 60s for proxy connection
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        rewrite: (path) => {
+          if (path.startsWith('/api/uploads')) return path;
+          return path.replace(/^\/api/, '');
+        },
       },
     },
   },
