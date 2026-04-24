@@ -14,7 +14,14 @@ export function fixImagePath(path?: string | null) {
   
   const trimmedPath = path.trim();
   
-  // If already absolute URL
+  // If it's a full URL to mallusmart, convert it to use our local /api proxy
+  // This bypasses the 401 Unauthorized errors caused by hotlink protection
+  if (trimmedPath.includes("mallusmart.com")) {
+    const relativePath = trimmedPath.split("mallusmart.com").pop()?.replace(/^\/+/, '') || "";
+    return `/api/${relativePath}`;
+  }
+  
+  // If already absolute URL (other than mallusmart)
   if (trimmedPath.startsWith("http")) {
     return trimmedPath;
   }
@@ -22,6 +29,6 @@ export function fixImagePath(path?: string | null) {
   // Clean the path (remove leading slashes to prevent double slashes)
   const cleanPath = trimmedPath.replace(/^\/+/, '');
   
-  // Return the path with the absolute production domain to use the Original API assets
-  return `https://mallusmart.com/${cleanPath}`;
+  // Return the path via the proxy to avoid CORS/401 issues
+  return `/api/${cleanPath}`;
 }
