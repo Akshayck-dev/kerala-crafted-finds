@@ -175,7 +175,7 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
         id: rawId.toString(),
         name: p.productName || p.ProductName || "N/A",
         price: Number(p.price || p.Price || 0),
-        image: fixImagePath(p.image || p.Image),
+        image: fixImagePath(p.image || p.Image || (Array.isArray(p.images || p.Images) && (p.images || p.Images).length > 0 ? (p.images || p.Images)[0] : null)),
         images: (Array.isArray(p.images || p.Images || p.otherImages || p.OtherImages) 
           ? (p.images || p.Images || p.otherImages || p.OtherImages) 
           : []).map((img: any) => fixImagePath(img)),
