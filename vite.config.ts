@@ -21,7 +21,7 @@ export default defineConfig({
         timeout: 60000, // Wait up to 60s for server response
         proxyTimeout: 60000, // Wait up to 60s for proxy connection
         rewrite: (path) => {
-          if (path.startsWith('/api/uploads')) return path;
+          if (path.startsWith('/api/uploads')) return path.replace(/^\/api\/uploads/, '/Content/uploads');
           return path.replace(/^\/api/, '');
         },
       },

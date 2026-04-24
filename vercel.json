@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/uploads/:path*",
-      "destination": "https://mallusmart.com/api/uploads/:path*"
+      "destination": "https://mallusmart.com/Content/uploads/:path*"
     },
     {
       "source": "/api/:path*",
