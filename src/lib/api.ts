@@ -401,27 +401,25 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     }
 
     // 5. 🔍 Debug: Verify EXACT FormData keys before sending
-    console.log("--- FINAL FormData Payload (v10.0) ---");
+    console.log("--- FINAL FormData Payload (v10.1 - SAFEFETCH) ---");
     for (let pair of (formData as any).entries()) {
-      console.log(`  ${pair[0]}:`, pair[1]);
+      const val = pair[1];
+      console.log(`  ${pair[0]}:`, val instanceof File ? `File(${val.name}, ${val.size}b)` : val);
     }
     console.log("--------------------------------------");
 
-    const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
     const url = `${BASE_URL}/Product/AddOrUpdateProduct`;
-
-    const response = await axios.post(url, formData, {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const response = await safeFetch(url, {
+      method: "POST",
+      body: formData,
+      // Note: safeFetch will automatically handle the Auth header and strip Content-Type for FormData
     });
 
-    if (response.status === 200 || response.status === 201) {
-      console.log("[API] Success (v10.0):", response.data);
-      return response.data;
-    }
-    throw new Error(`Unexpected status: ${response.status}`);
+    const data = await handleResponse(response);
+    console.log("[API] Success (v10.1):", data);
+    return data;
   } catch (error: any) {
-    const errorDetail = error.response?.data || error.message;
-    console.error("[API] Error (v10.0):", errorDetail);
+    console.error("[API] Error (v10.1):", error.message);
     throw error;
   }
 }
