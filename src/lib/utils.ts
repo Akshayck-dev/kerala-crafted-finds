@@ -14,11 +14,17 @@ export function fixImagePath(path?: string | null) {
   
   const trimmedPath = path.trim();
   
+  // If it's a blob URL (for previews), return it as is
+  if (trimmedPath.startsWith('blob:')) {
+    return trimmedPath;
+  }
+
   // If it's a full URL to mallusmart, convert it to use our local /api proxy
-  // This bypasses the 401 Unauthorized errors caused by hotlink protection
   if (trimmedPath.includes("mallusmart.com")) {
     const relativePath = trimmedPath.split("mallusmart.com").pop()?.replace(/^\/+/, '') || "";
-    return `/api/${relativePath}`;
+    // Avoid double /api prefix if the relative path already starts with api/
+    const finalPath = relativePath.startsWith('api/') ? relativePath : `api/${relativePath}`;
+    return `/${finalPath.replace(/^\/+/, '')}`;
   }
   
   // If already absolute URL (other than mallusmart)
@@ -26,9 +32,19 @@ export function fixImagePath(path?: string | null) {
     return trimmedPath;
   }
   
+  // If it already starts with /api/, return it as is
+  if (trimmedPath.startsWith("/api/")) {
+    return trimmedPath;
+  }
+  
   // Clean the path (remove leading slashes to prevent double slashes)
   const cleanPath = trimmedPath.replace(/^\/+/, '');
   
   // Return the path via the proxy to avoid CORS/401 issues
-  return `/api/${cleanPath}`;
+  const fixed = `/api/${cleanPath}`;
+  
+  // Console logging removed for production, but kept here for debugging if needed
+  // console.log(`[UTILS] Path fixed: ${path} -> ${fixed}`);
+  
+  return fixed;
 }

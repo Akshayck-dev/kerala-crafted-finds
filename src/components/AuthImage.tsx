@@ -26,13 +26,17 @@ export function AuthImage({ src, alt, className, fallback = "/placeholder.svg" }
     setError(false);
 
     // Fetch the image with the Authorization header
+    console.log(`[AuthImage] Fetching: ${src}`);
     fetch(src, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     })
     .then(response => {
-      if (!response.ok) throw new Error("Failed to fetch image");
+      if (!response.ok) {
+        console.error(`[AuthImage] HTTP Error ${response.status} for ${src}`);
+        throw new Error(`Failed to fetch image: ${response.status}`);
+      }
       return response.blob();
     })
     .then(blob => {
@@ -41,7 +45,7 @@ export function AuthImage({ src, alt, className, fallback = "/placeholder.svg" }
       setIsLoading(false);
     })
     .catch(err => {
-      console.error("AuthImage Error:", err);
+      console.error(`[AuthImage] Error for ${src}:`, err);
       setError(true);
       setImageSrc(fallback);
       setIsLoading(false);
