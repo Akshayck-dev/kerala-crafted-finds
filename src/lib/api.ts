@@ -8,8 +8,10 @@ import { useLoadingStore } from "./loading-store";
 // NOTE: This may require CORS configuration on the backend.
 // Use the Vite proxy to avoid CORS issues and standardize headers.
 const BASE_URL = "/api";
+const CACHE_BUSTER = "FORCE_UPDATE_v10_2_" + Date.now();
+console.log(`[API] Cache Buster Active: ${CACHE_BUSTER}`);
 
-console.log("[API] Module loaded. Version: 1.0.2 - PASCAL_CASE_VALIDATION");
+console.log("[API] Module loaded. Version: 1.0.2 - AUTH_HARDENING_v10.2");
 
 // --- Helper Functions ---
 
