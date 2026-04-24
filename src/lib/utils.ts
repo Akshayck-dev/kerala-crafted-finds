@@ -29,10 +29,6 @@ export function fixImagePath(path?: string | null) {
   // Clean the path (remove leading slashes to prevent double slashes)
   const cleanPath = trimmedPath.replace(/^\/+/, '');
   
-  // Get token for authentication (some backends allow ?token= for images)
-  const token = typeof window !== 'undefined' ? (localStorage.getItem("adminToken")?.replace(/^"|"$/g, '') || "") : "";
-  const authParam = token ? (cleanPath.includes('?') ? `&token=${token}` : `?token=${token}`) : "";
-
-  // Return the path via the proxy with the auth token to avoid 401 issues
-  return `/api/${cleanPath}${authParam}`;
+  // Return the path via the proxy to avoid CORS/401 issues
+  return `/api/${cleanPath}`;
 }

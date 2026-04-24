@@ -7,6 +7,7 @@ import { type Product } from "@/lib/data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Edit, Trash2, AlertCircle } from "lucide-react";
 import { ProductModal } from "@/components/admin/ProductModal";
+import { AuthImage } from "@/components/AuthImage";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -192,12 +193,12 @@ function AdminProducts() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                          <div className="h-12 w-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
-                            <img 
-                                src={product.image} 
-                                alt={product.name} 
-                                className="h-full w-full object-cover" 
-                                onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
-                            />
+                             <AuthImage 
+                                 src={product.image} 
+                                 alt={product.name ?? ""} 
+                                 className="h-full w-full object-cover" 
+                                 fallback="/placeholder.svg"
+                             />
                          </div>
                          <div className="flex flex-col">
                             <span className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors">{product.name ?? "N/A"}</span>

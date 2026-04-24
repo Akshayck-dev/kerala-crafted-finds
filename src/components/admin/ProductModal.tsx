@@ -21,6 +21,7 @@ import {
 import { addOrUpdateProduct, fetchCategories, fetchMembers } from "@/lib/api";
 import { type Product, type Category, type Member } from "@/lib/data";
 import { Loader2, Upload } from "lucide-react";
+import { AuthImage } from "@/components/AuthImage";
 
 interface ProductModalProps {
   product: Partial<Product> | null;
@@ -326,11 +327,11 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                 {/* Preview */}
                 {(previewUrl || formData.image) && (
                   <div className="h-24 w-24 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shadow-inner relative group">
-                    <img 
-                      src={previewUrl || formData.image} 
+                    <AuthImage 
+                      src={previewUrl || formData.image || ""} 
                       className="h-full w-full object-cover" 
                       alt="Preview"
-                      onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
+                      fallback="/placeholder.svg"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                        <span className="text-[10px] text-white font-bold uppercase">Main Preview</span>
@@ -373,11 +374,11 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
                     {otherPreviewUrls.map((url, idx) => (
                       <div key={idx} className="aspect-square rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shadow-sm relative group">
-                        <img 
+                        <AuthImage 
                           src={url} 
                           className="h-full w-full object-cover" 
                           alt={`Gallery ${idx}`}
-                          onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
+                          fallback="/placeholder.svg"
                         />
                         <button
                           type="button"
