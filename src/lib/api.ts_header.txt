@@ -1,0 +1,111 @@
+import { fixImagePath } from "./utils";
+import axios from "axios";
+import type { Product, Category, Member } from "./data";
+import { toast } from "sonner";
+import { useLoadingStore } from "./loading-store";
+
+// BASE_URL is set directly to the production domain as requested.
+// NOTE: This may require CORS configuration on the backend.
+// Use the Vite proxy to avoid CORS issues and standardize headers.
+const BASE_URL = "/api";
+const CACHE_BUSTER = "FORCE_UPDATE_v10_3_" + Date.now();
+console.log(`[API] Cache Buster Active: ${CACHE_BUSTER}`);
+
+console.log("[API] Module loaded. Version: 1.0.3 - FIX_SYNTAX");
+
+// --- Helper Functions ---
+
+function getAuthToken() {
+  if (typeof window === 'undefined') return "";
+  const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || "";
+  return token.toString().trim().replace(/^"|"$/g, '');
+}
+
+function startLoading() {
+  useLoadingStore.getState().startLoading();
+}
+
+function stopLoading() {
+  useLoadingStore.getState().stopLoading();
+}
+
+/**
+ * Robust wrapper for fetch to handle auth headers, error logging, and FormData requirements.
+ */
+async function safeFetch(url: string, options: RequestInit = {}, retry = true): Promise<Response> {
+  startLoading();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s Timeout
+
+  const method = options.method || 'GET';
+  const token = getAuthToken();
+  
+  console.log(`[API] calling ${url} ${method}`);
+
+  const finalHeaders: Record<string, string> = {
+    ...(options.headers as Record<string, string>),
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
+  };
+
+  if (token && token.length > 10) {
+    finalHeaders['Authorization'] = `Bearer ${token}`;
+    console.log(`[AUTH] Header present: Bearer ${token.substring(0, 10)}... [Length: ${token.length}]`);
+  } else {
+    console.warn(`[AUTH] WARNING: No valid token found for ${url}!`);
+  }
+
+  // CRITICAL: If body is FormData (e.g. AddOrUpdateProduct), we MUST NOT set Content-Type.
+  // The browser must set it automatically to include the boundary string, otherwise 415 error occurs.
+  if (options.body instanceof FormData) {
+    delete finalHeaders['Content-Type'];
+    console.log(`[API] FormData detected for ${url}. Stripping manual Content-Type header.`);
+  } else if (!finalHeaders['Content-Type'] && method !== 'GET') {
+    finalHeaders['Content-Type'] = 'application/json';
+  }
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: finalHeaders,
+      signal: controller.signal,
+    });
+
+    console.log(`[API] ${url} -> status ${response.status}`);
+    clearTimeout(timeoutId);
+
+    if (!response.ok && response.status >= 500 && retry) {
+      console.warn(`Retrying request to ${url} due to status ${response.status}`);
+      return safeFetch(url, options, false);
+    }
+
+    return response;
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (retry && error.name !== 'AbortError') {
+      console.warn(`Retrying request to ${url} due to network error`);
+      return safeFetch(url, options, false);
+    }
+    throw error;
+  } finally {
+    stopLoading();
+  }
+}
+
+async function handleResponse(response: Response) {
+  if (response.status === 401) {
+    localStorage.removeItem("adminToken");
+    toast.error("Session expired. Please login again.");
+    setTimeout(() => {
+      window.location.href = "/admin/login";
+    }, 1500);
+    throw new Error("Unauthorized. Redirecting to login...");
+  }
+
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    return text;
+  }
+}

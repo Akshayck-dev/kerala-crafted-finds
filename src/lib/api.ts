@@ -4,43 +4,26 @@ import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
 import { useLoadingStore } from "./loading-store";
 
-// BASE_URL is set directly to the production domain as requested.
-// NOTE: This may require CORS configuration on the backend.
-// Use the Vite proxy to avoid CORS issues and standardize headers.
 const BASE_URL = "/api";
-const CACHE_BUSTER = "FORCE_UPDATE_v10_2_" + Date.now();
+const CACHE_BUSTER = "FORCE_UPDATE_v10_3_" + Date.now();
 console.log(`[API] Cache Buster Active: ${CACHE_BUSTER}`);
 
-console.log("[API] Module loaded. Version: 1.0.2 - AUTH_HARDENING_v10.2");
+console.log("[API] Module loaded. Version: 1.0.3 - FIX_SYNTAX");
 
 // --- Helper Functions ---
 
-function getAuthHeaders(method: string = "GET", includeContentType: boolean = true) {
-  let token = localStorage.getItem("adminToken");
-  
-  if (token) {
-    token = token.toString().trim().replace(/^"|"$/g, '');
-  }
-
-  const isInvalidToken = !token || 
-                         token === "null" || 
-                         token === "undefined" || 
-                         token === "[object Object]" ||
-                         token.length < 5;
-  
-  const headers: Record<string, string> = {
-    "Accept": "application/json"
-  };
-  
-  if (includeContentType && method !== "GET" && method !== "DELETE") {
-    headers["Content-Type"] = "application/json";
-  }
-  
-  if (!isInvalidToken) {
 function getAuthToken() {
   if (typeof window === 'undefined') return "";
   const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || "";
   return token.toString().trim().replace(/^"|"$/g, '');
+}
+
+function startLoading() {
+  useLoadingStore.getState().startLoading();
+}
+
+function stopLoading() {
+  useLoadingStore.getState().stopLoading();
 }
 
 /**
