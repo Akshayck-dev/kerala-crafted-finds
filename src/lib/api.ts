@@ -383,9 +383,9 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     }
 
     if (fileToSend) {
-      // Unified field name as per latest "FULL FINAL CODE" PLUS variations for safety
-      formData.append("NewImage", fileToSend);
+      // Primary keys for image uploads
       formData.append("Image", fileToSend);
+      formData.append("NewImage", fileToSend);
       formData.append("image", fileToSend);
       formData.append("File", fileToSend);
     }
