@@ -35,58 +35,57 @@ function getAuthHeaders(method: string = "GET", includeContentType: boolean = tr
   }
   
   if (!isInvalidToken) {
-    // Backend accepts both raw and Bearer, standardize on Bearer
-    headers["Authorization"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
-  }
-  
-  return headers;
+function getAuthToken() {
+  if (typeof window === 'undefined') return "";
+  const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || "";
+  return token.toString().trim().replace(/^"|"$/g, '');
 }
 
+/**
+ * Robust wrapper for fetch to handle auth headers, error logging, and FormData requirements.
+ */
 async function safeFetch(url: string, options: RequestInit = {}, retry = true): Promise<Response> {
-  const { startLoading, stopLoading } = useLoadingStore.getState();
   startLoading();
-
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s Timeout
 
   const method = options.method || 'GET';
-  console.log(`[API] calling ${url} ${method}`);
+  const token = getAuthToken();
   
-  // Debug headers
-  const authHeader = (options.headers as Record<string, string>)?.['Authorization'];
-  if (authHeader) {
-    console.log(`[AUTH] Header present: ${authHeader.substring(0, 15)}... [Length: ${authHeader.length}]`);
-    if (authHeader.includes('undefined') || authHeader.includes('null') || authHeader.includes('[object')) {
-      console.warn(`[AUTH] SUSPICIOUS HEADER DETECTED: ${authHeader}`);
-    }
+  console.log(`[API] calling ${url} ${method}`);
+
+  const finalHeaders: Record<string, string> = {
+    ...(options.headers as Record<string, string>),
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
+  };
+
+  if (token && token.length > 10) {
+    finalHeaders['Authorization'] = `Bearer ${token}`;
+    console.log(`[AUTH] Header present: Bearer ${token.substring(0, 10)}... [Length: ${token.length}]`);
   } else {
-    console.log(`[AUTH] No Authorization header sent.`);
+    console.warn(`[AUTH] WARNING: No valid token found for ${url}!`);
   }
 
-    const finalHeaders: Record<string, string> = {
-      ...getAuthHeaders(method),
-      ...(options.headers as Record<string, string>),
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
-    };
+  // CRITICAL: If body is FormData (e.g. AddOrUpdateProduct), we MUST NOT set Content-Type.
+  // The browser must set it automatically to include the boundary string, otherwise 415 error occurs.
+  if (options.body instanceof FormData) {
+    delete finalHeaders['Content-Type'];
+    console.log(`[API] FormData detected for ${url}. Stripping manual Content-Type header.`);
+  } else if (!finalHeaders['Content-Type'] && method !== 'GET') {
+    finalHeaders['Content-Type'] = 'application/json';
+  }
 
-    // CRITICAL: If body is FormData (e.g. AddOrUpdateProduct), we MUST NOT set Content-Type.
-    // The browser must set it automatically to include the boundary string, otherwise 415 error occurs.
-    if (options.body instanceof FormData) {
-      delete finalHeaders['Content-Type'];
-      console.log(`[API] FormData detected for ${url}. Stripping manual Content-Type header.`);
-    }
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: finalHeaders,
+      signal: controller.signal,
+    });
 
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers: finalHeaders,
-        signal: controller.signal,
-      });
     console.log(`[API] ${url} -> status ${response.status}`);
     clearTimeout(timeoutId);
 
-    // Only retry on network errors or 500+ server errors
     if (!response.ok && response.status >= 500 && retry) {
       console.warn(`Retrying request to ${url} due to status ${response.status}`);
       return safeFetch(url, options, false);
@@ -95,8 +94,6 @@ async function safeFetch(url: string, options: RequestInit = {}, retry = true): 
     return response;
   } catch (error: any) {
     clearTimeout(timeoutId);
-    
-    // Retry on genuine network errors (not logic or aborts)
     if (retry && error.name !== 'AbortError') {
       console.warn(`Retrying request to ${url} due to network error`);
       return safeFetch(url, options, false);
@@ -401,7 +398,8 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     }
 
     // 5. 🔍 Debug: Verify EXACT FormData keys before sending
-    console.log("--- FINAL FormData Payload (v10.1 - SAFEFETCH) ---");
+    const token = typeof window !== 'undefined' ? (localStorage.getItem("adminToken") || "").replace(/^"|"$/g, '') : "";
+    console.log(`--- FINAL FormData Payload (v10.2) --- Token Present: ${!!token}`);
     for (let pair of (formData as any).entries()) {
       const val = pair[1];
       console.log(`  ${pair[0]}:`, val instanceof File ? `File(${val.name}, ${val.size}b)` : val);
@@ -412,7 +410,9 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     const response = await safeFetch(url, {
       method: "POST",
       body: formData,
-      // Note: safeFetch will automatically handle the Auth header and strip Content-Type for FormData
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
 
     const data = await handleResponse(response);
