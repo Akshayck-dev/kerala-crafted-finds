@@ -237,7 +237,10 @@ function AdminProducts() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                       <span className="text-slate-600 text-xs font-medium">{product.sellerName ?? "Mallu Smart"}</span>
+                       <div className="flex flex-col">
+                          <span className="text-slate-900 text-xs font-bold">{product.sellerName ?? "Mallu Smart"}</span>
+                          {product.businessName && <span className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">{product.businessName}</span>}
+                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">

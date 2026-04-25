@@ -75,8 +75,9 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           <h3 className="text-[11px] min-[400px]:text-xs sm:text-base font-bold leading-tight text-foreground transition-colors group-hover/title:text-primary line-clamp-1">
             {product.name}
           </h3>
-          <p className="text-[8px] min-[400px]:text-[9px] sm:text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider mt-0.5">
-            By {product.sellerName || "Local Seller"}
+          <p className="text-[8px] min-[400px]:text-[9px] sm:text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider mt-0.5 flex flex-wrap gap-x-1">
+            <span>By {product.sellerName || "Local Seller"}</span>
+            {product.businessName && <span className="opacity-70">({product.businessName})</span>}
           </p>
         </Link>
 
