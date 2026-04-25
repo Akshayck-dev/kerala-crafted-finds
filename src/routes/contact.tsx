@@ -119,13 +119,13 @@ function ContactPage() {
             <div className="space-y-6">
                <h4 className="text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase text-center lg:text-left">Follow the Journey</h4>
                <div className="flex justify-center gap-4 lg:justify-start">
-                  <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl border-border/50 hover:bg-muted">
+                  <Button size="icon" className="h-14 w-14 rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
                     <Instagram className="h-6 w-6" />
                   </Button>
-                  <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl border-border/50 hover:bg-muted">
+                  <Button size="icon" className="h-14 w-14 rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
                     <Facebook className="h-6 w-6" />
                   </Button>
-                  <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl border-border/50 hover:bg-muted">
+                  <Button size="icon" className="h-14 w-14 rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
                     <Twitter className="h-6 w-6" />
                   </Button>
                </div>

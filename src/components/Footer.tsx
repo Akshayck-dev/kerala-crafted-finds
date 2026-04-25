@@ -28,15 +28,15 @@ export function Footer() {
             <h4 className="text-sm font-semibold text-foreground mb-2">Contact</h4>
             <p className="text-xs text-muted-foreground">support@mallusmart.com</p>
             <p className="text-xs text-muted-foreground">+91 9999999999</p>
-            <div className="mt-4 flex gap-5">
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors p-1 hover:bg-primary/10 rounded-lg">
-                <Facebook size={18} />
+            <div className="mt-4 flex gap-3">
+              <a href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-110 hover:opacity-90">
+                <Facebook size={14} />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors p-1 hover:bg-primary/10 rounded-lg">
-                <Instagram size={18} />
+              <a href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-110 hover:opacity-90">
+                <Instagram size={14} />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors p-1 hover:bg-primary/10 rounded-lg">
-                <Twitter size={18} />
+              <a href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-110 hover:opacity-90">
+                <Twitter size={14} />
               </a>
             </div>
           </div>
