@@ -17,12 +17,19 @@ export const Route = createFileRoute("/contact")({
   component: ContactPage,
 });
 
+import { motion } from "framer-motion";
+
 function ContactPage() {
   return (
     <div className="pb-24">
       <div className="section-padding">
         {/* Header Block */}
-        <div className="mb-16 space-y-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-16 space-y-4"
+        >
           <div className="flex items-center gap-3">
              <span className="text-[10px] font-bold tracking-[0.4em] text-[#B68D40] uppercase">
                 Customer Support ——
@@ -35,11 +42,17 @@ function ContactPage() {
           <p className="max-w-xl text-lg font-medium text-muted-foreground/80 leading-relaxed pt-2">
             We are here to help you anytime.
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid gap-16 lg:grid-cols-2 lg:items-start">
           {/* Contact Form Section */}
-          <div className="rounded-[3rem] border border-border bg-card p-8 shadow-2xl sm:p-12">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="rounded-[3rem] border border-border bg-card p-8 shadow-2xl sm:p-12"
+          >
             <h2 className="mb-8 text-2xl font-bold text-foreground">Send a Message</h2>
             <form
               onSubmit={(e) => {
@@ -78,10 +91,16 @@ function ContactPage() {
                 Send Message <Send className="ml-2 h-4 w-4" />
               </Button>
             </form>
-          </div>
+          </motion.div>
 
           {/* Contact Information & Socials */}
-          <div className="space-y-12 lg:pt-8">
+          <motion.div 
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="space-y-12 lg:pt-8"
+          >
             <div className="space-y-8">
                <div className="group flex gap-6 items-start">
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/5 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
@@ -135,7 +154,7 @@ function ContactPage() {
             <div className="rounded-[2rem] bg-muted/50 p-6 text-sm text-muted-foreground leading-relaxed">
                <p><strong>Note:</strong> We typically respond to all artisan inquiries within 24 hours. For immediate order support, please use the WhatsApp button found in the cart or on product pages.</p>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

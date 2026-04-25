@@ -25,6 +25,8 @@ const faqs = [
   { q: "Can I become a seller?", a: "Definitely! We are built for local sellers. You can join our registry and start selling your handcrafted or natural products directly to customers." },
 ];
 
+import { motion } from "framer-motion";
+
 function FaqPage() {
   return (
     <div className="pb-24">
@@ -44,14 +46,22 @@ function FaqPage() {
         <div className="max-w-3xl">
           <Accordion type="single" collapsible className="space-y-4">
             {faqs.map((faq, i) => (
-              <AccordionItem key={i} value={`item-${i}`} className="rounded-[2rem] border border-border/50 bg-card/40 px-6 transition-colors hover:bg-card/80">
-                <AccordionTrigger className="py-6 text-base font-black italic tracking-tight uppercase hover:no-underline">
-                    {faq.q}
-                </AccordionTrigger>
-                <AccordionContent className="pb-6 text-lg font-medium leading-relaxed text-muted-foreground/80">
-                    {faq.a}
-                </AccordionContent>
-              </AccordionItem>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              >
+                <AccordionItem value={`item-${i}`} className="rounded-[2rem] border border-border/50 bg-card/40 px-6 transition-colors hover:bg-card/80">
+                  <AccordionTrigger className="py-6 text-base font-black italic tracking-tight uppercase hover:no-underline">
+                      {faq.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-6 text-lg font-medium leading-relaxed text-muted-foreground/80">
+                      {faq.a}
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
             ))}
           </Accordion>
         </div>
