@@ -210,8 +210,8 @@ function ShopPage() {
                     </div>
                 ))
             ) : (
-                paginatedProducts.map((p) => (
-                  <ProductCard key={p.id} product={p} />
+                paginatedProducts.map((p, i) => (
+                  <ProductCard key={p.id} product={p} index={i} />
                 ))
             )}
           </div>

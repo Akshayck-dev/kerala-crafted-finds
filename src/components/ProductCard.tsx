@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import type { Product } from "@/lib/data";
 import { addToCart, toggleWishlist, useWishlist } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const { isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(product.id);
   const discount = product.originalPrice
@@ -14,7 +15,13 @@ export function ProductCard({ product }: { product: Product }) {
     : 0;
 
   return (
-    <div className="group relative flex flex-col gap-2 rounded-[1.2rem] sm:rounded-[2.5rem] border border-border/50 bg-background/40 p-1.5 sm:p-3 shadow-sm transition-all duration-500 hover:-translate-y-2 hover:bg-background/80 hover:shadow-2xl hover:shadow-primary/5 backdrop-blur-md">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, delay: (index % 5) * 0.1 }}
+      className="group relative flex flex-col gap-2 rounded-[1.2rem] sm:rounded-[2.5rem] border border-border/50 bg-background/40 p-1.5 sm:p-3 shadow-sm transition-all duration-500 hover:-translate-y-2 hover:bg-background/80 hover:shadow-2xl hover:shadow-primary/5 backdrop-blur-md"
+    >
       {/* Image Section */}
       <div className="relative aspect-square sm:aspect-[4/5] overflow-hidden rounded-[1rem] sm:rounded-[2rem] bg-muted">
         <Link to="/product/$productId" params={{ productId: product.id }} className="h-full w-full">
@@ -100,6 +107,6 @@ export function ProductCard({ product }: { product: Product }) {
             </Button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

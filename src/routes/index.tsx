@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { ProductCard } from "@/components/ProductCard";
@@ -159,7 +160,13 @@ function HomePage() {
             Explore Local Creations
           </h2>
 
-          <div className="flex gap-10 overflow-x-auto pb-4 scrollbar-hide sm:grid sm:grid-cols-5 sm:overflow-visible">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="flex gap-10 overflow-x-auto pb-4 scrollbar-hide sm:grid sm:grid-cols-5 sm:overflow-visible"
+          >
             {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className="flex flex-col items-center gap-3">
@@ -250,8 +257,8 @@ function HomePage() {
                     </div>
                 ))
             ) : (
-                featured.map((p) => (
-                  <ProductCard key={p.id} product={p} />
+                featured.map((p, i) => (
+                  <ProductCard key={p.id} product={p} index={i} />
                 ))
             )}
           </div>
@@ -261,7 +268,13 @@ function HomePage() {
       {/* Artisan Spotlight */}
       <section className="py-16">
         <div className="mx-auto max-w-[1200px] px-4">
-          <div className="grid items-center gap-12 md:grid-cols-2">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="grid items-center gap-12 md:grid-cols-2"
+          >
             <div className="relative aspect-square overflow-hidden rounded-3xl shadow-2xl">
               <img
                 src="/images/artisan-at-work.png"
@@ -290,7 +303,7 @@ function HomePage() {
               </div>
               <Button className="mt-6 rounded-full px-8 py-4 text-lg">Read Our Story</Button>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
