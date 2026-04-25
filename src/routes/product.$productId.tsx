@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { addToCart, useProducts } from "@/lib/store";
-import { ShoppingCart, MessageCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ShoppingCart, MessageCircle, ArrowLeft, CheckCircle2, ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { ProductCard } from "@/components/ProductCard";
 import { useState, useEffect } from "react";
 import { QuantitySelector } from "@/components/QuantitySelector";
 import { fetchProducts } from "@/lib/api";
@@ -146,17 +147,41 @@ function ProductDetailPage() {
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <p className="text-lg font-medium leading-relaxed text-foreground/80">
-                {product.description}
-              </p>
-              {product.ingredients && (
-                <p className="text-[11px] font-bold tracking-widest text-muted-foreground uppercase leading-relaxed">
-                  {product.ingredients}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <p className="text-lg font-medium leading-relaxed text-foreground/80">
+                  {product.description}
                 </p>
-              )}
-            </div>
+                {product.ingredients && (
+                  <p className="text-[11px] font-bold tracking-widest text-muted-foreground uppercase leading-relaxed">
+                    {product.ingredients}
+                  </p>
+                )}
+              </div>
+
+              {/* Premium Features Grid */}
+              <div className="grid grid-cols-2 gap-4 rounded-3xl border border-border/50 bg-muted/20 p-6">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase opacity-60">Category</span>
+                  <p className="text-sm font-bold text-foreground capitalize">{product.categoryName || product.category?.replace("-", " ")}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase opacity-60">Net Weight</span>
+                  <p className="text-sm font-bold text-foreground">
+                    {product.quantity ? `${product.quantity} ${product.unit || ''}` : 'Standard Pack'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase opacity-60">Authenticity</span>
+                  <p className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                     <ShieldCheck className="h-3.5 w-3.5 text-[#B68D40]" /> Certified Kerala
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase opacity-60">Availability</span>
+                  <p className="text-sm font-bold text-green-600">Ships in 24h</p>
+                </div>
+              </div>
 
             {/* Artisan Card */}
             <div className="flex items-center justify-between rounded-3xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
@@ -217,6 +242,64 @@ function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Trust Badges */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-24 border-y border-border/50 py-12 px-6">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center text-foreground">
+            <ShieldCheck className="h-6 w-6" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold uppercase tracking-wider">Quality Assured</h4>
+            <p className="text-xs text-muted-foreground">Hand-picked authentic items</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center text-foreground">
+            <Truck className="h-6 w-6" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold uppercase tracking-wider">Fast Shipping</h4>
+            <p className="text-xs text-muted-foreground">Directly from Kerala hub</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center text-foreground">
+            <RotateCcw className="h-6 w-6" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold uppercase tracking-wider">7 Day Return</h4>
+            <p className="text-xs text-muted-foreground">Hassle free replacements</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Related Products Section */}
+      <section className="space-y-12">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+             <span className="text-[10px] font-bold tracking-[0.4em] text-[#B68D40] uppercase">
+                Explore More ——
+             </span>
+             <div className="h-[1px] flex-1 bg-[#B68D40]/20" />
+          </div>
+          <h2 className="fluid-heading-3 font-black italic tracking-tighter uppercase text-foreground">
+            You May Also Like
+          </h2>
+        </div>
+
+        <div className="grid mobile-grid-dense gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+          {products
+            .filter((p) => p.category === product.category && p.id !== product.id)
+            .slice(0, 4)
+            .map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+        </div>
+        {products.filter((p) => p.category === product.category && p.id !== product.id).length === 0 && (
+           <p className="text-center text-[10px] font-bold tracking-widest text-muted-foreground uppercase italic py-12">No other records found in this category.</p>
+        )}
+      </section>
 
       {/* Sticky Mobile Action Bar */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/80 p-4 backdrop-blur-xl transition-all duration-300 animate-in slide-in-from-bottom-full sm:hidden">
