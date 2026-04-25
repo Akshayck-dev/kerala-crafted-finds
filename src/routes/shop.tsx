@@ -65,6 +65,15 @@ function ShopPage() {
 
     if (sort === "low") result = [...result].sort((a, b) => a.price - b.price);
     if (sort === "high") result = [...result].sort((a, b) => b.price - a.price);
+    if (sort === "newest") {
+      result = [...result].sort((a, b) => {
+        const timeA = a.createdOn ? new Date(a.createdOn).getTime() : 0;
+        const timeB = b.createdOn ? new Date(b.createdOn).getTime() : 0;
+        return timeB - timeA;
+      });
+    }
+    if (sort === "az") result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+    if (sort === "za") result = [...result].sort((a, b) => b.name.localeCompare(a.name));
     
     return result;
   }, [products, selectedCategory, sort]);
@@ -141,9 +150,12 @@ function ShopPage() {
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent className="rounded-2xl border-border/50 bg-card">
-                <SelectItem value="default" className="text-xs uppercase tracking-wide">Standard Entry</SelectItem>
-                <SelectItem value="low" className="text-xs uppercase tracking-wide">Value: Ascending</SelectItem>
-                <SelectItem value="high" className="text-xs uppercase tracking-wide">Value: Descending</SelectItem>
+                <SelectItem value="default" className="text-xs uppercase tracking-wide">Sort</SelectItem>
+                <SelectItem value="newest" className="text-xs uppercase tracking-wide">Newest First</SelectItem>
+                <SelectItem value="az" className="text-xs uppercase tracking-wide">Name: A-Z</SelectItem>
+                <SelectItem value="za" className="text-xs uppercase tracking-wide">Name: Z-A</SelectItem>
+                <SelectItem value="low" className="text-xs uppercase tracking-wide">Price: Low to High</SelectItem>
+                <SelectItem value="high" className="text-xs uppercase tracking-wide">Price: High to Low</SelectItem>
               </SelectContent>
             </Select>
           </div>
