@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import logo from "@/assets/logo.jpg";
+import { Facebook, Instagram, Twitter } from "lucide-react";
 
 export function Footer() {
   return (
@@ -27,10 +28,16 @@ export function Footer() {
             <h4 className="text-sm font-semibold text-foreground mb-2">Contact</h4>
             <p className="text-xs text-muted-foreground">support@mallusmart.com</p>
             <p className="text-xs text-muted-foreground">+91 9999999999</p>
-            <div className="mt-3 flex gap-3">
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">FB</a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">IG</a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">TW</a>
+            <div className="mt-4 flex gap-5">
+              <a href="#" className="text-muted-foreground hover:text-primary transition-colors p-1 hover:bg-primary/10 rounded-lg">
+                <Facebook size={18} />
+              </a>
+              <a href="#" className="text-muted-foreground hover:text-primary transition-colors p-1 hover:bg-primary/10 rounded-lg">
+                <Instagram size={18} />
+              </a>
+              <a href="#" className="text-muted-foreground hover:text-primary transition-colors p-1 hover:bg-primary/10 rounded-lg">
+                <Twitter size={18} />
+              </a>
             </div>
           </div>
         </div>

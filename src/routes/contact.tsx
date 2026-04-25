@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone, MapPin, Send, Instagram, Facebook } from "lucide-react";
+import { Mail, Phone, MapPin, Send, Instagram, Facebook, Twitter } from "lucide-react";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -124,6 +124,9 @@ function ContactPage() {
                   </Button>
                   <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl border-border/50 hover:bg-muted">
                     <Facebook className="h-6 w-6" />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl border-border/50 hover:bg-muted">
+                    <Twitter className="h-6 w-6" />
                   </Button>
                </div>
             </div>
