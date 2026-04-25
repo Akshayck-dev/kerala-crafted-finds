@@ -197,6 +197,11 @@ function ProductDetailPage() {
                   <p className="text-lg font-bold text-foreground">
                     {product.sellerName || product.artisan || "Independent Artisan"}
                   </p>
+                  {product.businessName && (
+                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                      {product.businessName}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="rounded-full bg-primary/5 p-2 text-primary/60">
