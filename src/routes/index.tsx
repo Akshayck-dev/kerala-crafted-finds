@@ -190,7 +190,7 @@ function HomePage() {
                   </Link>
                 ))
             )}
-          </div>
+          </motion.div>
         </div>
       </section>
 
