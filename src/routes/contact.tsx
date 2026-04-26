@@ -18,8 +18,43 @@ export const Route = createFileRoute("/contact")({
 });
 
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 function ContactPage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Build a structured WhatsApp message from the form
+    const lines = [
+      `📩 *New Contact Inquiry — Mallu Smart*`,
+      ``,
+      `👤 *Name:* ${formData.name}`,
+      `📧 *Email:* ${formData.email}`,
+      formData.subject ? `📌 *Subject:* ${formData.subject}` : null,
+      `💬 *Message:* ${formData.message}`,
+    ].filter(Boolean);
+
+    const text = encodeURIComponent(lines.join("\n"));
+    const whatsappUrl = `https://wa.me/919495532563?text=${text}`;
+
+    setSubmitted(true);
+    setTimeout(() => {
+      window.open(whatsappUrl, "_blank");
+    }, 600);
+  };
+
   return (
     <div className="pb-24">
       <div className="section-padding">
@@ -53,44 +88,100 @@ function ContactPage() {
             transition={{ duration: 0.8 }}
             className="rounded-[3rem] border border-border bg-card p-8 shadow-2xl sm:p-12"
           >
-            <h2 className="mb-8 text-2xl font-bold text-foreground">Send a Message</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                alert("Thank you! Your inquiry has been received. We will get back to you within 24 hours.");
-              }}
-              className="space-y-6"
-            >
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-[10px] font-bold tracking-widest uppercase opacity-60">Full Name</Label>
-                  <Input id="name" required placeholder="John Doe" className="h-12 rounded-2xl border-border/50 bg-muted/30 focus-visible:ring-primary" />
+            {submitted ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="py-8 text-center"
+              >
+                <div className="mb-4 inline-flex rounded-full bg-primary/10 p-4">
+                  <Send className="h-10 w-10 text-primary" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-[10px] font-bold tracking-widest uppercase opacity-60">Email Address</Label>
-                  <Input id="email" required type="email" placeholder="john@example.com" className="h-12 rounded-2xl border-border/50 bg-muted/30 focus-visible:ring-primary" />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="subject" className="text-[10px] font-bold tracking-widest uppercase opacity-60">Subject</Label>
-                <Input id="subject" placeholder="Artisan Inquiry" className="h-12 rounded-2xl border-border/50 bg-muted/30 focus-visible:ring-primary" />
-              </div>
+                <h3 className="text-2xl font-bold text-foreground">Message Sent!</h3>
+                <p className="mt-3 text-muted-foreground">
+                  WhatsApp is opening with your message. If it doesn't open, please message us directly at{" "}
+                  <a
+                    href="https://wa.me/919495532563"
+                    className="font-semibold text-primary underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    +91 94955 32563
+                  </a>
+                </p>
+                <Button
+                  onClick={() => {
+                    setSubmitted(false);
+                    setFormData({ name: "", email: "", subject: "", message: "" });
+                  }}
+                  variant="outline"
+                  className="mt-6 rounded-full"
+                >
+                  Send Another Message
+                </Button>
+              </motion.div>
+            ) : (
+              <>
+                <h2 className="mb-8 text-2xl font-bold text-foreground">Send a Message</h2>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="text-[10px] font-bold tracking-widest uppercase opacity-60">Full Name</Label>
+                      <Input
+                        id="name"
+                        required
+                        placeholder="John Doe"
+                        value={formData.name}
+                        onChange={(e) => handleChange("name", e.target.value)}
+                        className="h-12 rounded-2xl border-border/50 bg-muted/30 focus-visible:ring-primary"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-[10px] font-bold tracking-widest uppercase opacity-60">Email Address</Label>
+                      <Input
+                        id="email"
+                        required
+                        type="email"
+                        placeholder="john@example.com"
+                        value={formData.email}
+                        onChange={(e) => handleChange("email", e.target.value)}
+                        className="h-12 rounded-2xl border-border/50 bg-muted/30 focus-visible:ring-primary"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="subject" className="text-[10px] font-bold tracking-widest uppercase opacity-60">Subject</Label>
+                    <Input
+                      id="subject"
+                      placeholder="Artisan Inquiry"
+                      value={formData.subject}
+                      onChange={(e) => handleChange("subject", e.target.value)}
+                      className="h-12 rounded-2xl border-border/50 bg-muted/30 focus-visible:ring-primary"
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="message" className="text-[10px] font-bold tracking-widest uppercase opacity-60">Your Message</Label>
-                <Textarea 
-                   id="message" 
-                   required 
-                   placeholder="How can we help you today?" 
-                   className="min-h-[150px] rounded-[2rem] border-border/50 bg-muted/30 p-6 focus-visible:ring-primary" 
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="message" className="text-[10px] font-bold tracking-widest uppercase opacity-60">Your Message</Label>
+                    <Textarea 
+                       id="message" 
+                       required 
+                       placeholder="How can we help you today?" 
+                       value={formData.message}
+                       onChange={(e) => handleChange("message", e.target.value)}
+                       className="min-h-[150px] rounded-[2rem] border-border/50 bg-muted/30 p-6 focus-visible:ring-primary" 
+                    />
+                  </div>
 
-              <Button type="submit" className="h-14 w-full rounded-full bg-primary text-lg font-bold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-98">
-                Send Message <Send className="ml-2 h-4 w-4" />
-              </Button>
-            </form>
+                  <Button type="submit" className="h-14 w-full rounded-full bg-primary text-lg font-bold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-98">
+                    Send via WhatsApp <Send className="ml-2 h-4 w-4" />
+                  </Button>
+                  <p className="text-center text-xs text-muted-foreground">
+                    Your message will be sent to our team via WhatsApp for a faster response.
+                  </p>
+                </form>
+              </>
+            )}
           </motion.div>
 
           {/* Contact Information & Socials */}
@@ -152,7 +243,7 @@ function ContactPage() {
 
             {/* Support Disclaimer Banner */}
             <div className="rounded-[2rem] bg-muted/50 p-6 text-sm text-muted-foreground leading-relaxed">
-               <p><strong>Note:</strong> We typically respond to all artisan inquiries within 24 hours. For immediate order support, please use the WhatsApp button found in the cart or on product pages.</p>
+               <p><strong>Note:</strong> We typically respond to all inquiries within 24 hours. For immediate support, use the floating WhatsApp button or click "Send via WhatsApp" in the form.</p>
             </div>
           </motion.div>
         </div>
@@ -164,3 +255,4 @@ function ContactPage() {
 function Separator({ className }: { className?: string }) {
     return <div className={`h-[1px] w-full ${className}`} />
 }
+

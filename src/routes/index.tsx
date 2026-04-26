@@ -125,7 +125,7 @@ function HomePage() {
                           Explore Products
                         </Button>
                       </Link>
-                      <Link to="/shop">
+                      <Link to="/sell">
                         <Button size="lg" className="h-12 sm:h-14 rounded-full bg-white px-8 sm:px-10 text-base sm:text-lg font-bold text-black ring-offset-black transition-all hover:scale-105 hover:bg-white/90 active:scale-95">
                           Start Selling
                         </Button>
@@ -314,9 +314,11 @@ function HomePage() {
             <p className="mx-auto mt-4 max-w-2xl text-lg font-medium opacity-90">
                 Turn your skills into income. Join Mallu Smart and start selling your products.
             </p>
-            <Button size="lg" className="mt-8 rounded-full bg-white px-10 py-6 text-lg font-bold text-black hover:bg-white/90">
-                Become a Seller
-            </Button>
+            <Link to="/sell">
+              <Button size="lg" className="mt-8 rounded-full bg-white px-10 py-6 text-lg font-bold text-black hover:bg-white/90">
+                  Become a Seller
+              </Button>
+            </Link>
         </div>
       </section>
 

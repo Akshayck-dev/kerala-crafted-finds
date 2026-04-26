@@ -5,6 +5,7 @@ import { CartDrawer } from "@/components/CartDrawer";
 import { CheckoutModal } from "@/components/CheckoutModal";
 import { SplashScreen } from "@/components/SplashScreen";
 import { TopLoadingBar } from "@/components/TopLoadingBar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { useState, useEffect } from "react";
 import { fetchProducts, fetchCategories } from "@/lib/api";
 import { setProducts } from "@/lib/store";
@@ -96,6 +97,7 @@ function RootComponent() {
       <Footer />
       <CartDrawer />
       <CheckoutModal />
+      <WhatsAppButton />
     </div>
   );
 }

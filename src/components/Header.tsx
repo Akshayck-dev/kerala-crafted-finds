@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import logo from "@/assets/logo.jpg";
 import { Search, Heart, ShoppingCart, Menu, X, User, MessageSquare, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SearchOverlay } from "@/components/SearchOverlay";
 import { useCart, useWishlist, toggleCart } from "@/lib/store";
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,7 @@ export function Header() {
   const { count: wishlistCount } = useWishlist();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -83,7 +85,7 @@ export function Header() {
 
         {/* Action Icons */}
         <div className="flex items-center gap-1 sm:gap-2">
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-muted">
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-muted" onClick={() => setSearchOpen(true)}>
             <Search className="h-4 w-4" />
           </Button>
           
@@ -129,6 +131,9 @@ export function Header() {
 
       {/* Mobile Menu Overlay Redesign */}
       {mobileOpen && <MobileMenuContent scrolled={scrolled} setMobileOpen={setMobileOpen} logo={logo} navLinks={navLinks} />}
+
+      {/* Search Overlay */}
+      <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }
