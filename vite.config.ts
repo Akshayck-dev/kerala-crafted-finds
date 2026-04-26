@@ -15,7 +15,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://mallusmart.com',
+        target: 'https://api.mallusmart.com',
         changeOrigin: true,
         secure: false, // Ignore SSL issues for the proxy target
         timeout: 60000, // Wait up to 60s for server response

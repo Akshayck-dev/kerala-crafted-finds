@@ -212,7 +212,7 @@ function MobileMenuContent({ scrolled, setMobileOpen, logo, navLinks }: {
                   <X className="h-4 w-4" />
                 </Button>
                 <a 
-                  href="https://wa.me/+910000000000" 
+                  href="https://wa.me/919495532563" 
                   className="h-12 flex items-center justify-center rounded-full bg-green-600 text-white shadow-lg active:scale-95 transition-transform"
                 >
                   <MessageSquare className="h-5 w-5" />

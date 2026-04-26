@@ -108,7 +108,7 @@ function ContactPage() {
                   </div>
                   <div className="space-y-1">
                     <h4 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Email Response Unit</h4>
-                    <p className="text-xl font-bold">support@keralacrafted.com</p>
+                    <p className="text-xl font-bold">mallusmart.kerala@gmail.com</p>
                   </div>
                </div>
 
@@ -118,7 +118,7 @@ function ContactPage() {
                   </div>
                   <div className="space-y-1">
                     <h4 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Hotline Support</h4>
-                    <p className="text-xl font-bold">+91 99999 00000</p>
+                    <p className="text-xl font-bold">+91 94955 32563</p>
                   </div>
                </div>
 

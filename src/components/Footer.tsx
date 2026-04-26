@@ -26,13 +26,13 @@ export function Footer() {
           </div>
           <div>
             <h4 className="text-sm font-semibold text-foreground mb-2">Contact</h4>
-            <p className="text-xs text-muted-foreground">support@mallusmart.com</p>
-            <p className="text-xs text-muted-foreground">+91 9999999999</p>
+            <p className="text-xs text-muted-foreground">mallusmart.kerala@gmail.com</p>
+            <p className="text-xs text-muted-foreground">9495532563</p>
             <div className="mt-4 flex gap-3">
-              <a href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-110 hover:opacity-90">
+              <a href="https://www.facebook.com/share/17RAiqmBvv/" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-110 hover:opacity-90">
                 <Facebook size={14} />
               </a>
-              <a href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-110 hover:opacity-90">
+              <a href="https://www.instagram.com/mallusmart?igsh=cWY3eHE4bWh3dnhr" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-110 hover:opacity-90">
                 <Instagram size={14} />
               </a>
               <a href="#" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:scale-110 hover:opacity-90">

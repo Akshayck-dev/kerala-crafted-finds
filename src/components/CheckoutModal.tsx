@@ -87,7 +87,8 @@ export function CheckoutModal() {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         // 3. Format WhatsApp Message
-        let waText = `*New Order - MalluSmart*\n`;
+        let waText = `*I'd like to buy these items from MalluSmart:*\n\n`;
+        waText += `*New Order - MalluSmart*\n`;
         waText += `*Ref:* \`${orderRef}\`\n\n`;
         waText += `*Customer Details:*\n`;
         waText += `👤 Name: ${name}\n`;
@@ -102,54 +103,92 @@ export function CheckoutModal() {
         });
         
         waText += `\n*Total Amount:* ₹${totalPrice}\n`;
+        waText += `\n_I'd like to buy these items._\n`;
 
         // 4. WhatsApp Redirect with Popup Guard
         const waUrl = `https://wa.me/919495532563?text=${encodeURIComponent(waText)}`;
+        
+        // Attempt auto-open
         const waWindow = window.open(waUrl, "_blank");
 
+        // If blocked (common on mobile after await), show a manual link
         if (!waWindow || waWindow.closed || typeof waWindow.closed === 'undefined') {
-          toast.warning("WhatsApp was blocked! Order is SAVED. Please contact +919495532563 manually.");
+          console.warn("WhatsApp popup blocked. Showing manual link.");
+          toast.warning("WhatsApp was blocked! Please click the 'Open WhatsApp' button below.");
+          setSubmitted(true); // Move to success view which will now contain the manual link
+        } else {
+          // Success! Cleanup and show success view
+          clearCart();
+          setSubmitted(true);
+          
+          setTimeout(() => {
+            setSubmitted(false);
+            toggleCheckout(false);
+          }, 5000);
         }
 
-        // 5. Success State Cleanup
-        clearCart();
-        setSubmitted(true);
-        
-        if (isMobile) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        setTimeout(() => {
-          setSubmitted(false);
-          toggleCheckout(false);
-        }, 5000);
-
-    } catch (error) {
+    } catch (error: any) {
         console.error("Fulfillment Error:", error);
-        toast.error("An unexpected error occurred. No charges were made.");
+        toast.error(`Order failed: ${error.message || "Unknown error"}. Please check your connection.`);
     } finally {
         setIsSubmitting(false);
     }
   }
 
-  const SuccessView = () => (
-    <div className="flex flex-col items-center justify-center space-y-6 px-10 py-24 text-center animate-in fade-in zoom-in duration-500">
-      <div className="relative">
-        <div className="absolute inset-0 animate-ping rounded-full bg-success/20" />
-        <div className="relative rounded-full bg-success/10 p-6">
-          <CheckCircle2 className="h-16 w-16 text-success" />
+  const SuccessView = () => {
+    // If the cart isn't empty, it means the popup was blocked and we need a manual link
+    const isBlocked = items.length > 0;
+    
+    // Re-generate WA text for the manual button if needed
+    const orderRef = "ORDER-" + Date.now(); // Fallback ref
+    let waText = `*New Order - MalluSmart*\n_Manual Link_\n\n*Total:* ₹${totalPrice}`;
+    const waUrl = `https://wa.me/919495532563?text=${encodeURIComponent(waText)}`;
+
+    return (
+      <div className="flex flex-col items-center justify-center space-y-6 px-10 py-16 text-center animate-in fade-in zoom-in duration-500">
+        <div className="relative">
+          <div className="absolute inset-0 animate-ping rounded-full bg-success/20" />
+          <div className="relative rounded-full bg-success/10 p-6">
+            <CheckCircle2 className="h-16 w-16 text-success" />
+          </div>
         </div>
+        <div className="space-y-3">
+          <h3 className="text-3xl font-black italic tracking-tighter text-foreground uppercase">
+            {isBlocked ? "Order Saved!" : "Order Placed"}
+          </h3>
+          <p className="max-w-md text-sm text-muted-foreground leading-relaxed">
+            {isBlocked 
+              ? "Your order is saved, but we couldn't open WhatsApp automatically. Please click the button below to finish."
+              : "Your order has been successfully transmitted to our team for processing."
+            }
+          </p>
+        </div>
+
+        {isBlocked && (
+          <Button 
+            className="w-full h-14 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-2xl font-bold gap-2 text-lg"
+            onClick={() => {
+              window.open(waUrl, "_blank");
+              clearCart();
+              setSubmitted(true); // Stay on success view but now it will look "placed"
+              setTimeout(() => {
+                setSubmitted(false);
+                toggleCheckout(false);
+              }, 3000);
+            }}
+          >
+            <Send className="h-5 w-5" /> OPEN WHATSAPP
+          </Button>
+        )}
+
+        {!isBlocked && (
+          <Button variant="outline" className="rounded-full" onClick={() => toggleCheckout(false)}>
+            Close Window
+          </Button>
+        )}
       </div>
-      <div className="space-y-3">
-        <h3 className="text-3xl font-black italic tracking-tighter text-foreground uppercase">
-          Order Placed
-        </h3>
-        <p className="max-w-md text-muted-foreground leading-relaxed">
-          Your order has been successfully transmitted to our team for processing.
-        </p>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const OrderSummaryPane = ({ isMobileView = false }: { isMobileView?: boolean }) => (
     <div className={cn(

@@ -1,5 +1,4 @@
 import { fixImagePath } from "./utils";
-import axios from "axios";
 import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
 import { useLoadingStore } from "./loading-store";
@@ -7,7 +6,7 @@ import { useLoadingStore } from "./loading-store";
 // BASE_URL is set directly to the production domain as requested.
 // NOTE: This may require CORS configuration on the backend.
 // Use the Vite proxy to avoid CORS issues and standardize headers.
-const BASE_URL = "/api";
+const BASE_URL = "https://api.mallusmart.com";
 const CACHE_BUSTER = "FORCE_UPDATE_v10_3_" + Date.now();
 console.log(`[API] Cache Buster Active: ${CACHE_BUSTER}`);
 
@@ -19,6 +18,27 @@ function getAuthToken() {
   if (typeof window === 'undefined') return "";
   const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || "";
   return token.toString().trim().replace(/^"|"$/g, '');
+}
+
+/**
+ * Standardized header generator for API requests.
+ */
+function getAuthHeaders(method: string = "GET", isJson: boolean = true) {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
+  };
+
+  if (token && token.length > 10) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  if (isJson && method !== 'GET') {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  return headers;
 }
 
 function startLoading() {

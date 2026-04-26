@@ -3,11 +3,11 @@ import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
 import { useLoadingStore } from "./loading-store";
 
-const BASE_URL = "/api";
-const CACHE_BUSTER = "FORCE_UPDATE_v10_3_" + Date.now();
-console.log(`[API] Cache Buster Active: ${CACHE_BUSTER}`);
+export const BASE_URL = import.meta.env.DEV ? "/api" : "https://api.mallusmart.com";
+const CACHE_BUSTER = "FORCE_UPDATE_v10_4_" + Date.now();
+console.log(`[API] Cache Buster Active: ${CACHE_BUSTER} | Base: ${BASE_URL}`);
 
-console.log("[API] Module loaded. Version: 1.0.3 - FIX_SYNTAX");
+console.log("[API] Module loaded. Version: 1.0.4 - PROXY_AWARE");
 
 // --- Helper Functions ---
 
@@ -57,7 +57,7 @@ async function safeFetch(url: string, options: RequestInit = {}, retry = true): 
 
   const method = options.method || 'GET';
   const token = getAuthToken();
-  
+
   console.log(`[API] calling ${url} ${method}`);
 
   const finalHeaders: Record<string, string> = {
@@ -119,12 +119,12 @@ async function handleResponse(response: Response) {
     }, 1500);
     throw new Error("Unauthorized. Redirecting to login...");
   }
-  
+
   // For 500 errors, the body might not be JSON or might be an ASP.NET error page
   if (response.status === 500) {
     const errorText = await response.clone().text().catch(() => "Unknown Server Error");
     const endpoint = response.url.split('/').pop() || "unknown";
-    
+
     // Log the error but do NOT purge the token on 500. 
     // Purging should only happen on 401 Unauthorized to avoid frustrating logouts during backend instability.
     console.error(`Critical Backend Error (500) at ${endpoint}:`, errorText);
@@ -144,15 +144,15 @@ async function handleResponse(response: Response) {
   if (!response.ok || data.success === false) {
     // Check for detailed validation errors
     if (data.errors) {
-       const firstError = Object.values(data.errors)[0];
-       const detail = Array.isArray(firstError) ? firstError[0] : firstError;
-       throw new Error(`Validation Error: ${detail || "Check all fields"}`);
+      const firstError = Object.values(data.errors)[0];
+      const detail = Array.isArray(firstError) ? firstError[0] : firstError;
+      throw new Error(`Validation Error: ${detail || "Check all fields"}`);
     }
     const errorMsg = data.message || data.error || (typeof data === 'string' ? data : null) || `API Request failed with status ${response.status}`;
     console.error(`[API ERROR] Status: ${response.status} | Message: ${errorMsg}`);
     throw new Error(errorMsg);
   }
-  
+
   return data;
 }
 
@@ -162,25 +162,25 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
   try {
     // Added timestamp to bust any browser/proxy caches
     const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs?t=${Date.now()}`, {
-        headers: getAuthHeaders("GET", false)
+      headers: getAuthHeaders("GET", false)
     });
     const data = await handleResponse(response);
 
     if (!Array.isArray(data)) {
-        throw new Error("API did not return an array of products");
+      throw new Error("API did not return an array of products");
     }
 
     return data.map((p: any, index: number) => {
       // Robust ID mapping: check for all backend variations
       const rawId = p.productId || p.ProductId || p.ProductID || p.productID || p.id || p.ID || p.Id || `AUTO-${index}`;
-      
+
       return {
         id: rawId.toString(),
         name: p.productName || p.ProductName || "N/A",
         price: Number(p.price || p.Price || 0),
         image: fixImagePath(p.image || p.Image || (Array.isArray(p.images || p.Images) && (p.images || p.Images).length > 0 ? (p.images || p.Images)[0] : null)),
-        images: (Array.isArray(p.images || p.Images || p.otherImages || p.OtherImages) 
-          ? (p.images || p.Images || p.otherImages || p.OtherImages) 
+        images: (Array.isArray(p.images || p.Images || p.otherImages || p.OtherImages)
+          ? (p.images || p.Images || p.otherImages || p.OtherImages)
           : []).map((img: any) => fixImagePath(img)),
         category: (p.categoryName || p.CategoryName || "all").toLowerCase().trim().replace(/\s+/g, "-"),
         categoryName: p.categoryName || p.CategoryName || "Uncategorized",
@@ -196,15 +196,15 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
         isActive: p.isActive ?? p.IsActive ?? true,
       };
     }).filter((p: any) => p.id && (p.name !== "N/A") && (!onlyActive || p.isActive !== false))
-       .sort((a: any, b: any) => {
-         const idA = parseInt(a.id);
-         const idB = parseInt(b.id);
-         if (!isNaN(idA) && !isNaN(idB)) return idB - idA;
-         return b.id.localeCompare(a.id); // Fallback for string IDs
-       });
+      .sort((a: any, b: any) => {
+        const idA = parseInt(a.id);
+        const idB = parseInt(b.id);
+        if (!isNaN(idA) && !isNaN(idB)) return idB - idA;
+        return b.id.localeCompare(a.id); // Fallback for string IDs
+      });
   } catch (error) {
     console.error("API Error (Products):", error);
-    throw error; 
+    throw error;
   }
 }
 
@@ -215,7 +215,7 @@ export async function fetchCategories(): Promise<Category[]> {
     });
     const data = await handleResponse(response);
     console.log("[API] GetAllCategories Raw Data (First Item):", data[0]);
-    
+
     return (Array.isArray(data) ? data : []).map((c: any, index: number) => ({
       // Prioritize actual database IDs from the backend
       id: (c.categoryID || c.CategoryID || c.id || c.ID || (index + 1)).toString(),
@@ -257,7 +257,7 @@ export interface OrderPayload {
 export async function saveOrder(order: OrderPayload) {
   try {
     const orderRef = order.orderRef || window.crypto?.randomUUID?.() || Date.now().toString();
-    
+
     const backendPayload = {
       customerName: order.customerName,
       address: order.address,
@@ -275,13 +275,13 @@ export async function saveOrder(order: OrderPayload) {
 
     const response = await safeFetch(`${BASE_URL}/Product/SaveOrderDetails`, {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
         "X-Request-ID": orderRef
       },
       body: JSON.stringify(backendPayload),
     });
-    
+
     return await handleResponse(response);
   } catch (error) {
     console.error("API Error (SaveOrder):", error);
@@ -301,9 +301,9 @@ export async function adminLogin(email: string, password: string): Promise<strin
 
     const data = await handleResponse(response);
     const token = typeof data === 'string' ? data : data.token;
-    
+
     if (!token) throw new Error("No token received from login API");
-    
+
     // Clean and return the token
     return token.toString().trim().replace(/^"|"$/g, '');
   } catch (error) {
@@ -329,7 +329,7 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
   const productId = Number(product.id || 0);
   const isUpdate = productId > 0;
   console.log(`[API] VERSION 10.0 - FULL | Mode: ${isUpdate ? "UPDATE" : "ADD"} | id=${productId}`);
-  
+
   try {
     const formData = new FormData();
     const now = new Date().toISOString();
@@ -340,25 +340,25 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     formData.append("Id", productId.toString());
     formData.append("ProductId", productId.toString());
     formData.append("ProductID", productId.toString());
-    
+
     formData.append("productName", pName);
     formData.append("ProductName", pName);
-    
+
     formData.append("description", product.description || "");
     formData.append("Description", product.description || "");
-    
+
     formData.append("price", Number(product.price || 0).toString());
     formData.append("Price", Number(product.price || 0).toString());
-    
+
     formData.append("quantity", Number(product.quantity || 0).toString());
     formData.append("Quantity", Number(product.quantity || 0).toString());
-    
+
     formData.append("unit", product.unit || "pcs");
     formData.append("Unit", product.unit || "pcs");
-    
+
     formData.append("categoryID", (product.categoryID || 1).toString());
     formData.append("CategoryID", (product.categoryID || 1).toString());
-    
+
     formData.append("memberID", (product.memberID || 1).toString());
     formData.append("MemberID", (product.memberID || 1).toString());
 
@@ -392,9 +392,15 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     }
 
     if (fileToSend) {
-      // Primary keys for image uploads
-      formData.append("Image", fileToSend);
-      formData.append("NewImage", fileToSend);
+      if (isUpdate) {
+        // Use NewImage for updates as requested
+        formData.append("NewImage", fileToSend);
+      } else {
+        // Use Image for new products as requested
+        formData.append("Image", fileToSend);
+      }
+
+      // Keep other variations for backward compatibility if needed by other backend versions
       formData.append("image", fileToSend);
       formData.append("File", fileToSend);
     }
@@ -444,12 +450,12 @@ export async function deleteProduct(productId: number) {
       headers: getAuthHeaders("POST", true),
       body: JSON.stringify({ ProductId: productId }),
     });
-    
+
     // Add a slightly longer delay to ensure the database soft-delete is indexed before refresh
     if (response.ok) {
-        await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 1200));
     }
-    
+
     return await handleResponse(response);
   } catch (error) {
     console.error("API Error (DeleteProduct):", error);
@@ -465,10 +471,10 @@ export async function fetchMembers(): Promise<Member[]> {
     });
     const data = await handleResponse(response);
     console.log("[API] GetAllMembers Full Raw Data:", data);
-    
+
     return (Array.isArray(data) ? data : []).map((m: any, index: number) => {
       const mid = (m.memberID || m.MemberID || m.memberId || m.MemberId || m.id || m.ID || (index + 1)).toString();
-      
+
       // More robust isActive detection
       const rawActive = m.isActive ?? m.IsActive ?? m.active ?? m.Active ?? true;
       let isActiveValue = true;
@@ -504,7 +510,7 @@ export async function addOrUpdateMember(member: Partial<Member>) {
     const finalId = Number(member.id || 0);
     const emailStr = String(member.email || "");
     const activeStatus = member.isActive ?? true;
-    
+
     // Payload with multiple casing and variations to satisfy backend model binding
     const payload = {
       id: finalId,
@@ -543,7 +549,7 @@ export async function addOrUpdateMember(member: Partial<Member>) {
       headers: getAuthHeaders("POST", true), // application/json
       body: JSON.stringify(payload),
     });
-    
+
     console.log(`[API] AddOrUpdateMember Status: ${response.status}`);
     const result = await handleResponse(response);
     return result;
@@ -557,18 +563,18 @@ export async function addOrUpdateMember(member: Partial<Member>) {
 export async function deleteMember(memberId: number) {
   try {
     console.log(`[API] Deleting Member ID: ${memberId}`);
-    
+
     // Aligning with DeleteProduct pattern: POST with query param, no body
     const response = await safeFetch(`${BASE_URL}/User/DeleteMember?id=${memberId}&memberId=${memberId}&MemberId=${memberId}`, {
       method: "POST",
       headers: getAuthHeaders("POST"), // No JSON body needed
     });
-    
+
     console.log(`[API] DeleteMember Response Status: ${response.status} ${response.statusText}`);
-    
+
     // Add a short delay to ensure the backend database/index is updated before the refresh happens
     if (response.ok) {
-        await new Promise(r => setTimeout(r, 1500));
+      await new Promise(r => setTimeout(r, 1500));
     }
 
     return await handleResponse(response);
@@ -610,18 +616,18 @@ export async function fetchOrders(): Promise<AdminOrder[]> {
       headers: getAuthHeaders("GET", false),
     });
     const data = await handleResponse(response);
-    
+
     return (data || []).map((o: any, index: number) => {
       const rawDate = o.createdOn || o.CreatedOn || o.date || o.Date || new Date().toISOString();
       const rawProducts = o.products || o.Products || [];
-      
+
       // Calculate total price from product lookup
       let calculatedTotal = 0;
       rawProducts.forEach((item: any) => {
-          const pid = (item.productId || item.ProductId || item.ProductID || item.productID || item.id || item.ID || "").toString();
-          const price = productPriceMap[pid] || 0;
-          const qty = Number(item.quantity || item.Quantity || 1); // Default to 1 if null
-          calculatedTotal += price * qty;
+        const pid = (item.productId || item.ProductId || item.ProductID || item.productID || item.id || item.ID || "").toString();
+        const price = productPriceMap[pid] || 0;
+        const qty = Number(item.quantity || item.Quantity || 1); // Default to 1 if null
+        calculatedTotal += price * qty;
       });
 
       return {

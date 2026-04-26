@@ -14,7 +14,7 @@ export function AuthImage({ src, alt, className, fallback = "/placeholder.svg" }
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!src || src.includes("placehold.co")) {
+    if (!src || src.includes("placehold.co") || src.startsWith("blob:")) {
       setImageSrc(src);
       setIsLoading(false);
       return;

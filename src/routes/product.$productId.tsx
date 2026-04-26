@@ -239,7 +239,7 @@ function ProductDetailPage() {
                  className="h-16 w-16 shrink-0 rounded-full border-2 border-[#25D366]/30 text-[#25D366] transition-all hover:bg-[#25D366] hover:text-white"
                  asChild
               >
-                <a href={`https://wa.me/919999999999?text=${whatsappMsg}`} target="_blank" rel="noreferrer">
+                <a href={`https://wa.me/919495532563?text=${whatsappMsg}`} target="_blank" rel="noreferrer">
                   <MessageCircle className="h-6 w-6" />
                 </a>
               </Button>
@@ -315,7 +315,7 @@ function ProductDetailPage() {
              className="h-12 w-12 shrink-0 rounded-full border-2 border-[#25D366]/30 text-[#25D366]"
              asChild
           >
-            <a href={`https://wa.me/919999999999?text=${whatsappMsg}`} target="_blank" rel="noreferrer">
+            <a href={`https://wa.me/919495532563?text=${whatsappMsg}`} target="_blank" rel="noreferrer">
               <MessageCircle className="h-6 w-6" />
             </a>
           </Button>
