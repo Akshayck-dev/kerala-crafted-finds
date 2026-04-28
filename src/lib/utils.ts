@@ -46,8 +46,11 @@ export function fixImagePath(path?: string | null) {
   const base = BASE_URL.replace(/\/+$/, '');
   const suffix = cleanPath.replace(/^\/+/, '');
   
-  const separator = suffix.includes('?') ? '&' : '?';
-  const finalUrl = `${base}/${suffix}${separator}v=${CACHE_BUSTER}`;
+  // Encode the suffix to handle spaces and special characters in filenames
+  const encodedSuffix = suffix.split('/').map(part => encodeURIComponent(part)).join('/');
+  
+  const separator = encodedSuffix.includes('?') ? '&' : '?';
+  const finalUrl = `${base}/${encodedSuffix}${separator}v=${CACHE_BUSTER}`;
   
   // console.log(`[fixImagePath] Original: ${trimmedPath} -> Final: ${finalUrl}`);
   return finalUrl;
