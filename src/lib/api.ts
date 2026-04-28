@@ -189,9 +189,9 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
         id: rawId.toString(),
         name: p.productName || p.ProductName || "N/A",
         price: Number(p.price || p.Price || 0),
-        image: fixImagePath(p.image || p.Image || (Array.isArray(p.images || p.Images) && (p.images || p.Images).length > 0 ? (p.images || p.Images)[0] : null)),
-        images: (Array.isArray(p.images || p.Images || p.otherImages || p.OtherImages)
-          ? (p.images || p.Images || p.otherImages || p.OtherImages)
+        image: fixImagePath(p.mainProductImage || p.MainProductImage || p.image || p.Image || (Array.isArray(p.productGalleryImages || p.ProductGalleryImages || p.images || p.Images) && (p.productGalleryImages || p.ProductGalleryImages || p.images || p.Images).length > 0 ? (p.productGalleryImages || p.ProductGalleryImages || p.images || p.Images)[0] : null)),
+        images: (Array.isArray(p.productGalleryImages || p.ProductGalleryImages || p.images || p.Images || p.otherImages || p.OtherImages)
+          ? (p.productGalleryImages || p.ProductGalleryImages || p.images || p.Images || p.otherImages || p.OtherImages)
           : []).map((img: any) => fixImagePath(img)),
         category: (p.categoryName || p.CategoryName || "all").toLowerCase().trim().replace(/\s+/g, "-"),
         categoryName: p.categoryName || p.CategoryName || "Uncategorized",
