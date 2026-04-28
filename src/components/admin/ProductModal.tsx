@@ -159,45 +159,23 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
         memberName: members.find(m => Number(m.id) === formData.memberID)?.name || ""
       };
 
-      // 🔥 CLEAN IMAGE PROCESSING (NO DUPLICATES)
-      const existingUrls = otherPreviewUrls.filter(url => url && typeof url === 'string' && !url.startsWith("blob:"));
-      const newFiles = otherImageFiles.filter((f): f is File => f !== null);
-      console.log(`[ProductModal] Processing images. Existing URLs: ${existingUrls.length}, New Gallery Files: ${newFiles.length}`);
+      let mainImageToSend: File | null = null;
+      let galleryImagesToSend: File[] = [];
 
-      // Run URL to File conversions in parallel for speed
-      const existingFiles: File[] = (await Promise.all(
-        existingUrls.map(async (url, i) => {
-          try {
-            console.log(`[ProductModal] Fetching existing image ${i}: ${url}`);
-            return await urlToFile(url, `existing-${i}.jpg`);
-          } catch (err) {
-            console.error(`[ProductModal] Failed to convert existing image ${i}:`, err);
-            return null;
-          }
-        })
-      )).filter((f): f is File => f !== null);
+      if (isUpdate) {
+        // 🔥 EDIT MODE: Only send if manually changed (imageFile is the raw File state)
+        mainImageToSend = imageFile;
+        galleryImagesToSend = otherImageFiles.filter((f): f is File => f !== null && f instanceof File);
+        
+        console.log(`[ProductModal] Edit Mode: Sending ${mainImageToSend ? "1 new main" : "no main"} and ${galleryImagesToSend.length} new gallery files.`);
+      } else {
+        // ➕ ADD MODE: Send everything
+        mainImageToSend = imageFile;
+        galleryImagesToSend = otherImageFiles.filter((f): f is File => f !== null && f instanceof File);
+        console.log(`[ProductModal] Add Mode: Sending main and ${galleryImagesToSend.length} gallery files.`);
+      }
 
-      console.log(`[ProductModal] Successfully converted ${existingFiles.length} existing images.`);
-
-      // Remove main image duplication
-      const filteredNew = newFiles.filter(file => {
-        return !(imageFile && file.name === imageFile.name && file.size === imageFile.size);
-      });
-
-      // Merge and Final dedupe
-      const allFiles = [...existingFiles, ...filteredNew];
-      const map = new Map<string, File>();
-      allFiles.forEach(file => {
-        const key = file.name + "_" + file.size;
-        if (!map.has(key)) {
-          map.set(key, file);
-        }
-      });
-
-      const finalFiles = Array.from(map.values());
-      console.log(`[ProductModal] Final Gallery File Count: ${finalFiles.length}. Main Image: ${imageFile ? "NEW" : "EXISTING"}`);
-
-      await addOrUpdateProduct(enrichedData, imageFile, finalFiles);
+      await addOrUpdateProduct(enrichedData, mainImageToSend, galleryImagesToSend);
       toast.success(isUpdate ? "Product updated" : "Product added", { id: toastId });
       onSuccess();
       onClose();
