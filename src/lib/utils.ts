@@ -32,14 +32,16 @@ export function fixImagePath(path?: string | null) {
     return cleanPath;
   }
   
-  // Standardize upload paths: ensure they start with Content/uploads/
+  // Standardize upload paths: ensure they start with /api/uploads/
+  // We rely on the Vercel proxy to map /api/uploads/ to /Content/uploads/
   cleanPath = cleanPath.replace(/^\/+/, '').replace(/^api\//, '');
   
+  // Remove any existing "Content/" prefix so it consistently hits the /api/uploads proxy rule
+  cleanPath = cleanPath.replace(/^Content\//, '');
+  
   let finalPath = cleanPath;
-  if (cleanPath.startsWith('uploads/')) {
-    finalPath = `Content/${cleanPath}`;
-  } else if (!cleanPath.startsWith('Content/') && (cleanPath.toLowerCase().includes('.jpg') || cleanPath.toLowerCase().includes('.png') || cleanPath.toLowerCase().includes('.jpeg') || cleanPath.toLowerCase().includes('.webp'))) {
-    finalPath = `Content/${cleanPath}`;
+  if (!cleanPath.startsWith('uploads/')) {
+    finalPath = `uploads/${cleanPath}`;
   }
 
   const base = BASE_URL.replace(/\/+$/, '');
