@@ -51,6 +51,5 @@ export function fixImagePath(path?: string | null) {
   const separator = encodedSuffix.includes('?') ? '&' : '?';
   const finalUrl = `${base}/${encodedSuffix}${separator}v=${CACHE_BUSTER}`;
   
-  console.log(`[fixImagePath] Mapping: "${path}" -> "${finalUrl}"`);
   return finalUrl;
 }
