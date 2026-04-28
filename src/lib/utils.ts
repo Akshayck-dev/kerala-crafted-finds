@@ -44,7 +44,8 @@ export function fixImagePath(path?: string | null) {
   // and we want the path to be relative to that folder.
   
   const base = BASE_URL.replace(/\/+$/, '');
-  const suffix = finalPath.replace(/^\/+/, '');
+  // Always prefix with uploads/ so it hits the correct Vercel proxy rule
+  const suffix = `uploads/${finalPath.replace(/^\/+/, '')}`;
   
   // Encode the suffix to handle spaces and special characters in filenames
   const encodedSuffix = suffix.split('/').map(part => encodeURIComponent(part)).join('/');
