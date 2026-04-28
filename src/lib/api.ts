@@ -194,7 +194,12 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
     }
 
     if (data.length > 0) {
-      console.log("[DEBUG] RAW API PRODUCT DATA (FULL):", JSON.stringify(data[0], null, 2));
+      const p = data[0];
+      console.log("%c >>>> PRODUCT IMAGE KEYS CHECK <<<< ", "background: #1e40af; color: #fff; font-weight: bold; font-size: 14px;");
+      console.log("mainProductImage:", p.mainProductImage || p.MainProductImage || p.mainProductImageUrl || "MISSING");
+      console.log("productGalleryImage:", p.productGalleryImage || p.ProductGalleryImage || "MISSING");
+      console.log("ALL KEYS IN OBJECT:", Object.keys(p));
+      (window as any).DEBUG_DATA = p;
     }
 
     const mappedProducts = data.map((p: any, index: number) => {
