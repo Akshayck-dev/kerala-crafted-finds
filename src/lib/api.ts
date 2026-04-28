@@ -380,27 +380,27 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     formData.append("CreatedOn", product.createdOn || now);
     formData.append("ModifiedOn", now);
 
-    // 2. 🔥 IMAGE LOGIC (Updated per Postman & Request)
-    // Only send if a NEW file is selected. Otherwise pass empty/null as requested.
+    // 2. 🔥 IMAGE LOGIC: ONLY send if a NEW file is provided
+    // If it's an update and no new file is picked, we omit the key entirely
+    // to tell the server "don't change the existing image".
     
     if (imageFile) {
-      console.log("[IMAGE] Main → Appending new file to 'MainProductImage'");
+      console.log("[IMAGE] Main → New file provided. Appending to 'MainProductImage'");
       formData.append("MainProductImage", imageFile);
-    } else {
-      console.log("[IMAGE] Main → No change, skipping 'MainProductImage'");
-      // Optionally append empty string if backend requires the key to exist
-      // formData.append("MainProductImage", ""); 
+    } else if (!isUpdate) {
+      // For NEW products, we might want to send an empty string or null if no image
+      // formData.append("MainProductImage", "");
     }
 
     if (otherImages && otherImages.length > 0) {
-      console.log(`[IMAGE] Gallery → Appending ${otherImages.length} files to 'ProductGalleryImage'`);
+      console.log(`[IMAGE] Gallery → ${otherImages.length} new files provided. Appending to 'ProductGalleryImage'`);
       otherImages.forEach((file) => {
         if (file instanceof File) {
           formData.append("ProductGalleryImage", file);
         }
       });
-    } else {
-      console.log("[IMAGE] Gallery → No change, skipping 'ProductGalleryImage'");
+    } else if (!isUpdate) {
+      // For NEW products, if no gallery, we can skip or send empty
     }
 
     // 3. 🔍 Debug: Verify EXACT FormData keys before sending
