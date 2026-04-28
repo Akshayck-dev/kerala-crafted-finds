@@ -36,14 +36,13 @@ export function fixImagePath(path?: string | null) {
   // We rely on the Vercel proxy to map /api/uploads/ to /Content/uploads/
   cleanPath = cleanPath.replace(/^\/+/, '').replace(/^api\//, '');
   
-  // Remove any existing "Content/" prefix so it consistently hits the /api/uploads proxy rule
-  cleanPath = cleanPath.replace(/^Content\//, '');
+  // Remove any existing "Content/" or "uploads/" prefix so it consistently hits the /api/uploads proxy rule
+  cleanPath = cleanPath.replace(/^Content\//i, '').replace(/^uploads\//i, '');
   
   let finalPath = cleanPath;
-  if (!cleanPath.startsWith('uploads/')) {
-    finalPath = `uploads/${cleanPath}`;
-  }
-
+  // Note: we don't need to re-add uploads/ here because our proxy destination already includes it
+  // and we want the path to be relative to that folder.
+  
   const base = BASE_URL.replace(/\/+$/, '');
   const suffix = finalPath.replace(/^\/+/, '');
   
