@@ -194,7 +194,7 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
     }
 
     if (data.length > 0) {
-      console.log("[DEBUG] RAW API PRODUCT DATA:", data[0]);
+      console.log("[DEBUG] RAW API PRODUCT DATA (FULL):", JSON.stringify(data[0], null, 2));
     }
 
     const mappedProducts = data.map((p: any, index: number) => {
