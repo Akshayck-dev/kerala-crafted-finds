@@ -29,7 +29,7 @@ export function AuthImage({ src, alt, className, fallback = "/placeholder.svg" }
     // Fetch the image with the Authorization header
     const fetchImage = async () => {
       try {
-        console.log(`[AuthImage] Attempting to fetch: ${src}`);
+        console.log(`[AuthImage] Attempting to fetch: "${src}"`);
         let response = await fetch(src, {
           headers: {
             'Authorization': `Bearer ${token}`,
