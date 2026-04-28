@@ -146,11 +146,12 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const isUpdate = product && Number(product.id) > 0;
-    const toastId = toast.loading("Saving product to Mallu’s Mart...");
-    setLoading(true);
-
     try {
+      const isUpdate = product && Number(product.id) > 0;
+      console.log(`[ProductModal] Starting handleSubmit. Mode: ${isUpdate ? "UPDATE" : "ADD"}, ID: ${product?.id}`);
+      const toastId = toast.loading("Saving product to Mallu’s Mart...");
+      setLoading(true);
+
       // Enrich payload
       const enrichedData = {
         ...formData,
@@ -159,18 +160,24 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
       };
 
       // 🔥 CLEAN IMAGE PROCESSING (NO DUPLICATES)
-      const existingUrls = otherPreviewUrls.filter(url => !url.startsWith("blob:"));
+      const existingUrls = otherPreviewUrls.filter(url => url && typeof url === 'string' && !url.startsWith("blob:"));
       const newFiles = otherImageFiles.filter((f): f is File => f !== null);
-      const existingFiles: File[] = [];
+      console.log(`[ProductModal] Processing images. Existing URLs: ${existingUrls.length}, New Gallery Files: ${newFiles.length}`);
 
-      for (let i = 0; i < existingUrls.length; i++) {
-        try {
-          const file = await urlToFile(existingUrls[i], `existing-${i}.jpg`);
-          existingFiles.push(file);
-        } catch (err) {
-          console.error("convert error:", err);
-        }
-      }
+      // Run URL to File conversions in parallel for speed
+      const existingFiles: File[] = (await Promise.all(
+        existingUrls.map(async (url, i) => {
+          try {
+            console.log(`[ProductModal] Fetching existing image ${i}: ${url}`);
+            return await urlToFile(url, `existing-${i}.jpg`);
+          } catch (err) {
+            console.error(`[ProductModal] Failed to convert existing image ${i}:`, err);
+            return null;
+          }
+        })
+      )).filter((f): f is File => f !== null);
+
+      console.log(`[ProductModal] Successfully converted ${existingFiles.length} existing images.`);
 
       // Remove main image duplication
       const filteredNew = newFiles.filter(file => {
@@ -188,15 +195,15 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
       });
 
       const finalFiles = Array.from(map.values());
-      console.log("FINAL FILE COUNT:", finalFiles.length);
+      console.log(`[ProductModal] Final Gallery File Count: ${finalFiles.length}. Main Image: ${imageFile ? "NEW" : "EXISTING"}`);
 
       await addOrUpdateProduct(enrichedData, imageFile, finalFiles);
       toast.success(isUpdate ? "Product updated" : "Product added", { id: toastId });
       onSuccess();
       onClose();
     } catch (error: any) {
-      console.error("Save error:", error);
-      toast.error(error.message || "Failed to save product", { id: toastId });
+      console.error("[ProductModal] CRITICAL Submit error:", error);
+      toast.error(error.message || "Failed to save product");
     } finally {
       setLoading(false);
     }

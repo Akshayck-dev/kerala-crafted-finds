@@ -89,7 +89,12 @@ async function safeFetch(url: string, options: RequestInit = {}, retry = true): 
       signal: controller.signal,
     });
 
-    console.log(`[API] ${url} -> status ${response.status}`);
+    console.log(`[API] ${url} -> status ${response.status} (${response.statusText})`);
+    if (response.status !== 200) {
+        const clone = response.clone();
+        const text = await clone.text().catch(() => "N/A");
+        console.warn(`[API] Error Body for ${url}:`, text.substring(0, 500));
+    }
     clearTimeout(timeoutId);
 
     if (!response.ok && response.status >= 500 && retry) {
@@ -135,8 +140,10 @@ async function handleResponse(response: Response) {
   const clone = response.clone();
   try {
     data = await response.json();
+    console.log(`[API] Parsed JSON response for ${response.url.split('/').pop()}:`, data);
   } catch (e) {
     data = await clone.text();
+    console.log(`[API] Parsed TEXT response for ${response.url.split('/').pop()}:`, data.substring(0, 100));
     // If it's just a string, return it as is
     return data;
   }
