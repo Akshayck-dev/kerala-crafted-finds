@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Skeleton } from "./ui/skeleton";
+import { getAuthToken } from "../lib/api";
 
 interface AuthImageProps {
   src: string;
@@ -20,7 +21,7 @@ export function AuthImage({ src, alt, className, fallback = "/placeholder.svg" }
       return;
     }
 
-    const token = localStorage.getItem("adminToken")?.toString().trim().replace(/^"|"$/g, '') || "";
+    const token = getAuthToken();
     
     setIsLoading(true);
     setError(false);

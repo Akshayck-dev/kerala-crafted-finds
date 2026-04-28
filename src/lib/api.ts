@@ -11,10 +11,26 @@ console.log("[API] Module loaded. Version: 1.0.4 - PROXY_AWARE");
 
 // --- Helper Functions ---
 
-function getAuthToken() {
+export function getAuthToken() {
   if (typeof window === 'undefined') return "";
-  const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || "";
-  return token.toString().trim().replace(/^"|"$/g, '');
+  let token = localStorage.getItem("adminToken") || localStorage.getItem("token") || "";
+  token = token.toString().trim().replace(/^"|"$/g, '');
+  
+  // VALIDATION: If token contains HTML tags or is a 404 page, it's corrupt.
+  // This happens if the server returns an HTML error instead of a JSON token.
+  if (token.includes('<!DOCTYPE') || token.includes('<html') || token.includes('<body')) {
+    console.error("[AUTH] Corrupt token detected (contains HTML). Clearing session.");
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("token");
+    return "";
+  }
+
+  // Basic JWT check (optional but helpful)
+  if (token.length > 0 && token.length < 20) {
+    console.warn("[AUTH] Token looks too short to be valid.");
+  }
+
+  return token;
 }
 
 /**
