@@ -105,11 +105,11 @@ async function safeFetch(url: string, options: RequestInit = {}, retry = true): 
       signal: controller.signal,
     });
 
-    console.log(`[API] ${url} -> status ${response.status} (${response.statusText})`);
-    if (response.status !== 200) {
+    console.log(`[API] ${url} -> status ${response.status} (${response.statusText}) | Redirected: ${response.redirected} | Final URL: ${response.url}`);
+    if (response.status !== 200 || response.url.includes("index.html") || (typeof response.url === 'string' && !response.url.includes("/api/"))) {
         const clone = response.clone();
         const text = await clone.text().catch(() => "N/A");
-        console.warn(`[API] Error Body for ${url}:`, text.substring(0, 500));
+        console.warn(`[API] Error/HTML Body for ${url}:`, text.substring(0, 500));
     }
     clearTimeout(timeoutId);
 
