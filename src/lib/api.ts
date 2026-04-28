@@ -181,7 +181,7 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
       console.log("[API] First Raw Product Data:", data[0]);
     }
 
-    return data.map((p: any, index: number) => {
+    const mappedProducts = data.map((p: any, index: number) => {
       // Robust ID mapping: check for all backend variations
       const rawId = p.productId || p.ProductId || p.ProductID || p.productID || p.id || p.ID || p.Id || `AUTO-${index}`;
 
@@ -206,8 +206,13 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
         memberID: Number(p.memberID || p.MemberID || 0),
         isActive: p.isActive ?? p.IsActive ?? true,
       };
-    }).filter((p: any) => p.id && (p.name !== "N/A") && (!onlyActive || p.isActive !== false))
-      .sort((a: any, b: any) => {
+    }).filter((p: any) => p.id && (p.name !== "N/A") && (!onlyActive || p.isActive !== false));
+
+    if (mappedProducts.length > 0) {
+      console.log("[API] First Mapped Product (Check image URL):", mappedProducts[0]);
+    }
+
+    return mappedProducts.sort((a: any, b: any) => {
         const idA = parseInt(a.id);
         const idB = parseInt(b.id);
         if (!isNaN(idA) && !isNaN(idB)) return idB - idA;
