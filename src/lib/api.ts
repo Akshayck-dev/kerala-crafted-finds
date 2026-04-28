@@ -161,7 +161,7 @@ async function handleResponse(response: Response) {
 export async function fetchProducts(onlyActive: boolean = true): Promise<Product[]> {
   try {
     // Added timestamp to bust any browser/proxy caches
-    const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs?t=${Date.now()}`, {
+    const response = await safeFetch(`${BASE_URL}/Product/GetAllProducts?t=${Date.now()}`, {
       headers: getAuthHeaders("GET", false)
     });
     const data = await handleResponse(response);
