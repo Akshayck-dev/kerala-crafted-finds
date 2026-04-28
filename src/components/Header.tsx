@@ -51,7 +51,7 @@ export function Header() {
           <div className="relative overflow-hidden rounded-full transition-all group-hover:scale-105 shrink-0">
             <img 
               src={logo} 
-              alt="Mallu Smart" 
+              alt="Mallu's Mart" 
               className={cn(
                 "h-8 w-8 min-[380px]:h-10 min-[380px]:w-10 md:h-12 md:w-12 lg:h-14 lg:w-14 transition-all duration-300",
                 scrolled && "md:h-10 md:w-10 lg:h-12 lg:w-12"
@@ -59,7 +59,7 @@ export function Header() {
             />
           </div>
           <span className="hidden min-[400px]:block text-[14px] min-[450px]:text-lg font-black italic tracking-tighter sm:block leading-none">
-            MALLU SMART
+            MALLU’S MART
           </span>
         </Link>
 
@@ -155,7 +155,7 @@ function MobileMenuContent({ scrolled, setMobileOpen, logo, navLinks }: {
             <img src={logo} alt="Logo" className="h-full w-full object-cover" />
           </div>
           <span className="text-lg font-black italic tracking-tighter uppercase text-foreground">
-            MALLU SMART
+            MALLU’S MART
           </span>
         </Link>
         <Button 
@@ -171,7 +171,7 @@ function MobileMenuContent({ scrolled, setMobileOpen, logo, navLinks }: {
       {/* Background Brand Watermark - More subtle */}
       <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden pointer-events-none opacity-[0.02]">
         <span className="text-[25vh] font-black italic tracking-tighter text-foreground uppercase rotate-90 whitespace-nowrap">
-          MALLU SMART
+          MALLU’S MART
         </span>
       </div>
 

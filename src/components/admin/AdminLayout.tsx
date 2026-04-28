@@ -40,7 +40,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex h-16 items-center justify-between border-b border-slate-800 px-6">
-          <span className="text-xl font-bold text-white tracking-widest uppercase">Mallu Smart</span>
+          <span className="text-xl font-bold text-white tracking-widest uppercase">Mallu’s Mart</span>
           <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
             <X className="h-6 w-6" />
           </button>

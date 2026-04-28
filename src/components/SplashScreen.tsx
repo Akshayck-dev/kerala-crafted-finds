@@ -42,7 +42,7 @@ export function SplashScreen({ onComplete, isLoading }: SplashScreenProps) {
           <div className="relative h-32 w-32 overflow-hidden rounded-full border border-primary/20 shadow-2xl animate-in zoom-in-50 duration-1000">
             <img 
               src={logo} 
-              alt="Mallu Smart" 
+              alt="Mallu’s Mart" 
               className="h-full w-full object-cover animate-in fade-in duration-1000" 
             />
           </div>
@@ -56,11 +56,11 @@ export function SplashScreen({ onComplete, isLoading }: SplashScreenProps) {
         {/* Text Reveal */}
         <div className="flex flex-col items-center gap-2 overflow-hidden">
           <h1 className="text-2xl font-black italic tracking-[0.3em] text-foreground uppercase animate-in slide-in-from-bottom-full duration-1000 fill-mode-both">
-            MALLU SMART
+            MALLU’S MART
           </h1>
           <div className="h-[2px] w-12 bg-primary/40 animate-in slide-in-from-left-full duration-1000 delay-300 fill-mode-both" />
           <p className="text-[10px] font-bold tracking-[0.5em] text-muted-foreground uppercase opacity-60 animate-in fade-in duration-1000 delay-700 fill-mode-both">
-            Authentic Registry
+            Home to Horizon
           </p>
         </div>
       </div>

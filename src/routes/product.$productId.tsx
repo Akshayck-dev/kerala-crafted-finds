@@ -77,7 +77,7 @@ function ProductDetailPage() {
   }
 
   const whatsappMsg = encodeURIComponent(`Hi, I'd like to order: ${product.name} (₹${product.price}) x ${qty}`);
-  const galleryImages = [product.image, ...(product.images || [])];
+  const galleryImages = Array.from(new Set([product.image, ...(product.images || [])])).filter(Boolean);
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-6 md:py-12 pb-32">

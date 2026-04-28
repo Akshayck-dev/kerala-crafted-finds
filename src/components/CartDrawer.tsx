@@ -20,11 +20,11 @@ export function CartDrawer() {
   return (
     <Sheet open={isOpen} onOpenChange={toggleCart}>
       <SheetContent className="flex w-full flex-col p-0 sm:max-w-md">
-        <SheetHeader className="border-b px-6 py-4">
+        <SheetHeader className="border-b px-6 py-6">
           <SheetTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5 text-primary" />
             Your Cart
-            <span className="ml-auto text-sm font-normal text-muted-foreground">
+            <span className="ml-auto mr-10 text-sm font-normal text-muted-foreground">
               ({totalItems} {totalItems === 1 ? "item" : "items"})
             </span>
           </SheetTitle>

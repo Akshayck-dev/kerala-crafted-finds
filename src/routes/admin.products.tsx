@@ -55,7 +55,7 @@ function AdminProducts() {
       setProducts(data);
     } catch (err: any) {
       console.error("[Admin] Sync error:", err);
-      setError(err.message || "Failed to sync with Mallu Smart backend. Please check your connection.");
+      setError(err.message || "Failed to sync with Mallu’s Mart backend. Please check your connection.");
       toast.error("Sync failed. Redirecting to login if session expired...");
     } finally {
       setIsLoading(true); // Keep skeleton for a tiny bit longer for smoother transition
@@ -238,7 +238,7 @@ function AdminProducts() {
                     </td>
                     <td className="px-6 py-4">
                        <div className="flex flex-col">
-                          <span className="text-slate-900 text-xs font-bold">{product.sellerName ?? "Mallu Smart"}</span>
+                          <span className="text-slate-900 text-xs font-bold">{product.sellerName ?? "Mallu’s Mart"}</span>
                           {product.businessName && <span className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">{product.businessName}</span>}
                        </div>
                     </td>

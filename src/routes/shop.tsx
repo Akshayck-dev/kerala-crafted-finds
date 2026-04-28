@@ -13,10 +13,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 export const Route = createFileRoute("/shop")({
   head: () => ({
     meta: [
-      { title: "Shop — Mallu Smart" },
-      { name: "description", content: "Browse authentic Kerala products." },
-      { property: "og:title", content: "Shop — Mallu Smart" },
-      { property: "og:description", content: "Browse authentic Kerala products." },
+      { title: "Shop — Mallu’s Mart" },
+      { name: "description", content: "Explore our collection of authentic Kerala products at Mallu’s Mart." },
+      { property: "og:title", content: "Shop — Mallu’s Mart" },
+      { property: "og:description", content: "Explore our collection of authentic Kerala products at Mallu’s Mart." },
     ],
   }),
   component: ShopPage,

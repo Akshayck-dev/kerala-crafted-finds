@@ -1,0 +1,29 @@
+# Mallu Smart — Authentic Kerala Products
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/jpeg" href="/logo.jpg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mallu Smart — Authentic Kerala Products</title>
+    <meta name="description" content="Discover handmade, natural & trusted Kerala products from local artisans." />
+    <meta name="author" content="Mallu Smart" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    
+    <style>
+      body { margin: 0; font-family: 'Inter', sans-serif; background-color: #fafaf9; color: #1c1917; }
+    </style>
+    <script type="module" crossorigin src="/assets/main-BmgYHaEc.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/main-CKk7IlLs.css">
+  </head>
+  <body>
+    <div id="root"></div>
+
+  </body>
+</html>

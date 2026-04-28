@@ -8,10 +8,10 @@ import { Mail, Phone, MapPin, Send, Instagram, Facebook, Twitter } from "lucide-
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Get in Touch — Kerala Crafted Finds" },
-      { name: "description", content: "Contact Kerala Crafted Finds for support or inquiries." },
-      { property: "og:title", content: "Get in Touch — Kerala Crafted Finds" },
-      { property: "og:description", content: "We are here to help. Reach out to the Kerala Crafted Finds team." },
+      { title: "Get in Touch — Mallu’s Mart" },
+      { name: "description", content: "Contact Mallu’s Mart for support or inquiries regarding our homepreneur products." },
+      { property: "og:title", content: "Get in Touch — Mallu’s Mart" },
+      { property: "og:description", content: "We are here to help. Reach out to the Mallu’s Mart team." },
     ],
   }),
   component: ContactPage,
@@ -38,7 +38,7 @@ function ContactPage() {
 
     // Build a structured WhatsApp message from the form
     const lines = [
-      `📩 *New Contact Inquiry — Mallu Smart*`,
+      `📩 *New Contact Inquiry — Mallu’s Mart*`,
       ``,
       `👤 *Name:* ${formData.name}`,
       `📧 *Email:* ${formData.email}`,
@@ -219,7 +219,7 @@ function ContactPage() {
                   </div>
                   <div className="space-y-1">
                     <h4 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Base of Operations</h4>
-                    <p className="text-xl font-bold">Wayanad Heritage Hub, <br />Kerala, India</p>
+                    <p className="text-xl font-bold">Kerala, India <br />Home to Horizon Hub</p>
                   </div>
                </div>
             </div>

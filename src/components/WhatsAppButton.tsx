@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 export function WhatsAppButton() {
   const phoneNumber = "919495532563";
-  const message = encodeURIComponent("Hi! I'm interested in your products from Mallu Smart.");
+  const message = encodeURIComponent("Hi! I'm interested in your products from Mallu’s Mart.");
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
 
   return (

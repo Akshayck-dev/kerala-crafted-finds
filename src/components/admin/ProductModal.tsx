@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { addOrUpdateProduct, fetchCategories, fetchMembers } from "@/lib/api";
+import { addOrUpdateProduct, fetchCategories, fetchMembers, urlToFile } from "@/lib/api";
 import { type Product, type Category, type Member } from "@/lib/data";
 import { Loader2, Upload } from "lucide-react";
 import { AuthImage } from "@/components/AuthImage";
@@ -34,7 +34,7 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
-  
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [otherImageFiles, setOtherImageFiles] = useState<File[]>([]);
   const [otherPreviewUrls, setOtherPreviewUrls] = useState<string[]>([]);
@@ -66,15 +66,15 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
         memberID: product.memberID ? Number(product.memberID) : 0,
         isActive: product.isActive !== false,
       });
-      
+
       // Auto-lookup category ID by name if ID is missing (common in this backend)
       if (categories.length > 0 && !product.categoryID && product.categoryName) {
         console.log(`[EditModal] Attempting to match category: "${product.categoryName}"`);
         const searchName = product.categoryName.toLowerCase().trim();
-        
+
         // Try exact match first
         let match = categories.find(c => c.name.toLowerCase().trim() === searchName);
-        
+
         // Fallback to partial matches if exact match fails
         if (!match) {
           match = categories.find(c => {
@@ -82,7 +82,7 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
             return catName.includes(searchName) || searchName.includes(catName);
           });
         }
-        
+
         if (match) {
           console.log(`[EditModal] Found matching category: ${match.name} (ID: ${match.id})`);
           setFormData(prev => ({ ...prev, categoryID: Number(match.id) }));
@@ -93,8 +93,9 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
 
       setPreviewUrl(product.image || "");
       setImageFile(null); // Reset file on edit
-      setOtherPreviewUrls(product.images || []);
-      setOtherImageFiles([]);
+      const gallery = Array.from(new Set(product.images || [])).filter(img => img !== product.image);
+      setOtherPreviewUrls(gallery);
+      setOtherImageFiles(new Array(gallery.length).fill(null)); // Placeholder for 1-to-1 mapping
     } else {
       setFormData({
         id: "0",
@@ -131,11 +132,11 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
 
       // Auto-select first category/member if NOT editing an existing product
       if (!product) {
-          setFormData(prev => ({
-              ...prev,
-              categoryID: prev.categoryID || (cats.length > 0 ? Number(cats[0].id) : 0),
-              memberID: prev.memberID || (mems.length > 0 ? Number(mems[0].id) : 0)
-          }));
+        setFormData(prev => ({
+          ...prev,
+          categoryID: prev.categoryID || (cats.length > 0 ? Number(cats[0].id) : 0),
+          memberID: prev.memberID || (mems.length > 0 ? Number(mems[0].id) : 0)
+        }));
       }
     } catch (err) {
       console.error("Failed to load modal dependencies:", err);
@@ -144,67 +145,57 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[Modal] Submitting Product Data:", {
-      id: product?.id,
-      name: formData.name,
-      categoryID: formData.categoryID,
-      memberID: formData.memberID,
-      hasFile: !!imageFile,
-      hasUrl: !!formData.image
-    });
     
-    // Prevent 500 error by validating category selection with descriptive feedback
-    // Improved validation with automatic fallback for missing IDs
-    const finalCategoryID = Number(formData.categoryID || 0);
-    const finalMemberID = Number(formData.memberID || 0);
-
-    if (finalCategoryID === 0) {
-      toast.error("Please select a Product Category.");
-      return;
-    }
-
-    if (finalMemberID === 0) {
-      // If only one member exists (common), auto-select it instead of blocking
-      if (members.length === 1) {
-        formData.memberID = Number(members[0].id);
-      } else {
-        toast.error("Please select a Seller/Member.");
-        return;
-      }
-    }
-
-    // 🔥 IMAGE VALIDATION (Final Fix)
     const isUpdate = product && Number(product.id) > 0;
-    if (!isUpdate && !imageFile) {
-        toast.error("Main product image is required for new products ❌");
-        return;
-    }
-    
-    if (isUpdate && !formData.image && !imageFile) {
-        toast.error("Product image is required for update ❌");
-        return;
-    }
-    
-    if (isUpdate) {
-        console.log("Existing Image URL for Update:", formData.image);
-    }
-
-    const toastId = toast.loading("Saving product to Mallu Smart API...");
+    const toastId = toast.loading("Saving product to Mallu’s Mart...");
     setLoading(true);
+
     try {
-      // Enrich payload with names for the JSON API
+      // Enrich payload
       const enrichedData = {
         ...formData,
         categoryName: categories.find(c => Number(c.id) === formData.categoryID)?.name || "",
         memberName: members.find(m => Number(m.id) === formData.memberID)?.name || ""
       };
 
-      await addOrUpdateProduct(enrichedData, imageFile, otherImageFiles);
-      toast.success(product && Number(product.id) > 0 ? "Product updated successfully" : "Product added successfully", { id: toastId });
+      // 🔥 CLEAN IMAGE PROCESSING (NO DUPLICATES)
+      const existingUrls = otherPreviewUrls.filter(url => !url.startsWith("blob:"));
+      const newFiles = otherImageFiles.filter((f): f is File => f !== null);
+      const existingFiles: File[] = [];
+
+      for (let i = 0; i < existingUrls.length; i++) {
+        try {
+          const file = await urlToFile(existingUrls[i], `existing-${i}.jpg`);
+          existingFiles.push(file);
+        } catch (err) {
+          console.error("convert error:", err);
+        }
+      }
+
+      // Remove main image duplication
+      const filteredNew = newFiles.filter(file => {
+        return !(imageFile && file.name === imageFile.name && file.size === imageFile.size);
+      });
+
+      // Merge and Final dedupe
+      const allFiles = [...existingFiles, ...filteredNew];
+      const map = new Map<string, File>();
+      allFiles.forEach(file => {
+        const key = file.name + "_" + file.size;
+        if (!map.has(key)) {
+          map.set(key, file);
+        }
+      });
+
+      const finalFiles = Array.from(map.values());
+      console.log("FINAL FILE COUNT:", finalFiles.length);
+
+      await addOrUpdateProduct(enrichedData, imageFile, finalFiles);
+      toast.success(isUpdate ? "Product updated" : "Product added", { id: toastId });
       onSuccess();
       onClose();
     } catch (error: any) {
-      console.error("Save product error:", error);
+      console.error("Save error:", error);
       toast.error(error.message || "Failed to save product", { id: toastId });
     } finally {
       setLoading(false);
@@ -235,7 +226,7 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                   className="border-slate-200 focus:ring-blue-500"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -263,12 +254,12 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
             </div>
 
             <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                    <Label htmlFor="quantity">Quantity</Label>
-                    {Number(formData.quantity || 0) < 5 && (
-                        <span className="text-[10px] bg-red-100 text-red-600 px-1.5 rounded uppercase font-bold">Low Stock Alert</span>
-                    )}
-                </div>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="quantity">Quantity</Label>
+                {Number(formData.quantity || 0) < 5 && (
+                  <span className="text-[10px] bg-red-100 text-red-600 px-1.5 rounded uppercase font-bold">Low Stock Alert</span>
+                )}
+              </div>
               <Input
                 id="quantity"
                 type="number"
@@ -327,20 +318,21 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                 {/* Preview */}
                 {(previewUrl || formData.image) && (
                   <div className="h-24 w-24 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shadow-inner relative group">
-                    <AuthImage 
-                      src={previewUrl || formData.image || ""} 
-                      className="h-full w-full object-cover" 
+                    <AuthImage
+                      src={previewUrl || formData.image || ""}
+                      className="h-full w-full object-cover"
                       alt="Preview"
                       fallback="/placeholder.svg"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                       <span className="text-[10px] text-white font-bold uppercase">Main Preview</span>
+                      <span className="text-[10px] text-white font-bold uppercase">Main Preview</span>
                     </div>
                   </div>
                 )}
               </div>
             </div>
 
+            {/* Gallery Images */}
             {/* Gallery Images */}
             <div className="space-y-4 md:col-span-2">
               <Label>Product Gallery (Multiple Images)</Label>
@@ -353,10 +345,23 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                     multiple
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
+                      let files = Array.from(e.target.files || []);
                       console.log("Selected gallery files:", files);
+
                       if (files.length > 0) {
+
+                        // ✅ SET MAIN IMAGE FIRST (FIX)
+                        if (!imageFile && !formData.image) {
+                          const first = files[0];
+                          setImageFile(first);
+                          setPreviewUrl(URL.createObjectURL(first));
+
+                          // 🔥 REMOVE FROM GALLERY (IMPORTANT FIX)
+                          files = files.slice(1);
+                        }
+
                         setOtherImageFiles(prev => [...prev, ...files]);
+
                         const newUrls = files.map(file => URL.createObjectURL(file));
                         setOtherPreviewUrls(prev => [...prev, ...newUrls]);
                       }
@@ -374,9 +379,9 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
                     {otherPreviewUrls.map((url, idx) => (
                       <div key={idx} className="aspect-square rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shadow-sm relative group">
-                        <AuthImage 
-                          src={url} 
-                          className="h-full w-full object-cover" 
+                        <AuthImage
+                          src={url}
+                          className="h-full w-full object-cover"
                           alt={`Gallery ${idx}`}
                           fallback="/placeholder.svg"
                         />
@@ -384,12 +389,9 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                           type="button"
                           className="absolute top-1 right-1 h-5 w-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                           onClick={() => {
+                            // 🔥 SIMPLE + SAFE REMOVE (1-to-1 mapping)
                             setOtherPreviewUrls(prev => prev.filter((_, i) => i !== idx));
-                            // Only filter imageFiles if they correspond to the newly added ones
-                            // This logic is a bit tricky if some are existing URLs and some are new files
-                            // For simplicity, we'll assume the user wants to remove from the current selection
-                            // In a real app, we'd separate existing vs new files
-                            setOtherImageFiles(prev => prev.filter((_, i) => i !== (idx - (otherPreviewUrls.length - otherImageFiles.length))));
+                            setOtherImageFiles(prev => prev.filter((_, i) => i !== idx));
                           }}
                         >
                           <span className="text-xs">×</span>
@@ -404,39 +406,39 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
             {/* Relationships */}
             <div className="space-y-2">
               <Label className="flex gap-1">Category <span className="text-red-500">*</span></Label>
-              <Select 
+              <Select
                 key={`${categories.length}-${formData.categoryID}`}
-                value={formData.categoryID?.toString() || "0"} 
+                value={formData.categoryID?.toString() || "0"}
                 onValueChange={(val) => setFormData({ ...formData, categoryID: Number(val) })}
               >
                 <SelectTrigger className="border-slate-200">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
-                    <SelectItem value="0">Uncategorized</SelectItem>
-                    {categories.map((c) => (
-                        <SelectItem key={c.id} value={c.id?.toString() || "0"}>{c.name}</SelectItem>
-                    ))}
+                  <SelectItem value="0">Uncategorized</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id?.toString() || "0"}>{c.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <Label>Member / Seller</Label>
-              <Select 
-                value={formData.memberID?.toString() || "0"} 
+              <Select
+                value={formData.memberID?.toString() || "0"}
                 onValueChange={(val) => setFormData({ ...formData, memberID: Number(val) })}
               >
                 <SelectTrigger className="border-slate-200">
                   <SelectValue placeholder="Select member" />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
-                    <SelectItem value="0">Generic Member</SelectItem>
-                    {members.map((m) => (
-                        <SelectItem key={m.id} value={m.id.toString()}>
-                          {m.name} {m.businessName ? `(${m.businessName})` : ""}
-                        </SelectItem>
-                    ))}
+                  <SelectItem value="0">Generic Member</SelectItem>
+                  {members.map((m) => (
+                    <SelectItem key={m.id} value={m.id.toString()}>
+                      {m.name} {m.businessName ? `(${m.businessName})` : ""}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

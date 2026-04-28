@@ -19,10 +19,10 @@ import Autoplay from "embla-carousel-autoplay";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Mallu Smart — Authentic Kerala Products" },
-      { name: "description", content: "Discover handmade, natural & trusted Kerala products from local artisans." },
-      { property: "og:title", content: "Mallu Smart — Authentic Kerala Products" },
-      { property: "og:description", content: "Discover handmade, natural & trusted Kerala products from local artisans." },
+      { title: "Mallu’s Mart — Home to Horizon" },
+      { name: "description", content: "Kerala's first platform dedicated exclusively to products created by homepreneurs. Authentic Kerala traditional foods, handmade crafts, and more." },
+      { property: "og:title", content: "Mallu’s Mart — Home to Horizon" },
+      { property: "og:description", content: "Empowering Kerala homepreneurs to take their authentic creations to the world." },
     ],
   }),
   component: HomePage,
@@ -30,22 +30,22 @@ export const Route = createFileRoute("/")({
 
 const heroSlides = [
   {
-    title: "Discover Authentic Kerala Products",
-    subtitle: "Made by real people, not factories. Shop local and support small businesses.",
+    title: "Empowering Kerala Homepreneurs",
+    subtitle: "Taking authentic Kerala creations from home to horizon. Shop unique products made with passion.",
     image: "/images/registry_archive.png",
-    label: "Featured Collection",
+    label: "Home to Horizon",
   },
   {
-    title: "Discover Authentic Kerala Products",
-    subtitle: "Made by real people, not factories. Shop local and support small businesses.",
+    title: "Authentic Kerala Traditions",
+    subtitle: "From traditional foods to handmade crafts, discover the soul of Kerala in every product.",
     image: "/images/artisan_legacy.png",
-    label: "Artisan Legacy",
+    label: "Handmade with Love",
   },
   {
-    title: "Discover Authentic Kerala Products",
-    subtitle: "Made by real people, not factories. Shop local and support small businesses.",
+    title: "Global Reach for Local Stars",
+    subtitle: "Join the mission to take Kerala's home-grown excellence to customers around the world.",
     image: "/images/backwater_majesty.png",
-    label: "Quality Selection",
+    label: "Global Vision",
   },
 ];
 
@@ -285,23 +285,25 @@ function HomePage() {
             </div>
             <div className="space-y-6">
               <span className="inline-block rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-primary uppercase">
-                Artisan Spotlight
+                Our Spirit
               </span>
-              <h2 className="text-3xl font-bold text-foreground sm:text-4xl">Every piece tells a story of tradition</h2>
+              <h2 className="text-3xl font-bold text-foreground sm:text-4xl">Kerala's First Platform for Homepreneurs</h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Our products aren't just items; they are the result of generations of craftsmanship. By choosing Kerala Crafted Finds, you're directly supporting artisans who have dedicated their lives to mastering their trade.
+                Mallu’s Mart is dedicated exclusively to products created by talented entrepreneurs from their homes. Every product carries a story, a passion, and the authentic spirit of Kerala.
               </p>
               <div className="grid grid-cols-2 gap-6 pt-4">
                 <div>
-                  <h4 className="text-2xl font-bold text-primary">50+</h4>
-                  <p className="text-sm text-muted-foreground">Certified Artisans</p>
+                  <h4 className="text-2xl font-bold text-primary">Home-Made</h4>
+                  <p className="text-sm text-muted-foreground">Exclusively Homepreneurs</p>
                 </div>
                 <div>
-                  <h4 className="text-2xl font-bold text-primary">100%</h4>
-                  <p className="text-sm text-muted-foreground">Ethically Sourced</p>
+                  <h4 className="text-2xl font-bold text-primary">Global</h4>
+                  <p className="text-sm text-muted-foreground">Home to Horizon</p>
                 </div>
               </div>
-              <Button className="mt-6 rounded-full px-8 py-4 text-lg">Read Our Story</Button>
+              <Link to="/about">
+                <Button className="mt-6 rounded-full px-8 py-4 text-lg">Our Full Story</Button>
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -312,7 +314,7 @@ function HomePage() {
         <div className="mx-auto max-w-[1200px] px-4 text-center">
             <h2 className="text-4xl font-black italic tracking-tighter uppercase sm:text-5xl">Start Selling Today</h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg font-medium opacity-90">
-                Turn your skills into income. Join Mallu Smart and start selling your products.
+                Turn your skills into income. Join Mallu’s Mart and start selling your products.
             </p>
             <Link to="/sell">
               <Button size="lg" className="mt-8 rounded-full bg-white px-10 py-6 text-lg font-bold text-black hover:bg-white/90">
@@ -322,7 +324,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Why Mallu Smart (The Heritage Guarantee) */}
+      {/* Why Mallu’s Mart (The Heritage Guarantee) */}
       <section className="py-12 bg-card/30">
         <div className="mx-auto max-w-[1200px] px-4">
           <div className="mb-10 text-center">

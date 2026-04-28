@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useLoadingStore } from "./loading-store";
 
 export const BASE_URL = import.meta.env.DEV ? "/api" : "https://api.mallusmart.com";
-const CACHE_BUSTER = "FORCE_UPDATE_v10_4_" + Date.now();
+export const CACHE_BUSTER = "FORCE_UPDATE_v10_4_" + Date.now();
 console.log(`[API] Cache Buster Active: ${CACHE_BUSTER} | Base: ${BASE_URL}`);
 
 console.log("[API] Module loaded. Version: 1.0.4 - PROXY_AWARE");
@@ -184,7 +184,7 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
           : []).map((img: any) => fixImagePath(img)),
         category: (p.categoryName || p.CategoryName || "all").toLowerCase().trim().replace(/\s+/g, "-"),
         categoryName: p.categoryName || p.CategoryName || "Uncategorized",
-        sellerName: p.memberName || p.MemberName || "Mallu Smart",
+        sellerName: p.memberName || p.MemberName || "Mallu’s Mart",
         businessName: p.businessName || p.BusinessName || "",
         description: p.description || p.Description || "Authentic Kerala handmade product.",
         originalPrice: Number(p.price || p.Price || 0) * 1.25,
@@ -313,7 +313,7 @@ export async function adminLogin(email: string, password: string): Promise<strin
 }
 
 // Helper to convert URL to File object for backend IFormFile compatibility
-async function urlToFile(url: string, filename: string = "image.jpg"): Promise<File> {
+export async function urlToFile(url: string, filename: string = "image.jpg"): Promise<File> {
   const token = getAuthToken();
   const res = await fetch(url, {
     headers: {
@@ -371,7 +371,6 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     formData.append("modifiedOn", now);
     formData.append("ModifiedOn", now);
     formData.append("categoryName", product.categoryName || "");
-    formData.append("categoryName", product.categoryName || "");
     formData.append("memberName", product.memberName || "");
     formData.append("MemberName", product.memberName || "");
 
@@ -399,21 +398,31 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
         // Use Image for new products as requested
         formData.append("Image", fileToSend);
       }
-
-      // Keep other variations for backward compatibility if needed by other backend versions
-      formData.append("image", fileToSend);
-      formData.append("File", fileToSend);
     }
 
-    // 4. 🔥 OTHER IMAGES (NEW)
-    if (otherImages && otherImages.length > 0) {
-      console.log(`IMAGE → Appending ${otherImages.length} additional images`);
-      otherImages.forEach((file) => {
-        formData.append("OtherImages", file);
-        formData.append("otherImages", file);
-        formData.append("Images", file);
-      });
-    }
+  // 🔥 FIXED: NO DUPLICATE IMAGE APPEND
+  if (otherImages && otherImages.length > 0) {
+    console.log(`IMAGE → Processing ${otherImages.length} gallery images`);
+
+    const uniqueMap = new Map<string, File>();
+
+    otherImages.forEach((file) => {
+      if (file instanceof File) {
+        const key = file.name + "_" + file.size; // ✅ FIXED
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, file);
+        }
+      }
+    });
+
+    const uniqueImages = Array.from(uniqueMap.values());
+
+    uniqueImages.forEach((file, index) => {
+      formData.append(`OtherImages[${index}]`, file);
+    });
+
+    console.log(`FINAL UNIQUE IMAGES COUNT: ${uniqueImages.length}`);
+  }
 
     // 5. 🔍 Debug: Verify EXACT FormData keys before sending
     const token = typeof window !== 'undefined' ? (localStorage.getItem("adminToken") || "").replace(/^"|"$/g, '') : "";

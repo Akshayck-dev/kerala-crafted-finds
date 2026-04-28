@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { BASE_URL } from "./api"
+import { BASE_URL, CACHE_BUSTER } from "./api"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -44,9 +44,9 @@ export function fixImagePath(path?: string | null) {
   const base = BASE_URL.replace(/\/+$/, '');
   const suffix = cleanPath.replace(/^\/+/, '');
   
-  // Add a cache buster to ensure fresh images after updates
-  const cacheBuster = `v=${Date.now()}`;
+  // Use the global CACHE_BUSTER instead of Date.now() to ensure stable URLs during mapping
+  // This prevents the "duplicate images" issue where the same image gets different cache-bust strings
   const separator = suffix.includes('?') ? '&' : '?';
   
-  return `${base}/${suffix}${separator}${cacheBuster}`;
+  return `${base}/${suffix}${separator}v=${CACHE_BUSTER}`;
 }

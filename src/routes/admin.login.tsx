@@ -59,7 +59,7 @@ function AdminLogin() {
             <ShieldCheck className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-widest uppercase">Admin Portal</h1>
-          <p className="mt-2 text-sm text-slate-300">Mallu Smart Internal Access</p>
+          <p className="mt-2 text-sm text-slate-300">Mallu’s Mart Internal Access</p>
         </div>
 
         {error && (

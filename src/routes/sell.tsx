@@ -20,16 +20,16 @@ import { useState } from "react";
 export const Route = createFileRoute("/sell")({
   head: () => ({
     meta: [
-      { title: "Start Selling — Mallu Smart" },
+      { title: "Start Selling — Mallu’s Mart" },
       {
         name: "description",
         content:
-          "Join Mallu Smart as a seller. Turn your skills into income by selling authentic Kerala products.",
+          "Join Mallu’s Mart as a homepreneur. Turn your skills into income by selling authentic Kerala products.",
       },
-      { property: "og:title", content: "Start Selling — Mallu Smart" },
+      { property: "og:title", content: "Start Selling — Mallu’s Mart" },
       {
         property: "og:description",
-        content: "Join Mallu Smart and start selling your products to customers across India.",
+        content: "Join Mallu’s Mart and start selling your home-made products to customers across the world.",
       },
     ],
   }),
@@ -101,7 +101,7 @@ function SellPage() {
 
     // Build WhatsApp message from form data
     const lines = [
-      `🛍️ *New Seller Application — Mallu Smart*`,
+      `🛍️ *New Seller Application — Mallu’s Mart*`,
       ``,
       `👤 *Name:* ${formData.name}`,
       `📱 *Phone:* ${formData.phone}`,
@@ -144,12 +144,11 @@ function SellPage() {
             <span className="mb-6 inline-block rounded-full border border-white/20 bg-white/10 px-5 py-2 text-[10px] font-bold uppercase tracking-[0.4em] backdrop-blur-sm">
               For Sellers & Artisans
             </span>
-            <h1 className="mx-auto max-w-3xl text-4xl font-black italic uppercase tracking-tighter sm:text-6xl lg:text-7xl leading-[0.9]">
-              Turn Your Skills Into Income
+            <h1 className="text-4xl font-black italic uppercase tracking-tighter sm:text-6xl lg:text-7xl">
+              From Home <br className="hidden sm:block" /> to Horizon.
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg font-medium opacity-90 sm:text-xl">
-              Join Mallu Smart and reach thousands of customers looking for authentic Kerala
-              products. No setup fees, no hidden charges.
+            <p className="mx-auto mt-6 max-w-2xl text-lg font-medium text-white/90 sm:text-xl">
+              Mallu’s Mart is Kerala's first platform dedicated exclusively to homepreneurs. Join our mission to take your authentic creations to the world.
             </p>
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <a href="#seller-form">
@@ -162,7 +161,7 @@ function SellPage() {
                 </Button>
               </a>
               <a
-                href="https://wa.me/919495532563?text=Hi%2C%20I%20want%20to%20start%20selling%20on%20Mallu%20Smart"
+                href="https://wa.me/919495532563?text=Hi%2C%20I%20want%20to%20start%20selling%20on%20Mallu%20Mart"
                 target="_blank"
                 rel="noopener noreferrer"
               >

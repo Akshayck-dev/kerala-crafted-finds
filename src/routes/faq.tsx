@@ -9,9 +9,9 @@ import {
 export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
-      { title: "FAQ — Mallu Smart" },
-      { name: "description", content: "Frequently asked questions about Mallu Smart." },
-      { property: "og:title", content: "FAQ — Mallu Smart" },
+      { title: "FAQ — Mallu’s Mart" },
+      { name: "description", content: "Frequently asked questions about Mallu’s Mart and our homepreneur mission." },
+      { property: "og:title", content: "FAQ — Mallu’s Mart" },
       { property: "og:description", content: "Frequently asked questions." },
     ],
   }),
@@ -19,10 +19,10 @@ export const Route = createFileRoute("/faq")({
 });
 
 const faqs = [
-  { q: "What is Mallu Smart?", a: "Mallu Smart is a platform where local people sell their products directly to customers. We support small businesses, home makers, and artisans by helping them reach more customers." },
-  { q: "How can I place an order?", a: "Simply browse our collection, add items to your cart, and proceed to checkout. We also offer a direct order option via WhatsApp for your convenience." },
-  { q: "Are products authentic?", a: "Yes, every product here is real, local, and made with care by authentic artisans and local sellers from Kerala." },
-  { q: "Can I become a seller?", a: "Definitely! We are built for local sellers. You can join our registry and start selling your handcrafted or natural products directly to customers." },
+  { q: "What is Mallu’s Mart?", a: "Mallu’s Mart is Kerala's first website dedicated exclusively to products created by homepreneurs. We bring together traditional foods, handmade crafts, and unique clothing made by talented entrepreneurs from their homes." },
+  { q: "How can I place an order?", a: "Browse our collection, add items to your cart, and checkout. Every product carries a story and the spirit of Kerala." },
+  { q: "Are products authentic?", a: "Absolutely. Every product is lovingly made by homepreneurs from their homes, ensuring 100% authenticity and local quality." },
+  { q: "Can I become a seller?", a: "Yes! If you are a homepreneur from Kerala, we offer you a 'Home to Horizon' opportunity. Join us to take your authentic creations to the world." },
 ];
 
 import { motion } from "framer-motion";
