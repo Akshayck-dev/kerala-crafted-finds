@@ -3,7 +3,7 @@ import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
 import { useLoadingStore } from "./loading-store";
 
-export const BASE_URL = import.meta.env.DEV ? "/api" : "https://api.mallusmart.com";
+export const BASE_URL = "/api";
 export const CACHE_BUSTER = "FORCE_UPDATE_v10_4_" + Date.now();
 console.log(`[API] Cache Buster Active: ${CACHE_BUSTER} | Base: ${BASE_URL}`);
 
