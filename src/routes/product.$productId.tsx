@@ -11,6 +11,8 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { AuthImage } from "@/components/AuthImage";
+
 export const Route = createFileRoute("/product/$productId")({
   component: ProductDetailPage,
 });
@@ -94,7 +96,7 @@ function ProductDetailPage() {
                 {product.badge}
               </Badge>
             )}
-            <img 
+            <AuthImage 
               src={galleryImages[selectedImage]} 
               alt={product.name} 
               className="aspect-square w-full object-cover transition-all duration-700 hover:scale-110" 
@@ -111,7 +113,7 @@ function ProductDetailPage() {
                     selectedImage === i ? "border-primary ring-2 ring-primary/20" : "border-transparent opacity-60 hover:opacity-100"
                   }`}
                 >
-                  <img src={img} alt={`Thumbnail ${i}`} className="h-full w-full object-cover" />
+                  <AuthImage src={img} alt={`Thumbnail ${i}`} className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>

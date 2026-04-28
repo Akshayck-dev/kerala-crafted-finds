@@ -7,6 +7,8 @@ import { addToCart, toggleWishlist, useWishlist } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
+import { AuthImage } from "./AuthImage";
+
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const { isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(product.id);
@@ -25,11 +27,10 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       {/* Image Section */}
       <div className="relative aspect-square sm:aspect-[4/5] overflow-hidden rounded-[1rem] sm:rounded-[2rem] bg-muted">
         <Link to="/product/$productId" params={{ productId: product.id }} className="h-full w-full">
-          <img
+          <AuthImage
             src={product.image}
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-            loading="lazy"
           />
         </Link>
         
