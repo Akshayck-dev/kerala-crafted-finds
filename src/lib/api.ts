@@ -378,11 +378,10 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     let fileToSend: File | null = null;
 
     if (imageFile) {
-      console.log("IMAGE → Using selected binary file");
+      console.log("[IMAGE] Main → Using selected binary file");
       fileToSend = imageFile;
     } else if (isUpdate && product.image) {
-      // For updates, we need a binary fallback if no new file is picked
-      console.log("IMAGE → Converting existing URL to binary fallback for Update:", product.image);
+      console.log("[IMAGE] Main → Converting existing URL to binary fallback:", product.image);
       try {
         fileToSend = await urlToFile(product.image);
       } catch (err) {
@@ -391,38 +390,21 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     }
 
     if (fileToSend) {
-      if (isUpdate) {
-        // Use NewImage for updates as requested
-        formData.append("NewImage", fileToSend);
-      } else {
-        // Use Image for new products as requested
-        formData.append("Image", fileToSend);
-      }
+      formData.append("image", fileToSend);
+      console.log("[DEBUG] Appended main image as 'image'");
     }
 
-  // 🔥 FIXED: NO DUPLICATE IMAGE APPEND
-  if (otherImages && otherImages.length > 0) {
-    console.log(`IMAGE → Processing ${otherImages.length} gallery images`);
+    // 4. 🔥 MULTIPLE GALLERY IMAGES (images[])
+    if (otherImages && otherImages.length > 0) {
+      console.log(`[IMAGE] Gallery → Processing ${otherImages.length} images`);
 
-    const uniqueMap = new Map<string, File>();
-
-    otherImages.forEach((file) => {
-      if (file instanceof File) {
-        const key = file.name + "_" + file.size; // ✅ FIXED
-        if (!uniqueMap.has(key)) {
-          uniqueMap.set(key, file);
+      otherImages.forEach((file, index) => {
+        if (file instanceof File) {
+          formData.append("images[]", file);
+          console.log(`[DEBUG] Appended gallery image ${index + 1} as 'images[]': ${file.name}`);
         }
-      }
-    });
-
-    const uniqueImages = Array.from(uniqueMap.values());
-
-    uniqueImages.forEach((file, index) => {
-      formData.append(`OtherImages[${index}]`, file);
-    });
-
-    console.log(`FINAL UNIQUE IMAGES COUNT: ${uniqueImages.length}`);
-  }
+      });
+    }
 
     // 5. 🔍 Debug: Verify EXACT FormData keys before sending
     const token = typeof window !== 'undefined' ? (localStorage.getItem("adminToken") || "").replace(/^"|"$/g, '') : "";
