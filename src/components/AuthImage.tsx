@@ -30,15 +30,23 @@ export function AuthImage({ src, alt, className, fallback = "/placeholder.svg" }
     const fetchImage = async () => {
       try {
         console.log(`[AuthImage] Attempting to fetch: ${src}`);
-        const response = await fetch(src, {
+        let response = await fetch(src, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Cache-Control': 'no-cache'
           }
         });
 
+        // FALLBACK: If 401/403, try without Auth header (some servers block Auth on static files)
+        if (response.status === 401 || response.status === 403) {
+          console.warn(`[AuthImage] Auth failed (Status ${response.status}). Retrying WITHOUT Authorization header for: ${src}`);
+          response = await fetch(src, {
+            headers: { 'Cache-Control': 'no-cache' }
+          });
+        }
+
         if (!response.ok) {
-          console.warn(`[AuthImage] HTTP Error ${response.status} for ${src}. Falling back.`);
+          console.warn(`[AuthImage] HTTP Error ${response.status} for ${src}. Falling back to placeholder.`);
           throw new Error(`Status ${response.status}`);
         }
 
