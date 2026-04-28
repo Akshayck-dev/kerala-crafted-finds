@@ -177,6 +177,10 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
       throw new Error("API did not return an array of products");
     }
 
+    if (data.length > 0) {
+      console.log("[API] First Raw Product Data:", data[0]);
+    }
+
     return data.map((p: any, index: number) => {
       // Robust ID mapping: check for all backend variations
       const rawId = p.productId || p.ProductId || p.ProductID || p.productID || p.id || p.ID || p.Id || `AUTO-${index}`;
