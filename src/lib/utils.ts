@@ -10,6 +10,7 @@ export function fixImagePath(path?: string | null) {
   const fallback = "https://placehold.co/600x600/f1f5f9/94a3b8?text=Product+Image";
   
   if (!path || typeof path !== 'string' || path.trim() === '') {
+    // console.log("[fixImagePath] Fallback triggered: path is empty or not a string");
     return fallback;
   }
   
@@ -32,19 +33,17 @@ export function fixImagePath(path?: string | null) {
   }
   
   // Standardize upload paths: ensure they start with Content/uploads/
-  // Backend returns paths like "uploads/image.jpg" or "Content/uploads/image.jpg"
   cleanPath = cleanPath.replace(/^\/+/, '').replace(/^api\//, '');
   
+  let finalPath = cleanPath;
   if (cleanPath.startsWith('uploads/')) {
-    cleanPath = `Content/${cleanPath}`;
-  } else if (!cleanPath.startsWith('Content/') && (cleanPath.includes('.jpg') || cleanPath.includes('.png') || cleanPath.includes('.jpeg') || cleanPath.includes('.webp'))) {
-    // If it looks like a file but doesn't have Content/ prefix, try adding it
-    // Most images in this backend are under Content/
-    cleanPath = `Content/${cleanPath}`;
+    finalPath = `Content/${cleanPath}`;
+  } else if (!cleanPath.startsWith('Content/') && (cleanPath.toLowerCase().includes('.jpg') || cleanPath.toLowerCase().includes('.png') || cleanPath.toLowerCase().includes('.jpeg') || cleanPath.toLowerCase().includes('.webp'))) {
+    finalPath = `Content/${cleanPath}`;
   }
 
   const base = BASE_URL.replace(/\/+$/, '');
-  const suffix = cleanPath.replace(/^\/+/, '');
+  const suffix = finalPath.replace(/^\/+/, '');
   
   // Encode the suffix to handle spaces and special characters in filenames
   const encodedSuffix = suffix.split('/').map(part => encodeURIComponent(part)).join('/');
@@ -52,6 +51,6 @@ export function fixImagePath(path?: string | null) {
   const separator = encodedSuffix.includes('?') ? '&' : '?';
   const finalUrl = `${base}/${encodedSuffix}${separator}v=${CACHE_BUSTER}`;
   
-  // console.log(`[fixImagePath] Original: ${trimmedPath} -> Final: ${finalUrl}`);
+  console.log(`[fixImagePath] Mapping: "${path}" -> "${finalUrl}"`);
   return finalUrl;
 }
