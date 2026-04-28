@@ -26,30 +26,34 @@ export function AuthImage({ src, alt, className, fallback = "/placeholder.svg" }
     setError(false);
 
     // Fetch the image with the Authorization header
-    console.log(`[AuthImage] Fetching: ${src}`);
-    fetch(src, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    const fetchImage = async () => {
+      try {
+        console.log(`[AuthImage] Attempting to fetch: ${src}`);
+        const response = await fetch(src, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache'
+          }
+        });
+
+        if (!response.ok) {
+          console.warn(`[AuthImage] HTTP Error ${response.status} for ${src}. Falling back.`);
+          throw new Error(`Status ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        setImageSrc(objectUrl);
+        setIsLoading(false);
+      } catch (err: any) {
+        console.error(`[AuthImage] Error for ${src}:`, err.message);
+        setError(true);
+        setImageSrc(fallback);
+        setIsLoading(false);
       }
-    })
-    .then(response => {
-      if (!response.ok) {
-        console.error(`[AuthImage] HTTP Error ${response.status} for ${src}`);
-        throw new Error(`Failed to fetch image: ${response.status}`);
-      }
-      return response.blob();
-    })
-    .then(blob => {
-      const objectUrl = URL.createObjectURL(blob);
-      setImageSrc(objectUrl);
-      setIsLoading(false);
-    })
-    .catch(err => {
-      console.error(`[AuthImage] Error for ${src}:`, err);
-      setError(true);
-      setImageSrc(fallback);
-      setIsLoading(false);
-    });
+    };
+
+    fetchImage();
 
     // Cleanup URL to prevent memory leaks
     return () => {

@@ -20,33 +20,35 @@ export function fixImagePath(path?: string | null) {
     return trimmedPath;
   }
 
-  // If it's a full URL to mallusmart, ensure it uses the correct API domain
+  // Handle full URLs to mallusmart
+  let cleanPath = trimmedPath;
   if (trimmedPath.includes("mallusmart.com")) {
-    const relativePath = trimmedPath.split("mallusmart.com").pop()?.replace(/^\/+/, '') || "";
-    // If it's an upload path, ensure it points to the Content/uploads directory on the backend
-    const cleanPath = relativePath.startsWith('Content/uploads/') ? relativePath : 
-                     relativePath.startsWith('uploads/') ? `Content/${relativePath}` : 
-                     relativePath;
-    
-    // Ensure we don't have double slashes if BASE_URL ends with / or cleanPath starts with /
-    const base = BASE_URL.replace(/\/+$/, '');
-    const suffix = cleanPath.replace(/^\/+/, '');
-    return `${base}/${suffix}`;
+    cleanPath = trimmedPath.split("mallusmart.com").pop()?.replace(/^\/+/, '') || "";
   }
   
   // If already absolute URL (other than mallusmart)
-  if (trimmedPath.startsWith("http")) {
-    return trimmedPath;
+  if (cleanPath.startsWith("http")) {
+    return cleanPath;
   }
   
-  // Clean the path and return full URL
-  const cleanPath = trimmedPath.replace(/^\/+/, '').replace(/^api\//, '');
+  // Standardize upload paths: ensure they start with Content/uploads/
+  // Backend returns paths like "uploads/image.jpg" or "Content/uploads/image.jpg"
+  cleanPath = cleanPath.replace(/^\/+/, '').replace(/^api\//, '');
+  
+  if (cleanPath.startsWith('uploads/')) {
+    cleanPath = `Content/${cleanPath}`;
+  } else if (!cleanPath.startsWith('Content/') && (cleanPath.includes('.jpg') || cleanPath.includes('.png') || cleanPath.includes('.jpeg') || cleanPath.includes('.webp'))) {
+    // If it looks like a file but doesn't have Content/ prefix, try adding it
+    // Most images in this backend are under Content/
+    cleanPath = `Content/${cleanPath}`;
+  }
+
   const base = BASE_URL.replace(/\/+$/, '');
   const suffix = cleanPath.replace(/^\/+/, '');
   
-  // Use the global CACHE_BUSTER instead of Date.now() to ensure stable URLs during mapping
-  // This prevents the "duplicate images" issue where the same image gets different cache-bust strings
   const separator = suffix.includes('?') ? '&' : '?';
+  const finalUrl = `${base}/${suffix}${separator}v=${CACHE_BUSTER}`;
   
-  return `${base}/${suffix}${separator}v=${CACHE_BUSTER}`;
+  // console.log(`[fixImagePath] Original: ${trimmedPath} -> Final: ${finalUrl}`);
+  return finalUrl;
 }
