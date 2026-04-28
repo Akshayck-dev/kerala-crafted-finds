@@ -334,81 +334,45 @@ export async function addOrUpdateProduct(product: any, imageFile?: File | null, 
     const formData = new FormData();
     const now = new Date().toISOString();
 
-    // 1. Core Fields Mapping (Robust PascalCase Injection)
-    const pName = product.name || product.productName || "";
+    // 1. Core Fields Mapping (Aligned with Postman collection)
     formData.append("id", productId.toString());
-    formData.append("Id", productId.toString());
-    formData.append("ProductId", productId.toString());
-    formData.append("ProductID", productId.toString());
-
-    formData.append("productName", pName);
-    formData.append("ProductName", pName);
-
-    formData.append("description", product.description || "");
-    formData.append("Description", product.description || "");
-
-    formData.append("price", Number(product.price || 0).toString());
-    formData.append("Price", Number(product.price || 0).toString());
-
-    formData.append("quantity", Number(product.quantity || 0).toString());
-    formData.append("Quantity", Number(product.quantity || 0).toString());
-
-    formData.append("unit", product.unit || "pcs");
-    formData.append("Unit", product.unit || "pcs");
-
-    formData.append("categoryID", (product.categoryID || 1).toString());
-    formData.append("CategoryID", (product.categoryID || 1).toString());
-
-    formData.append("memberID", (product.memberID || 1).toString());
     formData.append("MemberID", (product.memberID || 1).toString());
-
-    formData.append("isActive", "true");
-    formData.append("IsActive", "true");
-
-    // 2. 🔥 NEW MANDATORY FIELDS (v10.0)
-    formData.append("createdOn", product.createdOn || now);
+    formData.append("CategoryID", (product.categoryID || 1).toString());
+    formData.append("ProductName", product.name || product.productName || "");
+    formData.append("Description", product.description || "");
+    formData.append("Price", Number(product.price || 0).toString());
+    formData.append("Quantity", Number(product.quantity || 0).toString());
+    formData.append("Unit", product.unit || "pcs");
+    formData.append("IsActive", (product.isActive ?? true).toString());
     formData.append("CreatedOn", product.createdOn || now);
-    formData.append("modifiedOn", now);
     formData.append("ModifiedOn", now);
-    formData.append("categoryName", product.categoryName || "");
-    formData.append("memberName", product.memberName || "");
-    formData.append("MemberName", product.memberName || "");
 
-    // 3. 🔥 IMAGE LOGIC (Robust Injection)
-    let fileToSend: File | null = null;
-
+    // 2. 🔥 IMAGE LOGIC (Updated per Postman & Request)
+    // Only send if a NEW file is selected. Otherwise pass empty/null as requested.
+    
     if (imageFile) {
-      console.log("[IMAGE] Main → Using selected binary file");
-      fileToSend = imageFile;
-    } else if (isUpdate && product.image) {
-      console.log("[IMAGE] Main → Converting existing URL to binary fallback:", product.image);
-      try {
-        fileToSend = await urlToFile(product.image);
-      } catch (err) {
-        console.error("Failed to convert image URL to File:", err);
-      }
+      console.log("[IMAGE] Main → Appending new file to 'MainProductImage'");
+      formData.append("MainProductImage", imageFile);
+    } else {
+      console.log("[IMAGE] Main → No change, skipping 'MainProductImage'");
+      // Optionally append empty string if backend requires the key to exist
+      // formData.append("MainProductImage", ""); 
     }
 
-    if (fileToSend) {
-      formData.append("image", fileToSend);
-      console.log("[DEBUG] Appended main image as 'image'");
-    }
-
-    // 4. 🔥 MULTIPLE GALLERY IMAGES (images[])
     if (otherImages && otherImages.length > 0) {
-      console.log(`[IMAGE] Gallery → Processing ${otherImages.length} images`);
-
-      otherImages.forEach((file, index) => {
+      console.log(`[IMAGE] Gallery → Appending ${otherImages.length} files to 'ProductGalleryImage'`);
+      otherImages.forEach((file) => {
         if (file instanceof File) {
-          formData.append("images[]", file);
-          console.log(`[DEBUG] Appended gallery image ${index + 1} as 'images[]': ${file.name}`);
+          formData.append("ProductGalleryImage", file);
         }
       });
+    } else {
+      console.log("[IMAGE] Gallery → No change, skipping 'ProductGalleryImage'");
     }
 
-    // 5. 🔍 Debug: Verify EXACT FormData keys before sending
+    // 3. 🔍 Debug: Verify EXACT FormData keys before sending
     const token = typeof window !== 'undefined' ? (localStorage.getItem("adminToken") || "").replace(/^"|"$/g, '') : "";
-    console.log(`--- FINAL FormData Payload (v10.2) --- Token Present: ${!!token}`);
+    console.log(`--- FINAL FormData Payload (Postman Sync) ---`);
     for (let pair of (formData as any).entries()) {
       const val = pair[1];
       console.log(`  ${pair[0]}:`, val instanceof File ? `File(${val.name}, ${val.size}b)` : val);
