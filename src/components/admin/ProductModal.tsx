@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { addOrUpdateProduct, fetchCategories, fetchMembers, urlToFile } from "@/lib/api";
+import { addOrUpdateProduct, fetchCategories, fetchMembers, urlToFile, deleteProductImage } from "@/lib/api";
 import { type Product, type Category, type Member } from "@/lib/data";
 import { Loader2, Upload } from "lucide-react";
 import { AuthImage } from "@/components/AuthImage";
@@ -373,7 +373,28 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
                         <button
                           type="button"
                           className="absolute top-1 right-1 h-5 w-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                          onClick={() => {
+                          onClick={async () => {
+                            const isExistingImage = url.startsWith('/api/') || url.includes('mallusmart.com');
+                            const productId = Number(formData.id);
+
+                            if (isExistingImage && productId > 0) {
+                              try {
+                                // Extract filename from URL (e.g., /api/uploads/name.jpg -> name.jpg)
+                                const filename = url.split('/').pop()?.split('?')[0] || "";
+                                if (filename) {
+                                  const confirmDelete = window.confirm("Are you sure you want to permanently delete this image from the server?");
+                                  if (!confirmDelete) return;
+
+                                  await deleteProductImage(productId, filename);
+                                  toast.success("Image deleted from server");
+                                }
+                              } catch (err) {
+                                console.error("Failed to delete image:", err);
+                                toast.error("Failed to delete image from server");
+                                return; // Don't remove from UI if API fails
+                              }
+                            }
+
                             // 🔥 SIMPLE + SAFE REMOVE (1-to-1 mapping)
                             setOtherPreviewUrls(prev => prev.filter((_, i) => i !== idx));
                             setOtherImageFiles(prev => prev.filter((_, i) => i !== idx));

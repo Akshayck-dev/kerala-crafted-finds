@@ -3,11 +3,11 @@ import type { Product, Category, Member } from "./data";
 import { toast } from "sonner";
 import { useLoadingStore } from "./loading-store";
 
+// For custom domain deployments, ensure your server proxy (Nginx/Apache) 
+// is configured to forward this path to the backend.
 export const BASE_URL = "/api";
-export const CACHE_BUSTER = "FORCE_UPDATE_v10_4_" + Date.now();
-console.log(`[API] Cache Buster Active: ${CACHE_BUSTER} | Base: ${BASE_URL}`);
-
-console.log("[API] Module loaded. Version: 1.0.4 - PROXY_AWARE");
+export const CACHE_BUSTER = "FORCE_UPDATE_v10_5_" + Date.now();
+console.log(`[API] Environment: ${window.location.hostname} | Base: ${BASE_URL}`);
 
 // --- Helper Functions ---
 
@@ -105,11 +105,17 @@ async function safeFetch(url: string, options: RequestInit = {}, retry = true): 
       signal: controller.signal,
     });
 
-    console.log(`[API] ${url} -> status ${response.status} (${response.statusText}) | Redirected: ${response.redirected} | Final URL: ${response.url}`);
-    if (response.status !== 200 || response.url.includes("index.html") || (typeof response.url === 'string' && !response.url.includes("/api/"))) {
+    const contentType = response.headers.get("content-type") || "";
+    console.log(`[API] ${url} -> status ${response.status} | Content-Type: ${contentType} | Final URL: ${response.url}`);
+    
+    if (!response.ok || !contentType.includes("application/json") || response.url.includes("index.html")) {
         const clone = response.clone();
         const text = await clone.text().catch(() => "N/A");
-        console.warn(`[API] Error/HTML Body for ${url}:`, text.substring(0, 500));
+        if (text.includes("<!DOCTYPE html>") || text.includes("<html")) {
+            console.error(`[API] HTML Response detected for JSON request to ${url}`);
+        } else {
+            console.warn(`[API] Error/Non-JSON Body for ${url}:`, text.substring(0, 500));
+        }
     }
     clearTimeout(timeoutId);
 
@@ -131,49 +137,47 @@ async function safeFetch(url: string, options: RequestInit = {}, retry = true): 
   }
 }
 
-async function handleResponse(response: Response) {
-  if (response.status === 401) {
-    localStorage.removeItem("adminToken");
-    toast.error("Session expired. Please login again.");
-    setTimeout(() => {
-      window.location.href = "/admin/login";
-    }, 1500);
-    throw new Error("Unauthorized. Redirecting to login...");
-  }
+async function handleResponse(res: Response) {
+  const contentType = res.headers.get("content-type") || "";
 
-  // For 500 errors, the body might not be JSON or might be an ASP.NET error page
-  if (response.status === 500) {
-    const errorText = await response.clone().text().catch(() => "Unknown Server Error");
-    const endpoint = response.url.split('/').pop() || "unknown";
-
-    // Log the error but do NOT purge the token on 500. 
-    // Purging should only happen on 401 Unauthorized to avoid frustrating logouts during backend instability.
-    console.error(`Critical Backend Error (500) at ${endpoint}:`, errorText);
-    throw new Error(`[${endpoint.toUpperCase()}] Backend Error (500): The server crashed. [Detail: ${errorText.substring(0, 200)}...]`);
-  }
-
-  let data;
-  const clone = response.clone();
-  try {
-    data = await response.json();
-    console.log(`[API] Parsed JSON response for ${response.url.split('/').pop()}:`, data);
-  } catch (e) {
-    data = await clone.text();
-    console.log(`[API] Parsed TEXT response for ${response.url.split('/').pop()}:`, data.substring(0, 100));
-    // If it's just a string, return it as is
-    return data;
-  }
-
-  if (!response.ok || data.success === false) {
-    // Check for detailed validation errors
-    if (data.errors) {
-      const firstError = Object.values(data.errors)[0];
-      const detail = Array.isArray(firstError) ? firstError[0] : firstError;
-      throw new Error(`Validation Error: ${detail || "Check all fields"}`);
+  if (!res.ok) {
+    // 401: Unauthorized / Token Expired
+    if (res.status === 401) {
+      console.warn("[AUTH] Unauthorized - token issue or expired.");
+      localStorage.removeItem("adminToken");
+      toast.error("Session expired. Please login again.");
+      setTimeout(() => {
+        window.location.href = "/admin/login";
+      }, 1500);
+      throw new Error("Unauthorized. Redirecting to login...");
     }
-    const errorMsg = data.message || data.error || (typeof data === 'string' ? data : null) || `API Request failed with status ${response.status}`;
-    console.error(`[API ERROR] Status: ${response.status} | Message: ${errorMsg}`);
-    throw new Error(errorMsg);
+    
+    // 500: Server Error
+    if (res.status === 500) {
+      const errorText = await res.clone().text().catch(() => "Unknown Server Error");
+      console.error(`❌ Critical Backend Error (500):`, errorText);
+      throw new Error(`Backend Error (500): The server encountered an issue.`);
+    }
+
+    throw new Error(`HTTP error! status: ${res.status}`);
+  }
+
+  // 🔥 CRITICAL: Detect HTML fallback clearly (Edge-Safe)
+  if (!contentType.includes("application/json")) {
+    const text = await res.text();
+    
+    if (text.startsWith("<!DOCTYPE html>") || text.includes("<html")) {
+      console.error("❌ HTML detected instead of JSON. Check server proxy order.");
+      throw new Error("Proxy misconfiguration: API returned HTML (SPA fallback).");
+    }
+    
+    return text; // Return as string if it's a simple success message
+  }
+
+  const data = await res.json();
+  
+  if (data && data.success === false) {
+    throw new Error(data.message || "API request failed");
   }
 
   return data;
@@ -187,7 +191,12 @@ export async function fetchProducts(onlyActive: boolean = true): Promise<Product
     const response = await safeFetch(`${BASE_URL}/Product/GetAllProdutcs?t=${Date.now()}`, {
       headers: getAuthHeaders("GET", false)
     });
-    const data = await handleResponse(response);
+    let data = await handleResponse(response);
+    
+    // Support both direct array and { data: [...] } structure
+    if (!Array.isArray(data) && data && typeof data === 'object' && Array.isArray((data as any).data)) {
+      data = (data as any).data;
+    }
 
     if (!Array.isArray(data)) {
       throw new Error("API did not return an array of products");
@@ -246,8 +255,14 @@ export async function fetchCategories(): Promise<Category[]> {
     const response = await safeFetch(`${BASE_URL}/Product/GetAllCategories`, {
       headers: getAuthHeaders("GET", false),
     });
-    const data = await handleResponse(response);
-    console.log("[API] GetAllCategories Raw Data (First Item):", data[0]);
+    let data = await handleResponse(response);
+    
+    // Support both direct array and { data: [...] } structure
+    if (!Array.isArray(data) && data && typeof data === 'object' && Array.isArray((data as any).data)) {
+      data = (data as any).data;
+    }
+    
+    console.log("[API] GetAllCategories Raw Data (First Item):", Array.isArray(data) ? data[0] : "N/A");
 
     return (Array.isArray(data) ? data : []).map((c: any, index: number) => ({
       // Prioritize actual database IDs from the backend
@@ -451,13 +466,34 @@ export async function deleteProduct(productId: number) {
   }
 }
 
+export async function deleteProductImage(productId: number, imageName: string) {
+  try {
+    // The API expects productId and imageName as query parameters in a POST request
+    const response = await safeFetch(`${BASE_URL}/Product/DeleteProductImage?productId=${productId}&imageName=${encodeURIComponent(imageName)}`, {
+      method: "POST",
+      headers: getAuthHeaders("POST", false),
+      body: "", // Empty raw body as per Postman collection
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    console.error("API Error (DeleteProductImage):", error);
+    throw error;
+  }
+}
+
 // Member CRUD
 export async function fetchMembers(): Promise<Member[]> {
   try {
     const response = await safeFetch(`${BASE_URL}/User/GetAllMembers`, {
       headers: getAuthHeaders("GET", false),
     });
-    const data = await handleResponse(response);
+    let data = await handleResponse(response);
+    
+    // Support both direct array and { data: [...] } structure
+    if (!Array.isArray(data) && data && typeof data === 'object' && Array.isArray((data as any).data)) {
+      data = (data as any).data;
+    }
+
     console.log("[API] GetAllMembers Full Raw Data:", data);
 
     return (Array.isArray(data) ? data : []).map((m: any, index: number) => {
@@ -653,5 +689,40 @@ export async function changePassword(newPassword: string) {
     console.error("API Error (ChangePassword):", error);
     throw error;
   }
+}
+
+/**
+ * Register a new member (seller) online
+ */
+export async function registerMemberOnline(data: {
+  name: string;
+  businessName: string;
+  place: string;
+  district: string;
+  product: string;
+  contactNumber: string;
+  licenceNumber?: string;
+  ownProduct?: boolean;
+}) {
+  const payload = {
+    id: 0,
+    ...data,
+    licenceNumber: data.licenceNumber || "NA",
+    ownProduct: data.ownProduct ?? true,
+    createdOn: new Date().toISOString(),
+    modifiedOn: new Date().toISOString(),
+    isActive: true,
+    isRegistrationOnline: true
+  };
+
+  const response = await safeFetch(`${BASE_URL}/User/MembersOnlineRegistration`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
 }
 

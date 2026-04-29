@@ -43,6 +43,8 @@ export const Route = createRootRoute({
 
 import { AnimatePresence, motion } from "framer-motion";
 
+import { GlobalSpinner } from "@/components/GlobalSpinner";
+
 function RootComponent() {
   const [showSplash, setShowSplash] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -67,37 +69,41 @@ function RootComponent() {
     initializeApp();
   }, []);
 
-  if (isAdminRoute) {
-    return <Outlet />;
-  }
-
   return (
     <div className="flex min-h-screen flex-col">
       <TopLoadingBar />
-      {showSplash && (
-        <SplashScreen 
-          isLoading={isInitializing} 
-          onComplete={() => setShowSplash(false)} 
-        />
+      <GlobalSpinner />
+      
+      {isAdminRoute ? (
+        <Outlet />
+      ) : (
+        <>
+          {showSplash && (
+            <SplashScreen 
+              isLoading={isInitializing} 
+              onComplete={() => setShowSplash(false)} 
+            />
+          )}
+          <Header />
+          <main className="flex-1">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
+          </main>
+          <Footer />
+          <CartDrawer />
+          <CheckoutModal />
+          <WhatsAppButton />
+        </>
       )}
-      <Header />
-      <main className="flex-1">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
-      </main>
-      <Footer />
-      <CartDrawer />
-      <CheckoutModal />
-      <WhatsAppButton />
     </div>
   );
 }

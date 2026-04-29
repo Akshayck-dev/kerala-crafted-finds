@@ -86,6 +86,9 @@ const steps = [
   },
 ];
 
+import { registerMemberOnline } from "@/lib/api";
+import { toast } from "sonner";
+
 function SellPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -95,32 +98,64 @@ function SellPage() {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    // Build WhatsApp message from form data
-    const lines = [
-      `🛍️ *New Seller Application — Mallu’s Mart*`,
-      ``,
-      `👤 *Name:* ${formData.name}`,
-      `📱 *Phone:* ${formData.phone}`,
-      `📍 *Place:* ${formData.place}`,
-      `📦 *Product:* ${formData.product}`,
-    ];
-    if (formData.message.trim()) {
-      lines.push(`💬 *Message:* ${formData.message}`);
+    try {
+      // Split place and district if possible
+      const placeParts = formData.place.split(',').map(s => s.trim());
+      const place = placeParts[0] || "";
+      const district = placeParts[1] || place || "Kerala";
+
+      // Call API first
+      await registerMemberOnline({
+        name: formData.name,
+        businessName: "Seller Application", // Placeholder as form doesn't have business name yet
+        place: place,
+        district: district,
+        product: formData.product,
+        contactNumber: formData.phone,
+      });
+
+      // Build WhatsApp message from form data
+      const lines = [
+        `🛍️ *New Seller Application — Mallu’s Mart*`,
+        ``,
+        `👤 *Name:* ${formData.name}`,
+        `📱 *Phone:* ${formData.phone}`,
+        `📍 *Place:* ${formData.place}`,
+        `📦 *Product:* ${formData.product}`,
+      ];
+      if (formData.message.trim()) {
+        lines.push(`💬 *Message:* ${formData.message}`);
+      }
+
+      const text = encodeURIComponent(lines.join("\n"));
+      const whatsappUrl = `https://wa.me/919495532563?text=${text}`;
+
+      setSubmitted(true);
+      toast.success("Application registered successfully!");
+
+      // Open WhatsApp in a new tab
+      setTimeout(() => {
+        window.open(whatsappUrl, "_blank");
+      }, 800);
+    } catch (err: any) {
+      console.error("Registration failed:", err);
+      toast.error("Network error during registration, but you can still apply via WhatsApp.");
+      
+      // Still allow WhatsApp fallback if API fails
+      const lines = [`🛍️ *New Seller Application (Direct) — Mallu’s Mart*`, ``, `👤 *Name:* ${formData.name}`, `📱 *Phone:* ${formData.phone}`, `📍 *Place:* ${formData.place}`, `📦 *Product:* ${formData.product}`];
+      if (formData.message.trim()) lines.push(`💬 *Message:* ${formData.message}`);
+      const text = encodeURIComponent(lines.join("\n"));
+      window.open(`https://wa.me/919495532563?text=${text}`, "_blank");
+      setSubmitted(true);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const text = encodeURIComponent(lines.join("\n"));
-    const whatsappUrl = `https://wa.me/919495532563?text=${text}`;
-
-    setSubmitted(true);
-
-    // Open WhatsApp in a new tab
-    setTimeout(() => {
-      window.open(whatsappUrl, "_blank");
-    }, 800);
   };
 
   const handleChange = (field: string, value: string) => {
@@ -392,10 +427,20 @@ function SellPage() {
 
                   <Button
                     type="submit"
-                    className="h-14 w-full rounded-full bg-primary text-lg font-bold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+                    disabled={isSubmitting}
+                    className="h-14 w-full rounded-full bg-primary text-lg font-bold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-70"
                   >
-                    <MessageSquare className="mr-2 h-5 w-5" />
-                    Submit via WhatsApp
+                    {isSubmitting ? (
+                      <>
+                        <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        Processing Application...
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquare className="mr-2 h-5 w-5" />
+                        Submit via WhatsApp
+                      </>
+                    )}
                   </Button>
 
                   <p className="text-center text-xs text-muted-foreground">

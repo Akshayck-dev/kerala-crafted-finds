@@ -1,12 +1,14 @@
 {
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/api/uploads/:path*",
-      "destination": "https://api.mallusmart.com/uploads/:path*"
+      "source": "^/api/uploads/(.*)",
+      "destination": "https://api.mallusmart.com/uploads/$1"
     },
     {
-      "source": "/api/:path*",
-      "destination": "https://api.mallusmart.com/:path*"
+      "source": "^/api/(.*)",
+      "destination": "https://api.mallusmart.com/$1"
     },
     {
       "source": "/(.*)",

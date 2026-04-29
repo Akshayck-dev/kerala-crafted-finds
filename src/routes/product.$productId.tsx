@@ -46,17 +46,50 @@ function ProductDetailPage() {
 
   if (isSyncing) {
     return (
-      <div className="mx-auto max-w-[1200px] px-4 py-8">
-        <div className="mb-6 h-4 w-32 animate-pulse bg-muted rounded-full" />
-        <div className="grid gap-12 lg:grid-cols-2">
-           <Skeleton className="aspect-square w-full rounded-[2.5rem]" />
-           <div className="space-y-6 pt-4">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-12 w-3/4" />
-              <Skeleton className="h-8 w-1/4" />
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-16 w-full rounded-full" />
-           </div>
+      <div className="mx-auto max-w-[1200px] px-4 py-6 md:py-12">
+        <div className="mb-6 flex items-center gap-2">
+            <Skeleton className="h-4 w-4 rounded-full" />
+            <Skeleton className="h-4 w-32 rounded-full" />
+        </div>
+        
+        <div className="grid gap-12 lg:grid-cols-2 lg:items-start">
+            {/* Left: Image Skeleton */}
+            <div className="space-y-4">
+               <Skeleton className="aspect-square w-full rounded-[2.5rem]" />
+               <div className="flex gap-3">
+                  <Skeleton className="h-20 w-20 rounded-2xl" />
+                  <Skeleton className="h-20 w-20 rounded-2xl" />
+                  <Skeleton className="h-20 w-20 rounded-2xl" />
+               </div>
+            </div>
+
+            {/* Right: Info Skeleton */}
+            <div className="space-y-8 pt-4">
+               <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-[1px] flex-1" />
+                  </div>
+                  <Skeleton className="h-12 w-3/4 rounded-xl" />
+                  <Skeleton className="h-10 w-1/4 rounded-lg" />
+               </div>
+
+               <div className="space-y-4">
+                  <Skeleton className="h-24 w-full rounded-3xl" />
+                  <Skeleton className="h-20 w-full rounded-3xl" />
+               </div>
+
+               <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between pt-4">
+                  <div className="space-y-3">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-12 w-32 rounded-2xl" />
+                  </div>
+                  <div className="flex gap-3">
+                    <Skeleton className="h-16 w-48 rounded-2xl" />
+                    <Skeleton className="h-16 w-16 rounded-full" />
+                  </div>
+               </div>
+            </div>
         </div>
       </div>
     );
