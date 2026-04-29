@@ -5,7 +5,7 @@ import { useLoadingStore } from "./loading-store";
 
 // For custom domain deployments, ensure your server proxy (Nginx/Apache) 
 // is configured to forward this path to the backend.
-export const BASE_URL = "/api";
+export const BASE_URL = "https://api.mallusmart.com";
 export const CACHE_BUSTER = "FORCE_UPDATE_v10_5_" + Date.now();
 console.log(`[API] Environment: ${window.location.hostname} | Base: ${BASE_URL}`);
 
