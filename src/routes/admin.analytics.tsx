@@ -21,7 +21,7 @@ import {
   Mail,
   MapPin
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, toTitleCase } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/analytics")({
   component: AdminAnalytics,
@@ -477,9 +477,9 @@ function SellerAnalyticsModal({ stat, onClose, member, products }: {
                        <div key={p.id} className="flex items-center justify-between p-2 rounded-xl border border-slate-100 bg-slate-50/50">
                           <div className="flex items-center gap-2 overflow-hidden">
                              <div className="h-8 w-8 rounded-lg overflow-hidden border border-slate-200 shrink-0">
-                                <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
+                                <img src={p.image} alt={toTitleCase(p.name)} className="h-full w-full object-cover" />
                              </div>
-                             <span className="text-[10px] font-bold text-slate-700 truncate">{p.name}</span>
+                             <span className="text-[10px] font-bold text-slate-700 truncate">{toTitleCase(p.name)}</span>
                           </div>
                           <span className="text-[10px] font-black text-slate-900 shrink-0 ml-2">₹{p.price}</span>
                        </div>

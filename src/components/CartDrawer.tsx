@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
+import { toTitleCase } from "@/lib/utils";
+
 export function CartDrawer() {
   const { items, totalItems, totalPrice } = useCart();
   const { isOpen, toggleCart } = useCartDrawer();
@@ -54,14 +56,14 @@ export function CartDrawer() {
                     <div className="h-14 w-14 min-[380px]:h-16 min-[380px]:w-16 flex-shrink-0 overflow-hidden rounded-xl bg-muted border border-border/50">
                       <img
                         src={item.product.image}
-                        alt={item.product.name}
+                        alt={toTitleCase(item.product.name)}
                         className="h-full w-full object-cover"
                       />
                     </div>
                     <div className="flex flex-1 flex-col justify-between py-0.5">
                       <div className="flex justify-between gap-2">
-                        <h4 className="line-clamp-2 text-[10px] min-[380px]:text-[12px] sm:text-sm font-bold leading-tight uppercase tracking-tight">
-                          {item.product.name}
+                        <h4 className="line-clamp-2 text-[10px] min-[380px]:text-[12px] sm:text-sm font-bold leading-tight tracking-tight">
+                          {toTitleCase(item.product.name)}
                         </h4>
                         <Button
                           variant="ghost"

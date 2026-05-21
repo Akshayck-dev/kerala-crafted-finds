@@ -5,6 +5,7 @@ import { Trash2, ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { PageHeader } from "@/components/PageHeader";
 import { QuantitySelector } from "@/components/QuantitySelector";
+import { toTitleCase } from "@/lib/utils";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -56,7 +57,7 @@ function CartPage() {
                <div className="relative aspect-square w-full sm:w-24 lg:w-32 flex-shrink-0 overflow-hidden rounded-[1.8rem] bg-muted shadow-sm">
                  <img
                    src={product.image}
-                   alt={product.name}
+                   alt={toTitleCase(product.name)}
                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                  />
                </div>
@@ -67,8 +68,8 @@ function CartPage() {
                     <span className="text-[9px] font-bold tracking-widest text-[#B68D40] uppercase">
                         {product.category?.replace("-", " ")}
                     </span>
-                    <h3 className="text-lg font-black italic tracking-tight text-foreground uppercase line-clamp-1">
-                        {product.name}
+                    <h3 className="text-lg font-black italic tracking-tight text-foreground line-clamp-1">
+                        {toTitleCase(product.name)}
                     </h3>
                  </div>
                  

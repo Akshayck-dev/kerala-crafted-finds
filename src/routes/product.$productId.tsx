@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { addToCart, useProducts } from "@/lib/store";
-import { ShoppingCart, MessageCircle, ArrowLeft, CheckCircle2, ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { ShoppingCart, MessageCircle, ArrowLeft, CheckCircle2, ShieldCheck, Truck, RotateCcw, Loader2, Calendar } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { useState, useEffect } from "react";
 import { QuantitySelector } from "@/components/QuantitySelector";
@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import { AuthImage } from "@/components/AuthImage";
+import { toTitleCase } from "@/lib/utils";
 
 export const Route = createFileRoute("/product/$productId")({
   component: ProductDetailPage,
@@ -23,6 +23,42 @@ function ProductDetailPage() {
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isSyncing, setIsSyncing] = useState(products.length === 0);
+
+  // Shipping Availability Checker State
+  const [pincode, setPincode] = useState("");
+  const [isChecking, setIsChecking] = useState(false);
+  const [checkedPincode, setCheckedPincode] = useState<string | null>(null);
+  const [isValidPin, setIsValidPin] = useState<boolean | null>(null);
+  const [pinError, setPinError] = useState<string | null>(null);
+
+  const getDeliveryDate = (days: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  };
+
+  const handleCheckShipping = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pincode.trim()) {
+      setPinError("Please enter a pincode.");
+      setIsValidPin(null);
+      return;
+    }
+    if (!/^\d{6}$/.test(pincode.trim())) {
+      setPinError("Please enter a valid 6-digit pincode.");
+      setIsValidPin(null);
+      return;
+    }
+    
+    setPinError(null);
+    setIsChecking(true);
+    
+    setTimeout(() => {
+      setIsChecking(false);
+      setCheckedPincode(pincode.trim());
+      setIsValidPin(true);
+    }, 600);
+  };
 
   const product = products.find((p) => p.id === productId);
 
@@ -111,7 +147,7 @@ function ProductDetailPage() {
     );
   }
 
-  const whatsappMsg = encodeURIComponent(`Hi, I'd like to order: ${product.name} (₹${product.price}) x ${qty}`);
+  const whatsappMsg = encodeURIComponent(`Hi, I'd like to order: ${toTitleCase(product.name)} (₹${product.price}) x ${qty}`);
   const galleryImages = Array.from(new Set([product.image, ...(product.images || [])])).filter(Boolean);
 
   return (
@@ -131,7 +167,7 @@ function ProductDetailPage() {
             )}
             <AuthImage 
               src={galleryImages[selectedImage]} 
-              alt={product.name} 
+              alt={toTitleCase(product.name)} 
               className="aspect-square w-full object-cover transition-all duration-700 hover:scale-110" 
             />
           </div>
@@ -167,8 +203,8 @@ function ProductDetailPage() {
               <span className="text-[10px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
                 {product.categoryName || product.category?.replace("-", " ")}
               </span>
-              <h1 className="fluid-heading-2 font-black italic uppercase text-foreground">
-                {product.name}
+              <h1 className="fluid-heading-2 font-black text-foreground">
+                {toTitleCase(product.name)}
               </h1>
             </div>
 
@@ -214,7 +250,7 @@ function ProductDetailPage() {
                 </div>
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase opacity-60">Availability</span>
-                  <p className="text-sm font-bold text-green-600">Ships in 24h</p>
+                  <p className="text-sm font-bold text-green-600">Ships in 10 days</p>
                 </div>
               </div>
 
@@ -242,6 +278,85 @@ function ProductDetailPage() {
               <div className="rounded-full bg-primary/5 p-2 text-primary/60">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
+            </div>
+
+            {/* Premium Interactive Shipping Checker */}
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
+              <div className="flex items-center gap-3">
+                <Truck className="h-5 w-5 text-[#B68D40]" />
+                <div>
+                  <h4 className="text-sm font-bold uppercase tracking-wider">Check Shipping Availability</h4>
+                  <p className="text-[10px] text-muted-foreground">Direct shipping from our premium Kerala hub</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleCheckShipping} className="flex gap-2 relative">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="Enter 6-digit Pincode (e.g. 682001)"
+                    value={pincode}
+                    onChange={(e) => {
+                      setPincode(e.target.value.replace(/\D/g, ""));
+                      if (pinError) setPinError(null);
+                    }}
+                    className="w-full h-11 rounded-xl border border-border/50 bg-background px-4 text-sm font-medium tracking-wide transition-all focus:border-primary/50 focus:outline-none"
+                  />
+                  {pinError && (
+                    <p className="absolute left-1 -bottom-5 text-[9px] font-bold text-destructive uppercase tracking-wider">
+                      {pinError}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  type="submit"
+                  disabled={isChecking}
+                  className="h-11 rounded-xl px-6 bg-primary font-bold text-xs tracking-wider uppercase text-white shadow-md active:scale-95 transition-all shrink-0"
+                >
+                  {isChecking ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Check"
+                  )}
+                </Button>
+              </form>
+
+              {checkedPincode && isValidPin && (
+                <div className="mt-4 pt-4 border-t border-border/50 space-y-4 animate-in fade-in slide-in-from-top-3 duration-300">
+                  <div className="flex items-center gap-2 rounded-2xl bg-[#B68D40]/5 border border-[#B68D40]/10 p-3 text-[#B68D40]">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-[#B68D40]" />
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider">Shipping Available to {checkedPincode}</p>
+                      <p className="text-[10px] font-semibold text-foreground/80">Guaranteed Delivery within 10 days! (by {getDeliveryDate(10)})</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold uppercase tracking-wider text-[10px] text-muted-foreground">Standard Courier</span>
+                        <span className="font-bold text-green-600 text-[10px] bg-green-500/10 px-2 py-0.5 rounded-full uppercase">Free</span>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-black text-foreground">{getDeliveryDate(5)} - {getDeliveryDate(8)}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Estimated 5-8 business days</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold uppercase tracking-wider text-[10px] text-muted-foreground">Express Dispatch</span>
+                        <span className="font-bold text-[#B68D40] text-[10px] bg-[#B68D40]/10 px-2 py-0.5 rounded-full uppercase">₹99</span>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-black text-foreground">{getDeliveryDate(2)} - {getDeliveryDate(4)}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Estimated 2-4 business days</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

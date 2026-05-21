@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { clearCart, useCart, useCheckoutModal } from "@/lib/store";
 import { useState, useEffect } from "react";
 import { CheckCircle2, ShieldCheck, Loader2, Send, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, toTitleCase } from "@/lib/utils";
 import { saveOrder } from "@/lib/api";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -98,7 +98,7 @@ export function CheckoutModal() {
         
         waText += `*Order Items:*\n`;
         items.forEach((item, idx) => {
-           waText += `${idx + 1}. *${item.product.name}*\n`;
+           waText += `${idx + 1}. *${toTitleCase(item.product.name)}*\n`;
            waText += `   Qty: ${item.quantity} | Total: ₹${item.product.price * item.quantity}\n`;
         });
         
@@ -213,13 +213,13 @@ export function CheckoutModal() {
             "flex-shrink-0 overflow-hidden rounded-xl bg-white shadow-sm border border-border/10",
             isMobileView ? "h-14 w-14" : "h-16 w-16"
           )}>
-            <img src={item.product.image} alt={item.product.name} className="h-full w-full object-cover" />
+            <img src={item.product.image} alt={toTitleCase(item.product.name)} className="h-full w-full object-cover" />
           </div>
           <div className="flex flex-1 flex-col justify-center">
             <h4 className={cn(
               "font-bold text-foreground leading-tight line-clamp-1",
               isMobileView ? "text-sm" : "text-sm"
-            )}>{item.product.name}</h4>
+            )}>{toTitleCase(item.product.name)}</h4>
             <p className="text-[9px] font-medium text-muted-foreground mt-0.5 uppercase tracking-wider">Qty {item.quantity}</p>
           </div>
           <div className={cn(

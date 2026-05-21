@@ -9,6 +9,7 @@ import { type Order, type Product, type Member } from "@/lib/data";
 import { fetchProducts, fetchMembers } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Package, User, MapPin, Calendar, Clock, CreditCard } from "lucide-react";
+import { toTitleCase } from "@/lib/utils";
 
 interface OrderDetailModalProps {
   order: Order | null;
@@ -144,7 +145,7 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
                                                         {p && p.image ? (
                                                             <img 
                                                                 src={p.image} 
-                                                                alt={p.name} 
+                                                                alt={toTitleCase(p.name)} 
                                                                 className="h-full w-full object-cover"
                                                                 onError={(e) => (e.currentTarget.style.display = 'none')}
                                                             />
@@ -152,7 +153,7 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
                                                             <Package className="h-5 w-5 text-slate-400" />
                                                         )}
                                                     </div>
-                                                    <span className="font-bold text-slate-900 text-xs">{p ? p.name : `Product #${item.productId}`}</span>
+                                                    <span className="font-bold text-slate-900 text-xs">{p ? toTitleCase(p.name) : `Product #${item.productId}`}</span>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-4 text-center font-medium">{item.quantity}</td>

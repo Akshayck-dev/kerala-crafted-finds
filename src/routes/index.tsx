@@ -101,13 +101,13 @@ function HomePage() {
                   <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
                   
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white">
-                     <div className="mb-6 flex animate-in fade-in slide-in-from-bottom-4 duration-700 items-center gap-3">
+                     <div className="mb-4 flex animate-in fade-in slide-in-from-bottom-4 duration-700 items-center gap-3">
                        <span className="text-[10px] font-bold tracking-[0.4em] text-white/80 uppercase">
                           Kerala Crafted Finds —— {slide.label}
                        </span>
                     </div>
 
-                    <h2 className="max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-1000 text-4xl font-black italic tracking-tighter uppercase min-[400px]:text-5xl sm:text-7xl lg:text-8xl leading-[0.9]">
+                    <h2 className="max-w-3xl animate-in fade-in slide-in-from-bottom-6 duration-1000 text-3xl font-black italic tracking-tight uppercase min-[400px]:text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.1]">
                       {slide.title.split(' ').map((word, i) => (
                         <React.Fragment key={i}>
                           {i > 0 && <br className="min-[500px]:hidden" />} {word}
@@ -115,18 +115,18 @@ function HomePage() {
                       ))}
                     </h2>
                     
-                    <p className="mt-6 max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-1000 text-lg font-medium text-white/90 sm:text-2xl">
+                    <p className="mt-4 max-w-xl animate-in fade-in slide-in-from-bottom-8 duration-1000 text-xs font-medium text-white/80 sm:text-sm md:text-base leading-relaxed">
                       {slide.subtitle}
                     </p>
 
-                    <div className="mt-8 flex animate-in fade-in slide-in-from-bottom-10 duration-1000 flex-col gap-3 min-[400px]:flex-row sm:gap-6">
+                    <div className="mt-6 flex animate-in fade-in slide-in-from-bottom-10 duration-1000 flex-col gap-3 min-[400px]:flex-row sm:gap-4">
                       <Link to="/shop">
-                        <Button size="lg" className="h-12 sm:h-14 rounded-full bg-white px-8 sm:px-10 text-base sm:text-lg font-bold text-black ring-offset-black transition-all hover:scale-105 hover:bg-white/90 active:scale-95">
+                        <Button size="lg" className="h-11 sm:h-12 rounded-full bg-white px-6 sm:px-8 text-xs sm:text-sm font-semibold text-black ring-offset-black transition-all hover:scale-105 hover:bg-white/90 active:scale-95">
                           Explore Products
                         </Button>
                       </Link>
                       <Link to="/sell">
-                        <Button size="lg" className="h-12 sm:h-14 rounded-full bg-white px-8 sm:px-10 text-base sm:text-lg font-bold text-black ring-offset-black transition-all hover:scale-105 hover:bg-white/90 active:scale-95">
+                        <Button size="lg" className="h-11 sm:h-12 rounded-full bg-white px-6 sm:px-8 text-xs sm:text-sm font-semibold text-black ring-offset-black transition-all hover:scale-105 hover:bg-white/90 active:scale-95">
                           Start Selling
                         </Button>
                       </Link>

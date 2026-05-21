@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Edit, Trash2, AlertCircle } from "lucide-react";
 import { ProductModal } from "@/components/admin/ProductModal";
 import { AuthImage } from "@/components/AuthImage";
+import { toTitleCase } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -195,13 +196,13 @@ function AdminProducts() {
                          <div className="h-12 w-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
                              <AuthImage 
                                  src={product.image} 
-                                 alt={product.name ?? ""} 
+                                 alt={toTitleCase(product.name ?? "")} 
                                  className="h-full w-full object-cover" 
                                  fallback="/placeholder.svg"
                              />
                          </div>
                          <div className="flex flex-col">
-                            <span className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors">{product.name ?? "N/A"}</span>
+                            <span className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors">{toTitleCase(product.name ?? "N/A")}</span>
                             <span className="text-xs text-slate-500 mt-0.5">ID: {product.id}</span>
                          </div>
                       </div>

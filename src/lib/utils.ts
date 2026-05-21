@@ -56,3 +56,13 @@ export function fixImagePath(path?: string | null) {
   console.log(`[fixImagePath] "${path}" -> "${finalUrl}"`);
   return finalUrl;
 }
+
+export function toTitleCase(str?: string | null): string {
+  if (!str || typeof str !== "string") return "";
+  return str
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}

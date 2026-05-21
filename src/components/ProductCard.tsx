@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/lib/data";
 import { addToCart, toggleWishlist, useWishlist } from "@/lib/store";
-import { cn } from "@/lib/utils";
+import { cn, toTitleCase } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 import { AuthImage } from "./AuthImage";
@@ -29,7 +29,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         <Link to="/product/$productId" params={{ productId: product.id }} className="h-full w-full">
           <AuthImage
             src={product.image}
-            alt={product.name}
+            alt={toTitleCase(product.name)}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
         </Link>
@@ -74,7 +74,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         
         <Link to="/product/$productId" params={{ productId: product.id }} className="group/title">
           <h3 className="text-[11px] min-[400px]:text-xs sm:text-base font-bold leading-tight text-foreground transition-colors group-hover/title:text-primary line-clamp-1">
-            {product.name}
+            {toTitleCase(product.name)}
           </h3>
           <p className="text-[8px] min-[400px]:text-[9px] sm:text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider mt-0.5 flex flex-wrap gap-x-1">
             <span>By {product.sellerName || "Local Seller"}</span>

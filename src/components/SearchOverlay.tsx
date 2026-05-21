@@ -4,6 +4,7 @@ import { Search, X, ArrowRight, TrendingUp } from "lucide-react";
 import { useProducts } from "@/lib/store";
 import { Link } from "@tanstack/react-router";
 import type { Product } from "@/lib/data";
+import { toTitleCase } from "@/lib/utils";
 
 interface SearchOverlayProps {
   isOpen: boolean;
@@ -184,14 +185,14 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
                           <img
                             src={product.image}
-                            alt={product.name}
+                            alt={toTitleCase(product.name)}
                             className="h-full w-full object-cover transition-transform group-hover:scale-110"
                           />
                         </div>
                         {/* Product Info */}
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-bold text-foreground">
-                            {product.name}
+                            {toTitleCase(product.name)}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {product.categoryName || product.category}

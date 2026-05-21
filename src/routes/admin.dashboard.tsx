@@ -6,7 +6,7 @@ import { fetchProducts, fetchMembers, fetchOrders } from "@/lib/api";
 import { type Product, type Member, type Order } from "@/lib/data";
 import { Package, ShoppingCart, Users, BadgeDollarSign, AlertTriangle, Clock, ArrowUpRight, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { cn, toTitleCase } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/dashboard")({
   component: AdminDashboard,
@@ -263,7 +263,7 @@ function AdminDashboard() {
                                     <img src={product.image} className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all" onError={(e) => e.currentTarget.src = "/placeholder.svg"}/>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-black text-slate-900 truncate uppercase tracking-tight">{product.name}</p>
+                                    <p className="text-xs font-black text-slate-900 truncate tracking-tight">{toTitleCase(product.name)}</p>
                                     <p className="text-[10px] font-bold text-rose-600 mt-1 uppercase">Only {product.quantity} {product.unit} left</p>
                                 </div>
                                 <ArrowUpRight className="h-4 w-4 text-slate-300" />
