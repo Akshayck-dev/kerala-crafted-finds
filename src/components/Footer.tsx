@@ -45,6 +45,17 @@ export function Footer() {
         <div className="mt-6 border-t border-border pt-4 text-center">
           <p className="text-xs text-muted-foreground font-bold italic uppercase tracking-tighter">Mallu’s Mart — Home to Horizon</p>
           <p className="text-[10px] text-muted-foreground/60 mt-1 uppercase tracking-[0.2em]">© 2026 Mallu’s Mart Kerala. All rights reserved.</p>
+          <p className="text-[10px] text-muted-foreground/60 mt-1 tracking-wider">
+            Developed by{" "}
+            <a 
+              href="https://enempvtltd.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-semibold text-primary hover:underline transition-colors"
+            >
+              ENEM
+            </a>
+          </p>
         </div>
       </div>
     </footer>

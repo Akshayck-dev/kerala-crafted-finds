@@ -92,7 +92,7 @@ function HomePage() {
           <CarouselContent>
             {heroSlides.map((slide, index) => (
               <CarouselItem key={index}>
-                <div className="relative h-[55vh] w-full sm:h-[85vh]">
+                <div className="relative h-[50vh] w-full sm:h-[70vh]">
                   <img
                     src={slide.image}
                     alt={slide.title}
@@ -102,12 +102,12 @@ function HomePage() {
                   
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white">
                      <div className="mb-4 flex animate-in fade-in slide-in-from-bottom-4 duration-700 items-center gap-3">
-                       <span className="text-[10px] font-bold tracking-[0.4em] text-white/80 uppercase">
+                       <span className="text-xs font-semibold tracking-wider text-white/80">
                           Kerala Crafted Finds —— {slide.label}
                        </span>
                     </div>
 
-                    <h2 className="max-w-3xl animate-in fade-in slide-in-from-bottom-6 duration-1000 text-3xl font-black italic tracking-tight uppercase min-[400px]:text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.1]">
+                    <h2 className="max-w-3xl animate-in fade-in slide-in-from-bottom-6 duration-1000 text-2xl font-extrabold tracking-tight min-[400px]:text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-tight">
                       {slide.title.split(' ').map((word, i) => (
                         <React.Fragment key={i}>
                           {i > 0 && <br className="min-[500px]:hidden" />} {word}
