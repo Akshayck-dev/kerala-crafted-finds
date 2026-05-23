@@ -24,6 +24,7 @@ export function CheckoutModal() {
   const { isOpen, toggleCheckout } = useCheckoutModal();
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState("");
   const isMobile = useIsMobile();
 
   // Guard against accidental tab closure during submission
@@ -37,6 +38,14 @@ export function CheckoutModal() {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [isSubmitting]);
+
+  // Reset submitted and whatsappUrl when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSubmitted(false);
+      setWhatsappUrl("");
+    }
+  }, [isOpen]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -112,6 +121,7 @@ export function CheckoutModal() {
 
         // 4. WhatsApp Redirect with Popup Guard
         const waUrl = `https://wa.me/919495532563?text=${encodeURIComponent(waText)}`;
+        setWhatsappUrl(waUrl);
         
         // Attempt auto-open
         const waWindow = window.open(waUrl, "_blank");
@@ -144,10 +154,8 @@ export function CheckoutModal() {
     // If the cart isn't empty, it means the popup was blocked and we need a manual link
     const isBlocked = items.length > 0;
     
-    // Re-generate WA text for the manual button if needed
-    const orderRef = "ORDER-" + Date.now(); // Fallback ref
-    let waText = `*New Order - MalluSmart*\n_Manual Link_\n\n*Total:* ₹${totalPrice}`;
-    const waUrl = `https://wa.me/919495532563?text=${encodeURIComponent(waText)}`;
+    // Use the stored rich WhatsApp URL, or regenerate fallback if not available
+    const waUrl = whatsappUrl || `https://wa.me/919495532563?text=${encodeURIComponent(`*New Order - MalluSmart*\n_Manual Link_\n\n*Total:* ₹${totalPrice}`)}`;
 
     return (
       <div className="flex flex-col items-center justify-center space-y-6 px-10 py-16 text-center animate-in fade-in zoom-in duration-500">
