@@ -36,33 +36,6 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
           </Link>
-
-          {/* Hover Action Bar (Desktop) */}
-          <div className="absolute inset-x-4 bottom-4 translate-y-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 hidden md:block">
-            <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 p-1.5 backdrop-blur-xl">
-              <Button
-                className="flex-1 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-105 transition-transform h-10"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShareModalOpen(true);
-                }}
-              >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Add
-              </Button>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="h-10 w-10 shrink-0 rounded-full bg-white/20 text-white hover:bg-white/40 ring-1 ring-white/30"
-                onClick={(e) => {
-                  e.preventDefault();
-                  toggleWishlist(product.id);
-                }}
-              >
-                <Heart className={cn("h-4 w-4", wishlisted && "fill-destructive text-destructive")} />
-              </Button>
-            </div>
-          </div>
         </div>
 
         {/* Info Section */}
@@ -92,21 +65,22 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
             )}
           </div>
 
-          {/* Mobile Persistent Action (Mobile Only) */}
-          <div className="mt-2 flex gap-1.5 md:hidden">
+          {/* Persistent Action Buttons */}
+          <div className="mt-2 flex gap-1.5">
               <Button
-                className="flex-1 rounded-full bg-primary text-primary-foreground h-8 min-[380px]:h-9 text-[9px] min-[380px]:text-[10px] font-bold"
+                className="flex-1 rounded-full bg-primary text-primary-foreground h-8 min-[380px]:h-9 md:h-10 text-[9px] min-[380px]:text-[10px] md:text-xs lg:text-sm font-bold shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-transform"
                 onClick={() => setShareModalOpen(true)}
               >
+                <ShoppingCart className="h-3.5 w-3.5 mr-1.5" />
                 Add to Cart
               </Button>
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 min-[400px]:h-9 min-[400px]:w-9 rounded-full border-border/50"
+                className="h-8 w-8 min-[400px]:h-9 min-[400px]:w-9 md:h-10 md:w-10 rounded-full border-border/50 hover:bg-muted/50"
                 onClick={() => toggleWishlist(product.id)}
               >
-                <Heart className={cn("h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5", wishlisted && "fill-destructive text-destructive")} />
+                <Heart className={cn("h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 md:h-4 md:w-4", wishlisted && "fill-destructive text-destructive")} />
               </Button>
           </div>
         </div>
