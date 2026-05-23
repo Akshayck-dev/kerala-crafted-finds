@@ -95,13 +95,18 @@ export function CheckoutModal() {
         waText += `📱 Phone: ${phone}\n`;
         waText += `📧 Email: ${email}\n`;
         waText += `📍 Address: ${address}\n\n`;
-        
+
         waText += `*Order Items:*\n`;
+        waText += `━━━━━━━━━━━━━━━━\n`;
         items.forEach((item, idx) => {
            waText += `${idx + 1}. *${toTitleCase(item.product.name)}*\n`;
-           waText += `   Qty: ${item.quantity} | Total: ₹${item.product.price * item.quantity}\n`;
+           if (item.product.sellerName) {
+             waText += `   🧑‍🌾 Seller: ${item.product.sellerName}${item.product.businessName ? ` (${item.product.businessName})` : ""}\n`;
+           }
+           waText += `   📦 Qty: ${item.quantity} | 💰 Total: ₹${item.product.price * item.quantity}\n`;
+           waText += `━━━━━━━━━━━━━━━━\n`;
         });
-        
+
         waText += `\n*Total Amount:* ₹${totalPrice}\n`;
         waText += `\n_I'd like to buy these items._\n`;
 
