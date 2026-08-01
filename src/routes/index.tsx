@@ -30,6 +30,12 @@ export const Route = createFileRoute("/")({
 
 const heroSlides = [
   {
+    title: "Festive Onam Specials",
+    subtitle: "Bring home the joy of Onam! Explore handloom Kasavu sarees, organic banana chips, traditional sweets, and handmade decors.",
+    image: "https://images.unsplash.com/photo-1605001011156-cbf0b0f67a51?w=1200&fit=crop",
+    label: "Onam Arrivals",
+  },
+  {
     title: "Empowering Kerala Homepreneurs",
     subtitle: "Taking authentic Kerala creations from home to horizon. Shop unique products made with passion.",
     image: "/images/registry_archive.png",
@@ -58,6 +64,7 @@ const guaranteeItems = [
 
 function HomePage() {
   const [featured, setFeatured] = useState<Product[]>([]);
+  const [onamProducts, setOnamProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -69,8 +76,33 @@ function HomePage() {
               fetchCategories()
             ]);
             setFeatured(pData.slice(0, 10));
+            
+            // Filter all products for Onam items
+            const filteredOnam = pData.filter(p => 
+              p.category === 'onam-specials' || 
+              p.category === 'onam-arrivals' ||
+              ['banana chips', 'kasavu', 'saree', 'halwa', 'spice gift'].some(k => 
+                p.name.toLowerCase().includes(k)
+              )
+            );
+            setOnamProducts(filteredOnam);
+
             globalSetProducts(pData);
-            setCategories(cData);
+
+            // Inject Onam Specials category if not returned by server API
+            const hasOnam = cData.some((c) => c.slug === "onam-specials");
+            if (!hasOnam) {
+              const onamCategory: Category = {
+                id: "onam-specials",
+                name: "Onam Specials",
+                slug: "onam-specials",
+                icon: "🌾",
+                image: "",
+              };
+              setCategories([...cData, onamCategory]);
+            } else {
+              setCategories(cData);
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -179,6 +211,7 @@ function HomePage() {
                   <Link
                     key={cat.id}
                     to="/shop"
+                    search={{ category: cat.slug }}
                     className="group flex flex-col items-center gap-4 transition-all"
                   >
                     <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] border border-border/50 bg-card/40 backdrop-blur-md shadow-lg transition-all duration-500 group-hover:-translate-y-2 group-hover:bg-primary/10 group-hover:shadow-xl group-hover:shadow-primary/5 group-hover:border-primary/20">
@@ -191,6 +224,117 @@ function HomePage() {
                 ))
             )}
           </motion.div>
+        </div>
+      </section>
+
+      {/* Onam Festive Specials Section */}
+      <section className="py-16 bg-[#B68D40]/5 border-y border-[#B68D40]/20 relative overflow-hidden">
+        {/* Festive background elements */}
+        <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 h-64 w-64 rounded-full bg-[#B68D40]/10 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 translate-y-12 -translate-x-12 h-64 w-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+
+        <div className="mx-auto max-w-[1200px] px-4">
+          <div className="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <div className="mb-3 flex items-center gap-2">
+                <span className="text-[10px] font-bold tracking-[0.4em] text-[#B68D40] uppercase">Festive Edition ——</span>
+                <span className="animate-pulse text-lg font-normal">🌾</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black italic uppercase tracking-tighter text-foreground">
+                Onam Festive Arrivals
+              </h2>
+              <p className="mt-2 text-xs text-muted-foreground uppercase tracking-widest">
+                Traditional clothing, fresh delicacies, and handmade decorations for your pookalam
+              </p>
+            </div>
+            
+            <Link to="/shop" search={{ category: "onam-specials" }}>
+              <Button variant="outline" className="rounded-full border-[#B68D40]/50 hover:bg-[#B68D40]/10 hover:text-[#B68D40] text-xs font-bold uppercase tracking-widest">
+                View All Specials →
+              </Button>
+            </Link>
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex flex-col gap-4 rounded-[2.5rem] border border-border/50 p-3 bg-card shadow-sm">
+                  <Skeleton className="aspect-square w-full rounded-[2rem]" />
+                  <div className="space-y-3 px-3 pb-3">
+                    <Skeleton className="h-3 w-1/2 rounded-full" />
+                    <Skeleton className="h-5 w-full rounded-lg" />
+                    <Skeleton className="h-6 w-1/3 rounded-md mt-2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            (() => {
+              if (onamProducts.length === 0) {
+                return (
+                  <p className="text-center text-xs tracking-wider text-muted-foreground uppercase italic py-8">
+                    No products added to the festive collection yet.
+                  </p>
+                );
+              }
+
+              return (
+                <Carousel
+                  plugins={[Autoplay({ delay: 4000 })]}
+                  opts={{
+                    align: "start",
+                    loop: onamProducts.length > 4,
+                  }}
+                  className="w-full"
+                >
+                  <CarouselContent>
+                    {onamProducts.map((p) => (
+                      <CarouselItem key={p.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                        <div className="p-1 h-full">
+                          <div className="relative group rounded-[2.5rem] border border-[#B68D40]/30 hover:border-[#B68D40] bg-card p-3 shadow-md hover:shadow-xl transition-all duration-300 h-full flex flex-col justify-between">
+                            <div>
+                              <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-muted mb-4">
+                                <img
+                                  src={p.image}
+                                  alt={p.name}
+                                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "/placeholder.svg";
+                                  }}
+                                />
+                                <div className="absolute top-3 left-3 rounded-full bg-amber-500 text-white px-3 py-1 text-[9px] font-black tracking-widest uppercase shadow-md animate-pulse">
+                                  Onam Special
+                                </div>
+                              </div>
+                              <div className="px-2">
+                                <p className="text-[9px] font-bold text-[#B68D40] tracking-wider uppercase mb-1">{p.categoryName || p.category}</p>
+                                <h3 className="text-xs font-black tracking-tight text-foreground line-clamp-2 min-h-[2rem] leading-tight mb-2 group-hover:text-primary transition-colors">
+                                  {p.name}
+                                </h3>
+                              </div>
+                            </div>
+                            <div className="px-2 pb-2 mt-auto">
+                              <div className="flex items-baseline gap-1.5 mb-3">
+                                <span className="text-sm font-extrabold text-foreground">₹{p.price}</span>
+                                {p.originalPrice && (
+                                  <span className="text-[10px] text-muted-foreground line-through">₹{p.originalPrice}</span>
+                                )}
+                              </div>
+                              <Link to={`/product/${p.id}`}>
+                                <Button className="w-full rounded-full h-8 text-[10px] font-bold uppercase tracking-wider bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition-all active:scale-95">
+                                  View Item
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
+              );
+            })()
+          )}
         </div>
       </section>
 

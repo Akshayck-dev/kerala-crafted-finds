@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ProductCard } from "@/components/ProductCard";
 import { PageHeader } from "@/components/PageHeader";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,8 +9,15 @@ import type { Product, Category } from "@/lib/data";
 import { setProducts as globalSetProducts } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { z } from "zod";
+
+const shopSearchSchema = z.object({
+  category: z.string().optional().catch(""),
+  search: z.string().optional().catch(""),
+});
 
 export const Route = createFileRoute("/shop")({
+  validateSearch: (search) => shopSearchSchema.parse(search),
   head: () => ({
     meta: [
       { title: "Shop — Mallu’s Mart" },
@@ -23,11 +30,13 @@ export const Route = createFileRoute("/shop")({
 });
 
 function ShopPage() {
+  const searchParams = Route.useSearch();
+  const selectedCategory = searchParams.category || "all";
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState("all");
   const [sort, setSort] = useState("default");
   
   // Pagination State
@@ -43,7 +52,21 @@ function ShopPage() {
         ]);
         setProducts(pData);
         globalSetProducts(pData);
-        setCategories(cData);
+
+        // Inject Onam Specials category if not returned by server API
+        const hasOnam = cData.some((c) => c.slug === "onam-specials");
+        if (!hasOnam) {
+          const onamCategory: Category = {
+            id: "onam-specials",
+            name: "Onam Specials",
+            slug: "onam-specials",
+            icon: "🌾",
+            image: "",
+          };
+          setCategories([...cData, onamCategory]);
+        } else {
+          setCategories(cData);
+        }
       } catch (err) {
         setError("Unable to connect to the heritage registry. Please try again.");
       } finally {
@@ -61,7 +84,16 @@ function ShopPage() {
   const filtered = useMemo(() => {
     let result = selectedCategory === "all"
       ? products
-      : products.filter((p) => p.category === selectedCategory);
+      : products.filter((p) => {
+          if (selectedCategory === "onam-specials") {
+            const isExplicitOnam = p.category === "onam-specials" || p.category === "onam-arrivals";
+            const isMatch = ["banana chips", "kasavu", "saree", "halwa", "spice gift"].some((k) => 
+              p.name.toLowerCase().includes(k)
+            );
+            return isExplicitOnam || isMatch;
+          }
+          return p.category === selectedCategory;
+        });
 
     if (sort === "low") result = [...result].sort((a, b) => a.price - b.price);
     if (sort === "high") result = [...result].sort((a, b) => b.price - a.price);
@@ -117,26 +149,28 @@ function ShopPage() {
           <div>
             <h3 className="mb-4 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Categories</h3>
             <div className="flex flex-col gap-1.5">
-                <button
-                  onClick={() => setSelectedCategory("all")}
+                <Link
+                  to="/shop"
+                  search={{ category: undefined }}
                   className={cn(
-                    "text-left text-xs font-bold uppercase tracking-wide py-2.5 px-3 rounded-xl transition-all",
+                    "text-left text-xs font-bold uppercase tracking-wide py-2.5 px-3 rounded-xl transition-all block",
                     selectedCategory === "all" ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
                   All Products
-                </button>
+                </Link>
                 {categories.map((cat) => (
-                  <button
+                  <Link
                     key={cat.id}
-                    onClick={() => setSelectedCategory(cat.slug)}
+                    to="/shop"
+                    search={{ category: cat.slug }}
                     className={cn(
-                        "text-left text-xs font-bold uppercase tracking-wide py-2.5 px-3 rounded-xl transition-all",
+                        "text-left text-xs font-bold uppercase tracking-wide py-2.5 px-3 rounded-xl transition-all block",
                         selectedCategory === cat.slug ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
                     {cat.name}
-                  </button>
+                  </Link>
                 ))}
             </div>
           </div>
@@ -168,30 +202,32 @@ function ShopPage() {
                 ))
             ) : (
                 <>
-                    <button
-                      onClick={() => setSelectedCategory("all")}
-                        className={cn(
-                          "shrink-0 rounded-full px-6 py-3 text-[10px] font-black italic tracking-widest uppercase transition-all duration-300 border shadow-md",
-                          selectedCategory === "all" 
-                            ? "bg-primary text-white border-primary shadow-primary/30" 
-                            : "bg-card border-border/50 text-muted-foreground hover:border-primary/30"
-                        )}
+                    <Link
+                      to="/shop"
+                      search={{ category: undefined }}
+                      className={cn(
+                        "shrink-0 rounded-full px-6 py-3 text-[10px] font-black italic tracking-widest uppercase transition-all duration-300 border shadow-md block text-center",
+                        selectedCategory === "all" 
+                          ? "bg-primary text-white border-primary shadow-primary/30" 
+                          : "bg-card border-border/50 text-muted-foreground hover:border-primary/30"
+                      )}
                     >
                       All Products
-                    </button>
+                    </Link>
                     {categories.map((cat) => (
-                      <button
+                      <Link
                         key={cat.id}
-                        onClick={() => setSelectedCategory(cat.slug)}
+                        to="/shop"
+                        search={{ category: cat.slug }}
                         className={cn(
-                            "shrink-0 rounded-full px-6 py-3 text-[10px] font-black italic tracking-widest uppercase transition-all duration-300 border shadow-md",
+                            "shrink-0 rounded-full px-6 py-3 text-[10px] font-black italic tracking-widest uppercase transition-all duration-300 border shadow-md block text-center",
                             selectedCategory === cat.slug 
                               ? "bg-primary text-white border-primary shadow-primary/30" 
                               : "bg-card border-border/50 text-muted-foreground hover:border-primary/30"
                         )}
                       >
                         {cat.name}
-                      </button>
+                      </Link>
                     ))}
                 </>
             )}
