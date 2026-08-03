@@ -3,10 +3,10 @@ import { motion } from "framer-motion";
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { ProductCard } from "@/components/ProductCard";
-import { ShieldCheck, Truck, Award, Package } from "lucide-react";
+import { ShieldCheck, Truck, Award, Package, Star, MessageSquare, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchProducts, fetchCategories } from "@/lib/api";
+import { fetchProducts, fetchCategories, fetchReviews } from "@/lib/api";
 import { setProducts as globalSetProducts } from "@/lib/store";
 import { type Product, type Category } from "@/lib/data";
 import {
@@ -66,16 +66,20 @@ function HomePage() {
   const [featured, setFeatured] = useState<Product[]>([]);
   const [onamProducts, setOnamProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [platformReviews, setPlatformReviews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
         try {
-            const [pData, cData] = await Promise.all([
+            const [pData, cData, rData] = await Promise.all([
               fetchProducts(),
-              fetchCategories()
+              fetchCategories(),
+              fetchReviews()
             ]);
             setFeatured(pData.slice(0, 10));
+            const platform = rData.filter((r: any) => r.reviewType === "Platform" && r.isActive !== false);
+            setPlatformReviews(platform);
             
             // Filter all products for Onam items
             const filteredOnam = pData.filter(p => 
@@ -467,6 +471,64 @@ function HomePage() {
             </Link>
         </div>
       </section>
+
+      {/* What Our Customers Say (Platform Testimonials) */}
+      {platformReviews.length > 0 && (
+        <section className="py-16 bg-slate-50/50">
+          <div className="mx-auto max-w-[1200px] px-4">
+            <div className="mb-10 text-center">
+              <span className="text-[10px] font-bold tracking-[0.4em] text-primary uppercase">
+                Testimonials
+              </span>
+              <h2 className="mt-4 text-4xl font-black italic tracking-tighter text-foreground uppercase sm:text-5xl">
+                What Our Customers Say
+              </h2>
+              <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+                Real feedback from our shopping platform about service, quality, and experience.
+              </p>
+            </div>
+
+            <div className="relative w-full overflow-hidden">
+              <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x scroll-smooth w-full">
+                {platformReviews.map((review) => (
+                  <div 
+                    key={review.id} 
+                    className="w-[320px] shrink-0 border border-border/50 bg-background rounded-3xl p-6 shadow-sm snap-start flex flex-col justify-between min-h-[180px] select-none hover:shadow-md transition-all duration-300"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="font-bold text-foreground text-xs truncate max-w-[140px]">
+                            {review.reviewerName}
+                          </span>
+                          <span className="text-[8px] bg-green-500/10 text-green-700 font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 flex items-center gap-0.5">
+                            <CheckCircle2 className="h-2.5 w-2.5 text-green-600" /> Platform Verified
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-muted-foreground font-semibold">{review.date}</span>
+                      </div>
+
+                      <p className="text-xs text-foreground/80 leading-relaxed font-medium line-clamp-4">
+                        "{review.comment}"
+                      </p>
+                    </div>
+
+                    <div className="pt-3 border-t border-border/40 mt-4 flex items-center justify-between">
+                      <div className="flex items-center gap-1 bg-amber-500/10 text-amber-700 px-2 py-0.5 rounded-lg text-xs font-extrabold">
+                        <span>{review.rating}</span>
+                        <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
+                        {review.location || "Kerala"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Why Mallu’s Mart (The Heritage Guarantee) */}
       <section className="py-12 bg-card/30">
