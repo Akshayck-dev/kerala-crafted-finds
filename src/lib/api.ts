@@ -758,8 +758,11 @@ export async function adminAddOrUpdateReview(review: {
   star: string | number;
   comments: string;
   isActive?: boolean;
+  productId?: string | number;
+  reviewType?: string;
 }) {
   try {
+    const cleanProductId = review.productId ? Number(review.productId) : 0;
     const payload = {
       ID: Number(review.id || 0),
       Name: review.name || "",
@@ -769,7 +772,12 @@ export async function adminAddOrUpdateReview(review: {
       CreatedOn: new Date().toISOString(),
       ModifiedOn: new Date().toISOString(),
       DeletedOn: new Date().toISOString(),
-      IsActive: review.isActive ?? true
+      IsActive: review.isActive ?? true,
+      productid: cleanProductId,
+      productId: cleanProductId,
+      ProductID: cleanProductId,
+      ReviewType: review.reviewType || "Product",
+      reviewType: review.reviewType || "Product"
     };
 
     const response = await safeFetch(`${BASE_URL}/AdminAddorUpdateReviews`, {
@@ -793,8 +801,11 @@ export async function customerAddReview(review: {
   star: string | number;
   comments: string;
   isActive?: boolean;
+  productId: string | number;
+  reviewType?: string;
 }) {
   try {
+    const cleanProductId = Number(review.productId || 0);
     const payload = {
       ID: Number(review.id || 0),
       Name: review.name || "",
@@ -804,7 +815,12 @@ export async function customerAddReview(review: {
       CreatedOn: new Date().toISOString(),
       ModifiedOn: new Date().toISOString(),
       DeletedOn: new Date().toISOString(),
-      IsActive: review.isActive ?? true
+      IsActive: review.isActive ?? true,
+      productid: cleanProductId,
+      productId: cleanProductId,
+      ProductID: cleanProductId,
+      ReviewType: review.reviewType || "Product",
+      reviewType: review.reviewType || "Product"
     };
 
     const response = await safeFetch(`${BASE_URL}/CustomerAddReviews`, {
@@ -841,7 +857,9 @@ export async function fetchReviews(): Promise<any[]> {
       date: (r.createdOn || r.CreatedOn || new Date().toISOString()).split('T')[0],
       comment: r.comments || r.Comments || "",
       isVerified: true,
-      isActive: r.isActive ?? r.IsActive ?? true
+      isActive: r.isActive ?? r.IsActive ?? true,
+      productId: (r.productId || r.ProductId || r.ProductID || r.productid || "").toString(),
+      reviewType: r.reviewType || r.ReviewType || "Product"
     }));
   } catch (e) {
     console.warn("[API] fetchReviews failed, falling back to local storage/mock data:", e);

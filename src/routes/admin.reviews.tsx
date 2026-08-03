@@ -36,6 +36,7 @@ function AdminReviews() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [ratingFilter, setRatingFilter] = useState("all");
+  const [productsList, setProductsList] = useState<any[]>([]);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,8 +47,8 @@ function AdminReviews() {
     setIsLoading(true);
     setError(null);
     try {
-      // 1. Fetch products to scan for local storage reviews
       const products = await fetchProducts(false);
+      setProductsList(products);
       let localReviews: ReviewItem[] = [];
 
       products.forEach((p) => {
@@ -121,6 +122,7 @@ function AdminReviews() {
       localReviews.forEach(r => mergedMap.set(r.id, r));
       // Merge backend reviews
       backendReviews.forEach((r: any) => {
+        const prod = products.find((p: any) => p.id.toString() === r.productId?.toString());
         mergedMap.set(r.id, {
           id: r.id,
           reviewerName: r.reviewerName || "Anonymous",
@@ -130,6 +132,8 @@ function AdminReviews() {
           comment: r.comment,
           isVerified: true,
           isActive: r.isActive ?? true,
+          productId: r.productId,
+          productName: prod ? prod.name : undefined,
         });
       });
 
@@ -166,6 +170,10 @@ function AdminReviews() {
     const comments = (form.elements.namedItem("comments") as HTMLTextAreaElement).value;
     const star = Number((form.elements.namedItem("star") as HTMLSelectElement).value);
     const isActive = (form.elements.namedItem("isActive") as HTMLInputElement).checked;
+    
+    const productIdSelect = (form.elements.namedItem("productId") as HTMLSelectElement).value;
+    const cleanProductId = productIdSelect === "general" ? 0 : Number(productIdSelect);
+    const reviewType = productIdSelect === "general" ? "General" : "Product";
 
     setIsSaving(true);
     try {
@@ -178,6 +186,8 @@ function AdminReviews() {
         star,
         comments,
         isActive,
+        productId: cleanProductId,
+        reviewType: reviewType
       });
 
       toast.success(selectedReview ? "Review updated successfully." : "Review created successfully.");
@@ -375,7 +385,21 @@ function AdminReviews() {
           </div>
 
           <form onSubmit={handleSave} className="p-6 space-y-4">
-            <div className="space-y-1.5">
+             <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Target Product (ReviewType = Product)</label>
+              <select
+                name="productId"
+                defaultValue={selectedReview?.productId || "general"}
+                className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold focus:outline-none focus:border-blue-500/50 cursor-pointer"
+              >
+                <option value="general">Global / General Feedback</option>
+                {productsList.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name} (ID: {p.id})</option>
+                ))}
+              </select>
+             </div>
+
+             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Reviewer Name</label>
               <input
                 type="text"
@@ -385,7 +409,7 @@ function AdminReviews() {
                 placeholder="Enter reviewer name"
                 className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold focus:outline-none focus:border-blue-500/50"
               />
-            </div>
+             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">

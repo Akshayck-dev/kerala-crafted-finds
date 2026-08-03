@@ -94,6 +94,11 @@ function ProductDetailPage() {
       try {
         const apiReviews = await fetchReviews();
         
+        // Filter backend reviews by current productId and reviewType = "Product"
+        const productSpecificReviews = apiReviews.filter(
+          (r: any) => r.productId.toString() === productId?.toString() && r.reviewType === "Product"
+        );
+
         const storageKey = `product_reviews_${productId}`;
         const stored = localStorage.getItem(storageKey);
         let localReviews: Review[] = [];
@@ -105,12 +110,11 @@ function ProductDetailPage() {
           }
         }
         
-        // Filter out any mock/seed reviews from localReviews
         const cleanLocalReviews = localReviews.filter(r => !r.id.includes("seed"));
 
         const mergedMap = new Map<string, Review>();
         
-        apiReviews.forEach((r: any) => {
+        productSpecificReviews.forEach((r: any) => {
           if (r.isActive !== false) {
             mergedMap.set(r.id || r.comment, {
               id: r.id || `${productId}-${Date.now()}-${Math.random()}`,
@@ -169,6 +173,8 @@ function ProductDetailPage() {
         location: "Kerala",
         star: newReview.rating,
         comments: newReview.comment,
+        productId: productId || "",
+        reviewType: "Product"
       });
     } catch (err) {
       console.error("Backend review submission failed, saved locally:", err);
