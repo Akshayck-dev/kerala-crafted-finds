@@ -759,7 +759,7 @@ export async function adminAddOrUpdateReview(review: {
   comments: string;
   isActive?: boolean;
   productId?: string | number;
-  reviewType?: string;
+  reviewType?: "Product" | "Platform";
 }) {
   try {
     const cleanProductId = review.productId ? Number(review.productId) : 0;
@@ -773,14 +773,15 @@ export async function adminAddOrUpdateReview(review: {
       ModifiedOn: new Date().toISOString(),
       DeletedOn: new Date().toISOString(),
       IsActive: review.isActive ?? true,
-      productid: cleanProductId,
-      productId: cleanProductId,
-      ProductID: cleanProductId,
+      ProductID: cleanProductId > 0 ? cleanProductId : null,
       ReviewType: review.reviewType || "Product",
+      // Backwards compatibility keys
+      productid: cleanProductId > 0 ? cleanProductId : null,
+      productId: cleanProductId > 0 ? cleanProductId : null,
       reviewType: review.reviewType || "Product"
     };
 
-    const response = await safeFetch(`${BASE_URL}/AdminAddorUpdateReviews`, {
+    const response = await safeFetch(`${BASE_URL}/Product/AdminAddorUpdateReviews`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -802,7 +803,7 @@ export async function customerAddReview(review: {
   comments: string;
   isActive?: boolean;
   productId: string | number;
-  reviewType?: string;
+  reviewType?: "Product" | "Platform";
 }) {
   try {
     const cleanProductId = Number(review.productId || 0);
@@ -816,10 +817,11 @@ export async function customerAddReview(review: {
       ModifiedOn: new Date().toISOString(),
       DeletedOn: new Date().toISOString(),
       IsActive: review.isActive ?? true,
-      productid: cleanProductId,
-      productId: cleanProductId,
-      ProductID: cleanProductId,
+      ProductID: cleanProductId > 0 ? cleanProductId : null,
       ReviewType: review.reviewType || "Product",
+      // Backwards compatibility keys
+      productid: cleanProductId > 0 ? cleanProductId : null,
+      productId: cleanProductId > 0 ? cleanProductId : null,
       reviewType: review.reviewType || "Product"
     };
 

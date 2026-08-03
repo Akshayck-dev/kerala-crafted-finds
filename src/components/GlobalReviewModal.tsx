@@ -52,7 +52,7 @@ export function GlobalReviewModal() {
         star: rating,
         comments,
         productId: 0,
-        reviewType: "General",
+        reviewType: "Platform",
       });
 
       toast.success("Thank you for sharing your feedback with us! ❤️");

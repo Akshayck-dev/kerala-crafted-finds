@@ -173,7 +173,7 @@ function AdminReviews() {
     
     const productIdSelect = (form.elements.namedItem("productId") as HTMLSelectElement).value;
     const cleanProductId = productIdSelect === "general" ? 0 : Number(productIdSelect);
-    const reviewType = productIdSelect === "general" ? "General" : "Product";
+    const reviewType: "Product" | "Platform" = productIdSelect === "general" ? "Platform" : "Product";
 
     setIsSaving(true);
     try {
