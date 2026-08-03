@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
 import { CheckoutModal } from "@/components/CheckoutModal";
+import { GlobalReviewModal } from "@/components/GlobalReviewModal";
 import { SplashScreen } from "@/components/SplashScreen";
 import { TopLoadingBar } from "@/components/TopLoadingBar";
 import { useState, useEffect } from "react";
@@ -100,6 +101,7 @@ function RootComponent() {
           <Footer />
           <CartDrawer />
           <CheckoutModal />
+          <GlobalReviewModal />
         </>
       )}
     </div>
