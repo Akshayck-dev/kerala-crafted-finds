@@ -183,6 +183,12 @@ function AdminOrders() {
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
         order={selectedOrder}
+        onStatusUpdate={(orderId, newStatus) => {
+          setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus.toLowerCase() as any } : o));
+          if (selectedOrder && selectedOrder.id === orderId) {
+            setSelectedOrder(prev => prev ? { ...prev, status: newStatus.toLowerCase() as any } : null);
+          }
+        }}
       />
     </AdminLayout>
   );

@@ -6,21 +6,41 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { type Order, type Product, type Member } from "@/lib/data";
-import { fetchProducts, fetchMembers } from "@/lib/api";
+import { fetchProducts, fetchMembers, updateOrderStatus } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, User, MapPin, Calendar, Clock, CreditCard } from "lucide-react";
+import { Package, User, MapPin, Calendar, Clock, CreditCard, Loader2 } from "lucide-react";
 import { toTitleCase } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface OrderDetailModalProps {
   order: Order | null;
   isOpen: boolean;
   onClose: () => void;
+  onStatusUpdate?: (orderId: string, newStatus: string) => void;
 }
 
-export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalProps) {
+export function OrderDetailModal({ order, isOpen, onClose, onStatusUpdate }: OrderDetailModalProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!order) return;
+    setIsUpdatingStatus(true);
+    try {
+      await updateOrderStatus(order.id, newStatus);
+      toast.success(`Order status updated to ${newStatus}`);
+      if (onStatusUpdate) {
+        onStatusUpdate(order.id, newStatus);
+      }
+    } catch (err: any) {
+      console.error("Failed to update status:", err);
+      toast.error(err.message || "Failed to update order status");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen && order) {
@@ -207,16 +227,34 @@ export function OrderDetailModal({ order, isOpen, onClose }: OrderDetailModalPro
             </section>
         </div>
 
-        <div className="p-6 border-t bg-slate-50 flex justify-end gap-3">
-             <button 
-                onClick={onClose}
-                className="px-6 py-2 border border-slate-200 rounded-lg text-sm font-semibold hover:bg-white transition-colors"
-                >
-                Close
-             </button>
-             <button className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-md shadow-blue-600/20">
-                Download Invoice
-             </button>
+        <div className="p-6 border-t bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+             {/* Status Changer */}
+             <div className="flex items-center gap-2 w-full sm:w-auto">
+               <span className="text-xs font-bold text-slate-500 uppercase whitespace-nowrap">Change Status:</span>
+               <select
+                 value={toTitleCase(order.status)}
+                 onChange={(e) => handleStatusChange(e.target.value)}
+                 disabled={isUpdatingStatus}
+                 className="bg-white border rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60 cursor-pointer"
+               >
+                 {['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Refunded'].map((status) => (
+                   <option key={status} value={status}>{status}</option>
+                 ))}
+               </select>
+               {isUpdatingStatus && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}
+             </div>
+
+             <div className="flex gap-3 w-full sm:w-auto justify-end">
+               <button 
+                  onClick={onClose}
+                  className="px-6 py-2 border border-slate-200 rounded-lg text-sm font-semibold hover:bg-white transition-colors"
+                  >
+                  Close
+               </button>
+               <button className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-md shadow-blue-600/20">
+                  Download Invoice
+               </button>
+             </div>
         </div>
       </DialogContent>
     </Dialog>
