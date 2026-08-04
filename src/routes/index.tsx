@@ -131,7 +131,7 @@ function HomePage() {
           <CarouselContent>
             {heroSlides.map((slide, index) => (
               <CarouselItem key={index}>
-                <div className="relative w-full h-auto aspect-[3/4] md:aspect-[1672/941] overflow-hidden">
+                <div className="relative w-full h-[40vh] sm:h-[50vh] md:h-[60vh] max-h-[500px] overflow-hidden">
                   <picture className="absolute inset-0 h-full w-full">
                     {slide.desktopImage && <source media="(min-width: 768px)" srcSet={slide.desktopImage} />}
                     {slide.mobileImage && <source media="(max-width: 767px)" srcSet={slide.mobileImage} />}
