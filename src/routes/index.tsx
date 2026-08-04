@@ -81,7 +81,10 @@ function HomePage() {
               fetchReviews()
             ]);
             setFeatured(pData.slice(0, 10));
-            const platform = rData.filter((r: any) => r.reviewType === "Platform" && r.isActive !== false);
+            const platform = rData.filter((r: any) => {
+              const type = (r.reviewType || "").toString().trim().toLowerCase();
+              return type === "platform" && r.isActive !== false;
+            });
             setPlatformReviews(platform);
             
             // Filter all products for Onam items

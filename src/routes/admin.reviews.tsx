@@ -389,7 +389,7 @@ function AdminReviews() {
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Target Product (ReviewType = Product)</label>
               <select
                 name="productId"
-                defaultValue={selectedReview?.productId || "general"}
+                defaultValue={(!selectedReview?.productId || selectedReview?.productId === "0") ? "general" : selectedReview.productId}
                 className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold focus:outline-none focus:border-blue-500/50 cursor-pointer"
               >
                 <option value="general">Global / General Feedback</option>

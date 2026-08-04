@@ -861,7 +861,7 @@ export async function fetchReviews(): Promise<any[]> {
       isVerified: true,
       isActive: r.isActive ?? r.IsActive ?? true,
       productId: (r.productId || r.ProductId || r.ProductID || r.productid || "").toString(),
-      reviewType: r.reviewType || r.ReviewType || "Product"
+      reviewType: (r.reviewType || r.ReviewType || r.reviewtype || r.Reviewtype || "Product").toString().trim()
     }));
   } catch (e) {
     console.warn("[API] fetchReviews failed, falling back to local storage/mock data:", e);

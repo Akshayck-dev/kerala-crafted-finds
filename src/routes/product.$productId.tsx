@@ -95,9 +95,11 @@ function ProductDetailPage() {
         const apiReviews = await fetchReviews();
         
         // Filter backend reviews by current productId and reviewType = "Product"
-        const productSpecificReviews = apiReviews.filter(
-          (r: any) => r.productId.toString() === productId?.toString() && r.reviewType === "Product"
-        );
+        const productSpecificReviews = apiReviews.filter((r: any) => {
+          const isMatchId = (r.productId || "").toString().trim() === productId?.toString().trim();
+          const type = (r.reviewType || "").toString().trim().toLowerCase();
+          return isMatchId && type === "product";
+        });
 
         const storageKey = `product_reviews_${productId}`;
         const stored = localStorage.getItem(storageKey);
