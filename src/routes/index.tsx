@@ -15,6 +15,8 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import onamDesk from "@/assets/onam desk.png";
+import onamMob from "@/assets/onam mob.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -44,7 +46,8 @@ const heroSlides = [
   {
     title: "Authentic Kerala Traditions",
     subtitle: "From traditional foods to handmade crafts, discover the soul of Kerala in every product.",
-    image: "/images/artisan_legacy.png",
+    desktopImage: onamDesk,
+    mobileImage: onamMob,
     label: "Handmade with Love",
   },
   {
@@ -129,11 +132,15 @@ function HomePage() {
             {heroSlides.map((slide, index) => (
               <CarouselItem key={index}>
                 <div className="relative h-[50vh] w-full sm:h-[70vh]">
-                  <img
-                    src={slide.image}
-                    alt={slide.title}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-[20s] hover:scale-110"
-                  />
+                  <picture className="absolute inset-0 h-full w-full">
+                    {slide.desktopImage && <source media="(min-width: 768px)" srcSet={slide.desktopImage} />}
+                    {slide.mobileImage && <source media="(max-width: 767px)" srcSet={slide.mobileImage} />}
+                    <img
+                      src={slide.image || slide.desktopImage}
+                      alt={slide.title}
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-[20s] hover:scale-110"
+                    />
+                  </picture>
                   <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
                   
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white">
