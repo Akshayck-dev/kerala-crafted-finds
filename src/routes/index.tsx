@@ -34,7 +34,8 @@ const heroSlides = [
   {
     title: "Festive Onam Specials",
     subtitle: "Bring home the joy of Onam! Explore handloom Kasavu sarees, organic banana chips, traditional sweets, and handmade decors.",
-    image: "https://images.unsplash.com/photo-1605001011156-cbf0b0f67a51?w=1200&fit=crop",
+    desktopImage: onamDesk,
+    mobileImage: onamMob,
     label: "Onam Arrivals",
   },
   {
@@ -46,8 +47,7 @@ const heroSlides = [
   {
     title: "Authentic Kerala Traditions",
     subtitle: "From traditional foods to handmade crafts, discover the soul of Kerala in every product.",
-    desktopImage: onamDesk,
-    mobileImage: onamMob,
+    image: "/images/artisan_legacy.png",
     label: "Handmade with Love",
   },
   {
