@@ -15,10 +15,8 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import onamDesk from "@/assets/desk.png";
-import onamMob from "@/assets/onam.png";
-import traditionsDesk from "@/assets/img desktop.png";
-import traditionsMob from "@/assets/img mob.png";
+import onamDesk from "@/assets/img desktop.png";
+import onamMob from "@/assets/img mob.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,8 +47,7 @@ const heroSlides = [
   {
     title: "Authentic Kerala Traditions",
     subtitle: "From traditional foods to handmade crafts, discover the soul of Kerala in every product.",
-    desktopImage: traditionsDesk,
-    mobileImage: traditionsMob,
+    image: "/images/artisan_legacy.png",
     label: "Handmade with Love",
   },
   {
