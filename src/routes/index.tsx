@@ -138,7 +138,11 @@ function HomePage() {
                     <img
                       src={slide.image || slide.desktopImage}
                       alt={slide.title}
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-[20s] hover:scale-110"
+                      className={`absolute inset-0 h-full w-full transition-transform duration-[20s] ${
+                        slide.desktopImage 
+                          ? "object-contain bg-[#030712] hover:scale-100" 
+                          : "object-cover hover:scale-110"
+                      }`}
                     />
                   </picture>
                   <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
