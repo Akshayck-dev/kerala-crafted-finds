@@ -131,18 +131,14 @@ function HomePage() {
           <CarouselContent>
             {heroSlides.map((slide, index) => (
               <CarouselItem key={index}>
-                <div className="relative h-[50vh] w-full sm:h-[70vh]">
+                <div className="relative w-full h-auto aspect-[3/4] md:aspect-[1672/941] overflow-hidden">
                   <picture className="absolute inset-0 h-full w-full">
                     {slide.desktopImage && <source media="(min-width: 768px)" srcSet={slide.desktopImage} />}
                     {slide.mobileImage && <source media="(max-width: 767px)" srcSet={slide.mobileImage} />}
                     <img
                       src={slide.image || slide.desktopImage}
                       alt={slide.title}
-                      className={`absolute inset-0 h-full w-full transition-transform duration-[20s] ${
-                        slide.desktopImage 
-                          ? "object-contain bg-[#030712] hover:scale-100" 
-                          : "object-cover hover:scale-110"
-                      }`}
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-[20s] hover:scale-110"
                     />
                   </picture>
                   <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
