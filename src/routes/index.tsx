@@ -15,8 +15,8 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import onamDesk from "@/assets/onam desk.png";
-import onamMob from "@/assets/onam mob.png";
+import onamDesk from "@/assets/desk.png";
+import onamMob from "@/assets/onam.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
