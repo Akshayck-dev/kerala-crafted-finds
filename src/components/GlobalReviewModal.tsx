@@ -72,7 +72,7 @@ export function GlobalReviewModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-[360px] bg-background/95 backdrop-blur-md border border-border/60 p-0 rounded-[1.5rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <DialogContent className="w-[92vw] max-w-[360px] bg-background/95 backdrop-blur-md border border-border/60 p-0 rounded-[1.5rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         <button 
           onClick={handleClose}
           className="absolute top-4 right-4 h-7 w-7 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors z-10"
