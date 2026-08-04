@@ -163,7 +163,10 @@ function HomePage() {
                     </p>
 
                     <div className="mt-6 flex animate-in fade-in slide-in-from-bottom-10 duration-1000 flex-col gap-3 min-[400px]:flex-row sm:gap-4">
-                      <Link to="/shop">
+                      <Link 
+                        to="/shop" 
+                        search={slide.label === "Onam Arrivals" ? { category: "onam-specials" } : undefined}
+                      >
                         <Button size="lg" className="h-11 sm:h-12 rounded-full bg-white px-6 sm:px-8 text-xs sm:text-sm font-semibold text-black ring-offset-black transition-all hover:scale-105 hover:bg-white/90 active:scale-95">
                           Explore Products
                         </Button>
