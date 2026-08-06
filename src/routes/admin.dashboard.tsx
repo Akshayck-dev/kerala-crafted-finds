@@ -105,15 +105,12 @@ function AdminDashboard() {
   // Compute statistics safely
   const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.totalPrice) || 0), 0);
   const pendingOrdersCount = orders.filter(o => o.status.toLowerCase() === "pending").length;
-  const lowStockCount = products.filter(p => Number(p.quantity || 0) < 5).length;
-
   const statCards = [
     { title: "Total Revenue", value: `₹${totalRevenue.toLocaleString()}`, icon: BadgeDollarSign, color: "bg-emerald-600", trend: "+12.5%", error: !orders.length && !!error },
     { title: "Total Orders", value: orders.length, icon: ShoppingCart, color: "bg-blue-600", trend: "+8%", error: !orders.length && !!error },
     { title: "Active Products", value: products.length, icon: Package, color: "bg-indigo-600", error: !products.length && !!error },
     { title: "Sellers", value: members.length, icon: Users, color: "bg-purple-600", error: !members.length && !!error },
     { title: "Pending", value: pendingOrdersCount, icon: Clock, color: "bg-amber-500", error: !orders.length && !!error },
-    { title: "Low Stock", value: lowStockCount, icon: AlertTriangle, color: "bg-rose-600", error: !products.length && !!error },
   ];
 
   const getStatusColor = (status: string) => {
@@ -162,17 +159,17 @@ function AdminDashboard() {
         )}
 
         {/* Stat Cards */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {isLoading 
-            ? Array.from({length: 6}).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)
+            ? Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)
             : statCards.map((stat, index) => (
                <StatCard key={index} {...stat} />
             ))}
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="w-full">
           {/* Recent Orders Table */}
-          <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col">
+          <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col">
             <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Recent Sales Activity</h3>
               <Link to="/admin/orders" className="text-[10px] font-bold text-blue-600 uppercase hover:underline">View All Orders</Link>
@@ -232,48 +229,6 @@ function AdminDashboard() {
                   )}
                 </tbody>
               </table>
-            </div>
-          </div>
-
-          {/* Low Stock Panel */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col">
-            <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Low Stock Alerts</h3>
-              <div className="h-2 w-2 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50" />
-            </div>
-            <div className="flex-1 overflow-y-auto max-h-[500px]">
-                {isLoading ? (
-                    <div className="p-6 space-y-4">
-                        <Skeleton className="h-16 w-full" />
-                        <Skeleton className="h-16 w-full" />
-                        <Skeleton className="h-16 w-full" />
-                    </div>
-                ) : products.filter(p => Number(p.quantity || 0) < 5).length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-12 text-center space-y-4">
-                        <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                            <Package className="h-6 w-6" />
-                        </div>
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Inventory Levels Healthy</p>
-                    </div>
-                ) : (
-                    <div className="divide-y">
-                        {products.filter(p => Number(p.quantity || 0) < 5).map(product => (
-                            <div key={product.id} className="p-4 hover:bg-rose-50/30 transition-colors flex items-center gap-4 group">
-                                <div className="h-10 w-10 rounded-lg overflow-hidden border bg-slate-50 shrink-0">
-                                    <img src={product.image} className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all" onError={(e) => e.currentTarget.src = "/placeholder.svg"}/>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-black text-slate-900 truncate tracking-tight">{toTitleCase(product.name)}</p>
-                                    <p className="text-[10px] font-bold text-rose-600 mt-1 uppercase">Only {product.quantity} {product.unit} left</p>
-                                </div>
-                                <ArrowUpRight className="h-4 w-4 text-slate-300" />
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-            <div className="p-4 border-t bg-slate-50/50">
-                <button className="w-full py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-all">Restock All</button>
             </div>
           </div>
         </div>

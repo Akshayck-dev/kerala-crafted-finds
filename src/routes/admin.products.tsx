@@ -231,9 +231,6 @@ function AdminProducts() {
                          </div>
                          <div className="flex items-center gap-2">
                             <span className="text-xs text-slate-500">{product.quantity} {product.unit}</span>
-                            {Number(product.quantity || 0) < 5 && (
-                                <span className="text-[10px] bg-red-100 text-red-600 px-1.5 rounded uppercase font-bold animate-pulse">Low Stock</span>
-                            )}
                          </div>
                       </div>
                     </td>
