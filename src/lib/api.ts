@@ -784,10 +784,12 @@ export async function adminAddOrUpdateReview(review: {
       IsActive: review.isActive ?? true,
       ProductID: cleanProductId > 0 ? cleanProductId : null,
       ReviewType: review.reviewType || "Product",
+      Reviewtype: review.reviewType || "Product",
+      reviewtype: review.reviewType || "Product",
+      reviewType: review.reviewType || "Product",
       // Backwards compatibility keys
       productid: cleanProductId > 0 ? cleanProductId : null,
-      productId: cleanProductId > 0 ? cleanProductId : null,
-      reviewType: review.reviewType || "Product"
+      productId: cleanProductId > 0 ? cleanProductId : null
     };
 
     const response = await safeFetch(`${BASE_URL}/Product/AdminAddorUpdateReviews`, {
@@ -828,10 +830,12 @@ export async function customerAddReview(review: {
       IsActive: review.isActive ?? true,
       ProductID: cleanProductId > 0 ? cleanProductId : null,
       ReviewType: review.reviewType || "Product",
+      Reviewtype: review.reviewType || "Product",
+      reviewtype: review.reviewType || "Product",
+      reviewType: review.reviewType || "Product",
       // Backwards compatibility keys
       productid: cleanProductId > 0 ? cleanProductId : null,
-      productId: cleanProductId > 0 ? cleanProductId : null,
-      reviewType: review.reviewType || "Product"
+      productId: cleanProductId > 0 ? cleanProductId : null
     };
 
     const response = await safeFetch(`${BASE_URL}/CustomerAddReviews`, {
@@ -870,7 +874,7 @@ export async function fetchReviews(): Promise<any[]> {
       isVerified: true,
       isActive: r.isActive ?? r.IsActive ?? true,
       productId: (r.productId || r.ProductId || r.ProductID || r.productid || "").toString(),
-      reviewType: (r.reviewType || r.ReviewType || r.reviewtype || r.Reviewtype || "Product").toString().trim()
+      reviewType: (r.ReviewType || r.Reviewtype || r.reviewType || r.reviewtype || "Product").toString().trim()
     }));
   } catch (e) {
     console.warn("[API] fetchReviews failed, falling back to local storage/mock data:", e);
