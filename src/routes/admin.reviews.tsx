@@ -121,12 +121,7 @@ function AdminReviews() {
       // Merge local storage reviews
       localReviews.forEach(r => mergedMap.set(r.id, r));
       // Merge backend reviews
-      backendReviews
-        .filter((r: any) => {
-          const type = (r.reviewType || "").toString().trim().toLowerCase();
-          return type === "product" || type === "";
-        })
-        .forEach((r: any) => {
+      backendReviews.forEach((r: any) => {
         const prod = products.find((p: any) => p.id.toString() === r.productId?.toString());
         mergedMap.set(r.id, {
           id: r.id,
@@ -177,8 +172,8 @@ function AdminReviews() {
     const isActive = (form.elements.namedItem("isActive") as HTMLInputElement).checked;
     
     const productIdSelect = (form.elements.namedItem("productId") as HTMLSelectElement).value;
-    const cleanProductId = Number(productIdSelect || 0);
-    const reviewType: "Product" | "Platform" = "Product";
+    const cleanProductId = productIdSelect === "general" ? 0 : Number(productIdSelect);
+    const reviewType: "Product" | "Platform" = productIdSelect === "general" ? "Platform" : "Product";
 
     setIsSaving(true);
     try {
@@ -394,9 +389,10 @@ function AdminReviews() {
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Target Product (ReviewType = Product)</label>
               <select
                 name="productId"
-                defaultValue={selectedReview?.productId || (productsList[0]?.id || "")}
+                defaultValue={(!selectedReview?.productId || selectedReview?.productId === "0" || selectedReview?.productId === "") ? "general" : selectedReview.productId}
                 className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold focus:outline-none focus:border-blue-500/50 cursor-pointer"
               >
+                <option value="general">Global / General Feedback</option>
                 {productsList.map((p) => (
                   <option key={p.id} value={p.id}>{p.name} (ID: {p.id})</option>
                 ))}
