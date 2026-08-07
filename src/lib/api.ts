@@ -86,11 +86,15 @@ async function safeFetch(url: string, options: RequestInit = {}, retry = true): 
     'Pragma': 'no-cache'
   };
 
-  if (token && token.length > 10) {
+  const isAdminApi = 
+    url.includes("Admin") || 
+    url.includes("ChangePassword") || 
+    url.includes("GetAllOrders") || 
+    url.includes("Login");
+
+  if (isAdminApi && token && token.length > 10) {
     finalHeaders['Authorization'] = `Bearer ${token}`;
-    console.log(`[AUTH] Header present: Bearer ${token.substring(0, 10)}... [Length: ${token.length}]`);
-  } else {
-    console.warn(`[AUTH] WARNING: No valid token found for ${url}!`);
+    console.log(`[AUTH] Header present for admin API: Bearer ${token.substring(0, 10)}...`);
   }
 
   // CRITICAL: If body is FormData (e.g. AddOrUpdateProduct), we MUST NOT set Content-Type.
@@ -148,12 +152,17 @@ async function handleResponse(res: Response) {
     // 401: Unauthorized / Token Expired
     if (res.status === 401) {
       console.warn("[AUTH] Unauthorized - token issue or expired.");
-      localStorage.removeItem("adminToken");
-      toast.error("Session expired. Please login again.");
-      setTimeout(() => {
-        window.location.href = "/admin/login";
-      }, 1500);
-      throw new Error("Unauthorized. Redirecting to login...");
+      const isAdminPath = window.location.pathname.startsWith("/admin");
+      if (isAdminPath) {
+        localStorage.removeItem("adminToken");
+        toast.error("Session expired. Please login again.");
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 1500);
+        throw new Error("Unauthorized. Redirecting to login...");
+      } else {
+        throw new Error("Unauthorized.");
+      }
     }
     
     // 500: Server Error
