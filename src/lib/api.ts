@@ -86,11 +86,15 @@ async function safeFetch(url: string, options: RequestInit = {}, retry = true): 
     'Pragma': 'no-cache'
   };
 
-  const isAdminApi = 
-    url.includes("Admin") || 
-    url.includes("ChangePassword") || 
-    url.includes("GetAllOrders") || 
-    url.includes("Login");
+  const isPublicApi = 
+    url.includes("GetAllProdutcs") || 
+    url.includes("GetAllCategories") || 
+    url.includes("SaveOrderDetails") || 
+    url.includes("MembersOnlineRegistration") || 
+    url.includes("CustomerAddReviews") || 
+    url.includes("GetAllReviews");
+
+  const isAdminApi = !isPublicApi;
 
   if (isAdminApi && token && token.length > 10) {
     finalHeaders['Authorization'] = `Bearer ${token}`;
