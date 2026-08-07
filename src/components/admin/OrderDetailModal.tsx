@@ -24,16 +24,24 @@ export function OrderDetailModal({ order, isOpen, onClose, onStatusUpdate }: Ord
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
 
-  const handleStatusChange = async (newStatus: string) => {
+  useEffect(() => {
+    if (order) {
+      setSelectedStatus(order.status ? order.status.toLowerCase().trim() : "pending");
+    }
+  }, [order]);
+
+  const handleStatusUpdateConfirm = async () => {
     if (!order) return;
     setIsUpdatingStatus(true);
     try {
-      await updateOrderStatus(order.id, newStatus);
-      toast.success(`Order status updated to ${newStatus}`);
+      await updateOrderStatus(order.id, selectedStatus);
+      toast.success(`Order status updated to ${selectedStatus.toUpperCase()}`);
       if (onStatusUpdate) {
-        onStatusUpdate(order.id, newStatus);
+        onStatusUpdate(order.id, selectedStatus);
       }
+      onClose();
     } catch (err: any) {
       console.error("Failed to update status:", err);
       toast.error(err.message || "Failed to update order status");
@@ -232,13 +240,13 @@ export function OrderDetailModal({ order, isOpen, onClose, onStatusUpdate }: Ord
              <div className="flex items-center gap-2 w-full sm:w-auto">
                <span className="text-xs font-bold text-slate-500 uppercase whitespace-nowrap">Change Status:</span>
                <select
-                 value={toTitleCase(order.status)}
-                 onChange={(e) => handleStatusChange(e.target.value)}
+                 value={selectedStatus}
+                 onChange={(e) => setSelectedStatus(e.target.value)}
                  disabled={isUpdatingStatus}
                  className="bg-white border rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60 cursor-pointer"
                >
                  {['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Refunded'].map((status) => (
-                   <option key={status} value={status}>{status}</option>
+                   <option key={status} value={status.toLowerCase()}>{status}</option>
                  ))}
                </select>
                {isUpdatingStatus && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}
@@ -247,12 +255,18 @@ export function OrderDetailModal({ order, isOpen, onClose, onStatusUpdate }: Ord
              <div className="flex gap-3 w-full sm:w-auto justify-end">
                <button 
                   onClick={onClose}
-                  className="px-6 py-2 border border-slate-200 rounded-lg text-sm font-semibold hover:bg-white transition-colors"
+                  disabled={isUpdatingStatus}
+                  className="px-6 py-2 border border-slate-200 rounded-lg text-sm font-semibold hover:bg-white transition-colors disabled:opacity-60"
                   >
                   Close
                </button>
-               <button className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-md shadow-blue-600/20">
-                  Download Invoice
+               <button 
+                  onClick={handleStatusUpdateConfirm}
+                  disabled={isUpdatingStatus}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-md shadow-blue-600/20 disabled:opacity-60 flex items-center gap-2"
+               >
+                  {isUpdatingStatus && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Update
                </button>
              </div>
         </div>
