@@ -241,9 +241,6 @@ export function ProductModal({ product, isOpen, onClose, onSuccess }: ProductMod
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <Label htmlFor="quantity">Quantity</Label>
-                {Number(formData.quantity || 0) < 5 && (
-                  <span className="text-[10px] bg-red-100 text-red-600 px-1.5 rounded uppercase font-bold">Low Stock Alert</span>
-                )}
               </div>
               <Input
                 id="quantity"

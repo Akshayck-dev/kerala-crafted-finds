@@ -28,7 +28,7 @@ export function OrderDetailModal({ order, isOpen, onClose, onStatusUpdate }: Ord
 
   useEffect(() => {
     if (order) {
-      setSelectedStatus(order.status ? order.status.toLowerCase().trim() : "pending");
+      setSelectedStatus(order.status ? toTitleCase(order.status.trim()) : "Pending");
     }
   }, [order]);
 
@@ -36,8 +36,11 @@ export function OrderDetailModal({ order, isOpen, onClose, onStatusUpdate }: Ord
     if (!order) return;
     setIsUpdatingStatus(true);
     try {
-      await updateOrderStatus(order.id, selectedStatus);
-      toast.success(`Order status updated to ${selectedStatus.toUpperCase()}`);
+      const result = await updateOrderStatus(order.id, selectedStatus);
+      const msg = typeof result === 'object' ? JSON.stringify(result) : String(result);
+      console.log("[API] updateOrderStatus result:", result);
+      
+      toast.success(`Status updated to ${selectedStatus.toUpperCase()}. Server: ${msg}`);
       if (onStatusUpdate) {
         onStatusUpdate(order.id, selectedStatus);
       }
@@ -80,25 +83,22 @@ export function OrderDetailModal({ order, isOpen, onClose, onStatusUpdate }: Ord
   };
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status.toLowerCase().trim()) {
       case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'processed': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'shipped': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
-      case 'delivered': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'confirmed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       case 'cancelled': return 'bg-rose-100 text-rose-700 border-rose-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+      default: return 'bg-blue-100 text-blue-700 border-blue-200';
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-white p-0">
-        {console.log("[DEBUG] OrderDetailModal order:", order)}
         <div className="p-6 border-b bg-slate-50">
             <DialogHeader className="flex flex-row items-center justify-between space-y-0">
                 <div>
                     <div className="flex items-center gap-3">
-                        <DialogTitle className="text-xl font-bold text-slate-900">Order Details V2</DialogTitle>
+                        <DialogTitle className="text-xl font-bold text-slate-900">Order Details</DialogTitle>
                         <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${getStatusColor(order.status)}`}>
                             {order.status}
                         </span>
@@ -157,10 +157,12 @@ export function OrderDetailModal({ order, isOpen, onClose, onStatusUpdate }: Ord
                         </thead>
                         <tbody className="divide-y">
                             {isLoading ? (
-                                <tr colSpan={4} className="p-4"><Skeleton className="h-12 w-full" /></tr>
+                                <tr>
+                                    <td colSpan={6} className="p-4"><Skeleton className="h-12 w-full" /></td>
+                                </tr>
                             ) : !order.products || order.products.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No item details available</td>
+                                    <td colSpan={6} className="px-4 py-8 text-center text-slate-400 italic">No item details available</td>
                                 </tr>
                             ) : (
                                 order.products.map((item, idx) => {
@@ -246,7 +248,7 @@ export function OrderDetailModal({ order, isOpen, onClose, onStatusUpdate }: Ord
                  className="bg-white border rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60 cursor-pointer"
                >
                  {['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Refunded'].map((status) => (
-                   <option key={status} value={status.toLowerCase()}>{status}</option>
+                   <option key={status} value={status}>{status}</option>
                  ))}
                </select>
                {isUpdatingStatus && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}

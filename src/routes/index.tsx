@@ -7,7 +7,7 @@ import { ShieldCheck, Truck, Award, Package, Star, MessageSquare, CheckCircle2 }
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchProducts, fetchCategories, fetchReviews } from "@/lib/api";
-import { setProducts as globalSetProducts } from "@/lib/store";
+import { setProducts as globalSetProducts, toggleReviewModal } from "@/lib/store";
 import { type Product, type Category } from "@/lib/data";
 import {
   Carousel,
@@ -499,6 +499,15 @@ function HomePage() {
               <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
                 Real feedback from our shopping platform about service, quality, and experience.
               </p>
+              <div className="mt-5 flex justify-center">
+                <Button 
+                  onClick={() => toggleReviewModal(true)} 
+                  variant="outline" 
+                  className="rounded-full border-primary/30 text-primary hover:bg-primary/5 font-bold text-xs uppercase tracking-wider h-10 px-6 active:scale-95 transition-all shadow-sm"
+                >
+                  <MessageSquare className="mr-1.5 h-4 w-4" /> Share Your Experience
+                </Button>
+              </div>
             </div>
 
             <Carousel

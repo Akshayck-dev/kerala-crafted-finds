@@ -11,12 +11,14 @@ let wishlistIds: Set<string> = new Set();
 let fetchedProducts: Product[] = [];
 let isCartOpen = false;
 let isCheckoutOpen = false;
+let isReviewOpen = false;
 
 let cartListeners: Array<() => void> = [];
 let wishlistListeners: Array<() => void> = [];
 let cartOpenListeners: Array<() => void> = [];
 let checkoutOpenListeners: Array<() => void> = [];
 let productsListeners: Array<() => void> = [];
+let reviewOpenListeners: Array<() => void> = [];
 
 function emitCart() {
   cartListeners.forEach((l) => l());
@@ -30,6 +32,9 @@ function emitCartOpen() {
 function emitCheckoutOpen() {
   checkoutOpenListeners.forEach((l) => l());
 }
+function emitReviewOpen() {
+  reviewOpenListeners.forEach((l) => l());
+}
 function emitProducts() {
   productsListeners.forEach((l) => l());
 }
@@ -42,6 +47,11 @@ export function toggleCart(open?: boolean) {
 export function toggleCheckout(open?: boolean) {
   isCheckoutOpen = open ?? !isCheckoutOpen;
   emitCheckoutOpen();
+}
+
+export function toggleReviewModal(open?: boolean) {
+  isReviewOpen = open ?? !isReviewOpen;
+  emitReviewOpen();
 }
 
 export function addToCart(product: Product, qty = 1) {
@@ -144,6 +154,21 @@ export function useCheckoutModal() {
   );
 
   return { isOpen, toggleCheckout };
+}
+
+export function useReviewModal() {
+  const isOpen = useSyncExternalStore(
+    (cb) => {
+      reviewOpenListeners.push(cb);
+      return () => {
+        reviewOpenListeners = reviewOpenListeners.filter((l) => l !== cb);
+      };
+    },
+    () => isReviewOpen,
+    () => isReviewOpen
+  );
+
+  return { isOpen, toggleReviewModal };
 }
 
 export function useWishlist() {

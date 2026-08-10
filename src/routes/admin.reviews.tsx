@@ -177,7 +177,7 @@ function AdminReviews() {
 
     setIsSaving(true);
     try {
-      const reviewId = selectedReview?.id ? Number(selectedReview.id.replace(/\D/g, '')) || 0 : 0;
+      const reviewId = selectedReview?.id && /^\d+$/.test(selectedReview.id) ? Number(selectedReview.id) : 0;
       
       await adminAddOrUpdateReview({
         id: reviewId,

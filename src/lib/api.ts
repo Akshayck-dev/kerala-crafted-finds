@@ -188,13 +188,16 @@ async function handleResponse(res: Response) {
       throw new Error("Proxy misconfiguration: API returned HTML (SPA fallback).");
     }
     
+    if (text.trim() === "false") {
+      throw new Error("API operation returned failure (false).");
+    }
     return text; // Return as string if it's a simple success message
   }
 
   const data = await res.json();
   
-  if (data && data.success === false) {
-    throw new Error(data.message || "API request failed");
+  if (data === false || (data && data.success === false)) {
+    throw new Error(data?.message || "API request failed");
   }
 
   return data;
@@ -747,15 +750,23 @@ export async function updateOrderStatus(orderId: number | string, status: string
   try {
     const cleanOrderId = typeof orderId === 'string' ? parseInt(orderId) : orderId;
     
-    const response = await safeFetch(`${BASE_URL}/ChangeOrderStatus?orderId=${cleanOrderId}&status=${encodeURIComponent(status)}`, {
+    const cleanStatus = status.trim();
+    const cleanStatusLower = status.toLowerCase().trim();
+    
+    const params = new URLSearchParams();
+    params.append("orderId", cleanOrderId.toString());
+    params.append("OrderId", cleanOrderId.toString());
+    params.append("OrderID", cleanOrderId.toString());
+    params.append("status", cleanStatus);
+    params.append("Status", cleanStatus);
+    params.append("statusLower", cleanStatusLower);
+
+    const response = await safeFetch(`${BASE_URL}/Product/ChangeOrderStatus?orderId=${cleanOrderId}&OrderId=${cleanOrderId}&orderID=${cleanOrderId}&status=${encodeURIComponent(cleanStatus)}&Status=${encodeURIComponent(cleanStatus)}`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/x-www-form-urlencoded"
       },
-      body: JSON.stringify({
-        orderId: cleanOrderId,
-        status: status
-      }),
+      body: params.toString(),
     });
     return await handleResponse(response);
   } catch (error) {
@@ -776,32 +787,25 @@ export async function adminAddOrUpdateReview(review: {
 }) {
   try {
     const cleanProductId = review.productId ? Number(review.productId) : 0;
-    const payload = {
-      ID: Number(review.id || 0),
-      Name: review.name || "",
-      Location: review.location || "",
-      Star: String(review.star || "5"),
-      Comments: review.comments || "",
-      CreatedOn: new Date().toISOString(),
-      ModifiedOn: new Date().toISOString(),
-      DeletedOn: new Date().toISOString(),
-      IsActive: review.isActive ?? true,
-      ProductID: cleanProductId > 0 ? cleanProductId : null,
-      ReviewType: review.reviewType || "Product",
-      Reviewtype: review.reviewType || "Product",
-      reviewtype: review.reviewType || "Product",
-      reviewType: review.reviewType || "Product",
-      // Backwards compatibility keys
-      productid: cleanProductId > 0 ? cleanProductId : null,
-      productId: cleanProductId > 0 ? cleanProductId : null
-    };
+    
+    const params = new URLSearchParams();
+    params.append("ID", Number(review.id || 0).toString());
+    params.append("Name", review.name || "");
+    params.append("Location", review.location || "");
+    params.append("Star", String(review.star || "5"));
+    params.append("Comments", review.comments || "");
+    params.append("IsActive", (review.isActive ?? true).toString());
+    params.append("ReviewType", review.reviewType || "Product");
+    if (cleanProductId > 0) {
+      params.append("ProductID", cleanProductId.toString());
+    }
 
     const response = await safeFetch(`${BASE_URL}/Product/AdminAddorUpdateReviews`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/x-www-form-urlencoded"
       },
-      body: JSON.stringify(payload),
+      body: params.toString(),
     });
     return await handleResponse(response);
   } catch (error) {
@@ -822,32 +826,25 @@ export async function customerAddReview(review: {
 }) {
   try {
     const cleanProductId = Number(review.productId || 0);
-    const payload = {
-      ID: Number(review.id || 0),
-      Name: review.name || "",
-      Location: review.location || "",
-      Star: String(review.star || "5"),
-      Comments: review.comments || "",
-      CreatedOn: new Date().toISOString(),
-      ModifiedOn: new Date().toISOString(),
-      DeletedOn: new Date().toISOString(),
-      IsActive: review.isActive ?? true,
-      ProductID: cleanProductId > 0 ? cleanProductId : null,
-      ReviewType: review.reviewType || "Product",
-      Reviewtype: review.reviewType || "Product",
-      reviewtype: review.reviewType || "Product",
-      reviewType: review.reviewType || "Product",
-      // Backwards compatibility keys
-      productid: cleanProductId > 0 ? cleanProductId : null,
-      productId: cleanProductId > 0 ? cleanProductId : null
-    };
+    
+    const params = new URLSearchParams();
+    params.append("ID", Number(review.id || 0).toString());
+    params.append("Name", review.name || "");
+    params.append("Location", review.location || "");
+    params.append("Star", String(review.star || "5"));
+    params.append("Comments", review.comments || "");
+    params.append("IsActive", (review.isActive ?? true).toString());
+    params.append("ReviewType", review.reviewType || "Product");
+    if (cleanProductId > 0) {
+      params.append("ProductID", cleanProductId.toString());
+    }
 
-    const response = await safeFetch(`${BASE_URL}/CustomerAddReviews`, {
+    const response = await safeFetch(`${BASE_URL}/Product/CustomerAddReviews`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/x-www-form-urlencoded"
       },
-      body: JSON.stringify(payload),
+      body: params.toString(),
     });
     return await handleResponse(response);
   } catch (error) {
@@ -858,7 +855,7 @@ export async function customerAddReview(review: {
 
 export async function fetchReviews(): Promise<any[]> {
   try {
-    const response = await safeFetch(`${BASE_URL}/Product/GetAllReviews`, {
+    const response = await safeFetch(`${BASE_URL}/Product/GetAllReviews?t=${Date.now()}`, {
       headers: getAuthHeaders("GET", false)
     });
     const data = await handleResponse(response);
@@ -877,7 +874,7 @@ export async function fetchReviews(): Promise<any[]> {
       comment: r.comments || r.Comments || "",
       isVerified: true,
       isActive: r.isActive ?? r.IsActive ?? true,
-      productId: (r.productId || r.ProductId || r.ProductID || r.productid || "").toString(),
+      productId: (r.productId || r.ProductId || r.ProductID || r.productID || r.productid || "").toString(),
       reviewType: (r.ReviewType || r.Reviewtype || r.reviewType || r.reviewtype || "Product").toString().trim()
     }));
   } catch (e) {

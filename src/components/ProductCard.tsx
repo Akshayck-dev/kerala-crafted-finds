@@ -1,19 +1,16 @@
-import { useState } from "react";
 import { Heart, ShoppingCart } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/lib/data";
-import { toggleWishlist, useWishlist } from "@/lib/store";
+import { toggleWishlist, useWishlist, addToCart } from "@/lib/store";
 import { cn, toTitleCase } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 import { AuthImage } from "./AuthImage";
-import { WhatsAppShareModal } from "./WhatsAppShareModal";
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const { isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(product.id);
-  const [shareModalOpen, setShareModalOpen] = useState(false);
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
@@ -69,7 +66,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           <div className="mt-2 flex gap-1.5">
               <Button
                 className="flex-1 rounded-full bg-primary text-primary-foreground h-8 min-[380px]:h-9 md:h-10 text-[9px] min-[380px]:text-[10px] md:text-xs lg:text-sm font-bold shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-transform"
-                onClick={() => setShareModalOpen(true)}
+                onClick={() => addToCart(product)}
               >
                 <ShoppingCart className="h-3.5 w-3.5 mr-1.5" />
                 Add to Cart
@@ -85,13 +82,6 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           </div>
         </div>
       </motion.div>
-
-      {/* WhatsApp Share Modal */}
-      <WhatsAppShareModal
-        product={shareModalOpen ? product : null}
-        isOpen={shareModalOpen}
-        onClose={() => setShareModalOpen(false)}
-      />
     </>
   );
 }

@@ -1,6 +1,7 @@
-import { ShoppingCart, ArrowRight, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ShoppingCart, ArrowRight, Trash2, Sparkles } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { useCart, useCartDrawer, removeFromCart, updateQuantity, toggleCheckout } from "@/lib/store";
+import { useCart, useCartDrawer, removeFromCart, updateQuantity, toggleCheckout, addToCart } from "@/lib/store";
 import { QuantitySelector } from "@/components/QuantitySelector";
 import {
   Sheet,
@@ -14,10 +15,27 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
 import { toTitleCase } from "@/lib/utils";
+import { fetchProducts } from "@/lib/api";
+import type { Product } from "@/lib/data";
 
 export function CartDrawer() {
   const { items, totalItems, totalPrice } = useCart();
   const { isOpen, toggleCart } = useCartDrawer();
+  const [recommendations, setRecommendations] = useState<Product[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchProducts().then((data) => {
+        const inCartIds = new Set(items.map((item) => item.product.id.toString()));
+        const filtered = data
+          .filter((p) => !inCartIds.has(p.id.toString()))
+          .slice(0, 2);
+        setRecommendations(filtered);
+      }).catch((err) => {
+        console.error("Failed to load recommendations:", err);
+      });
+    }
+  }, [isOpen, items]);
 
   return (
     <Sheet open={isOpen} onOpenChange={toggleCart}>
@@ -88,6 +106,46 @@ export function CartDrawer() {
                   </div>
                 ))}
               </div>
+
+              {recommendations.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-border/80">
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <Sparkles className="h-3.5 w-3.5 text-[#B68D40]" />
+                    <h5 className="text-[10px] font-extrabold tracking-widest text-[#B68D40] uppercase">
+                      Recommended for You
+                    </h5>
+                  </div>
+                  <div className="space-y-3 pb-6">
+                    {recommendations.map((prod) => (
+                      <div key={prod.id} className="flex items-center justify-between gap-3 bg-muted/30 rounded-xl p-3 border border-border/40 transition-all hover:bg-muted/50">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <img 
+                            src={prod.image} 
+                            alt={toTitleCase(prod.name)}
+                            className="h-12 w-12 object-cover rounded-xl border border-border/50 shrink-0 bg-white" 
+                          />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-foreground truncate leading-tight">
+                              {toTitleCase(prod.name)}
+                            </p>
+                            <p className="text-xs font-extrabold text-[#B68D40] mt-0.5">
+                              ₹{prod.price}
+                            </p>
+                          </div>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="h-8 px-4 text-[10px] font-bold uppercase tracking-wider rounded-xl bg-background border-border hover:bg-primary hover:text-white hover:border-primary active:scale-95 transition-all shrink-0"
+                          onClick={() => addToCart(prod, 1)}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </ScrollArea>
 
             <SheetFooter className="border-t bg-card/50 px-4 py-4 sm:px-6 sm:py-6 sm:flex-col">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Skeleton } from "./ui/skeleton";
-import { getAuthToken } from "../lib/api";
+import { getAuthToken, BASE_URL } from "../lib/api";
 
 interface AuthImageProps {
   src: string;
@@ -22,6 +22,7 @@ export function AuthImage({ src, alt, className, fallback = "/placeholder.svg" }
     }
 
     const token = getAuthToken();
+    const targetSrc = src.startsWith("/uploads/") ? `${BASE_URL}${src}` : src;
     
     setIsLoading(true);
     setError(false);
@@ -29,8 +30,8 @@ export function AuthImage({ src, alt, className, fallback = "/placeholder.svg" }
     // Fetch the image with the Authorization header
     const fetchImage = async () => {
       try {
-        console.log(`[AuthImage] Attempting to fetch: "${src}"`);
-        let response = await fetch(src, {
+        console.log(`[AuthImage] Attempting to fetch: "${targetSrc}"`);
+        let response = await fetch(targetSrc, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Cache-Control': 'no-cache'
@@ -39,14 +40,14 @@ export function AuthImage({ src, alt, className, fallback = "/placeholder.svg" }
 
         // FALLBACK: If 401/403, try without Auth header (some servers block Auth on static files)
         if (response.status === 401 || response.status === 403) {
-          console.warn(`[AuthImage] Auth failed (Status ${response.status}). Retrying WITHOUT Authorization header for: ${src}`);
-          response = await fetch(src, {
+          console.warn(`[AuthImage] Auth failed (Status ${response.status}). Retrying WITHOUT Authorization header for: ${targetSrc}`);
+          response = await fetch(targetSrc, {
             headers: { 'Cache-Control': 'no-cache' }
           });
         }
 
         if (!response.ok) {
-          console.warn(`[AuthImage] HTTP Error ${response.status} for ${src}. Falling back to placeholder.`);
+          console.warn(`[AuthImage] HTTP Error ${response.status} for ${targetSrc}. Falling back to placeholder.`);
           throw new Error(`Status ${response.status}`);
         }
 
@@ -55,7 +56,7 @@ export function AuthImage({ src, alt, className, fallback = "/placeholder.svg" }
         setImageSrc(objectUrl);
         setIsLoading(false);
       } catch (err: any) {
-        console.error(`[AuthImage] Error for ${src}:`, err.message);
+        console.error(`[AuthImage] Error for ${targetSrc}:`, err.message);
         setError(true);
         setImageSrc(fallback);
         setIsLoading(false);

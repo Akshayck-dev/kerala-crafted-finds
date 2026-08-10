@@ -1,38 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Star, X, MessageSquare, Heart } from "lucide-react";
 import { customerAddReview } from "@/lib/api";
 import { toast } from "sonner";
+import { useReviewModal } from "@/lib/store";
+import { ThankYouModal } from "@/components/ThankYouModal";
 
 export function GlobalReviewModal() {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isOpen, toggleReviewModal } = useReviewModal();
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    // 1. Check if review already submitted
-    const isSubmitted = localStorage.getItem("app_review_submitted") === "true";
-    // 2. Check if review dismissed in this session
-    const isDismissed = sessionStorage.getItem("app_review_dismissed") === "true";
-
-    if (isSubmitted || isDismissed) {
-      return;
-    }
-
-    // 3. Set a 50-second timer to open the modal
-    const timer = setTimeout(() => {
-      setIsOpen(true);
-    }, 50000); // 50 seconds
-
-    return () => clearTimeout(timer);
-  }, []);
+  const [showThankYou, setShowThankYou] = useState(false);
 
   const handleClose = () => {
-    setIsOpen(false);
-    // Mark as dismissed for this session so it won't show again
-    sessionStorage.setItem("app_review_dismissed", "true");
+    toggleReviewModal(false);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -58,19 +41,22 @@ export function GlobalReviewModal() {
       toast.success("Thank you for sharing your feedback with us! ❤️");
       // Mark as submitted globally so it never shows again
       localStorage.setItem("app_review_submitted", "true");
-      setIsOpen(false);
+      toggleReviewModal(false);
+      setShowThankYou(true);
     } catch (err: any) {
       console.error("Global review submit error:", err);
       // Even on failure, save locally so we don't repeatedly prompt the user
       localStorage.setItem("app_review_submitted", "true");
       toast.success("Thank you! Your feedback has been received.");
-      setIsOpen(false);
+      toggleReviewModal(false);
+      setShowThankYou(true);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="w-[92vw] max-w-[360px] bg-background/95 backdrop-blur-md border border-border/60 p-0 rounded-[1.5rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         <button 
@@ -162,5 +148,12 @@ export function GlobalReviewModal() {
         </form>
       </DialogContent>
     </Dialog>
+    <ThankYouModal 
+      isOpen={showThankYou} 
+      onClose={() => setShowThankYou(false)} 
+      title="Feedback Submitted! 🎉"
+      message="Thank you for sharing your feedback with us. Your suggestions help us improve Mallu's Mart!"
+    />
+    </>
   );
 }

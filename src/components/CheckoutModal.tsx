@@ -409,7 +409,7 @@ export function CheckoutModal() {
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={toggleCheckout}>
-        <DrawerContent className="max-h-[96vh] px-4 pb-12">
+        <DrawerContent className="max-h-[96vh] px-4 pb-4">
             <div className="mx-auto w-12 h-1.5 rounded-full bg-muted/40 my-3" />
             <DrawerHeader className="px-0 mb-4 flex flex-row items-center justify-between">
                 <div className="text-left">
@@ -431,7 +431,6 @@ export function CheckoutModal() {
             </DrawerHeader>
             <div className="overflow-y-auto pr-1 scrollbar-hide">
                 {submitted ? <SuccessView /> : <CheckoutForm />}
-                <div className="h-8" />
             </div>
         </DrawerContent>
       </Drawer>

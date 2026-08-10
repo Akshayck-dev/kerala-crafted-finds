@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { useState, useEffect } from "react";
 import { QuantitySelector } from "@/components/QuantitySelector";
 import { fetchProducts, customerAddReview, fetchReviews } from "@/lib/api";
+import { ThankYouModal } from "@/components/ThankYouModal";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -86,6 +87,7 @@ function ProductDetailPage() {
   const [showWriteForm, setShowWriteForm] = useState(false);
   const [ratingInput, setRatingInput] = useState(5);
   const [showAllReviewsModal, setShowAllReviewsModal] = useState(false);
+  const [showThankYou, setShowThankYou] = useState(false);
 
   useEffect(() => {
     if (!productId) return;
@@ -186,7 +188,7 @@ function ProductDetailPage() {
     setReviews(updated);
     localStorage.setItem(`product_reviews_${productId}`, JSON.stringify(updated));
     setShowWriteForm(false);
-    toast.success("Thank you! Your review has been submitted.");
+    setShowThankYou(true);
   };
 
   useEffect(() => {
@@ -445,22 +447,12 @@ function ProductDetailPage() {
               />
             </div>
 
-            <div className="hidden sm:flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
               <Button 
-                className="h-10 rounded-xl bg-primary px-6 text-xs font-bold tracking-wider text-white transition-all active:scale-95 sm:flex-none uppercase"
+                className="h-10 w-full sm:w-auto rounded-xl bg-primary px-6 text-xs font-bold tracking-wider text-white transition-all active:scale-95 uppercase"
                 onClick={() => addToCart(product, qty)}
               >
                 <ShoppingCart className="mr-1.5 h-4 w-4" /> Add to Cart
-              </Button>
-              <Button 
-                 variant="outline" 
-                 size="icon" 
-                 className="h-10 w-10 shrink-0 rounded-xl border border-[#25D366]/20 text-[#25D366] hover:bg-[#25D366]/5 transition-all"
-                 asChild
-              >
-                <a href={`https://wa.me/919495532563?text=${whatsappMsg}`} target="_blank" rel="noreferrer">
-                  <MessageCircle className="h-4.5 w-4.5" />
-                </a>
               </Button>
             </div>
           </div>
@@ -898,16 +890,6 @@ function ProductDetailPage() {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/80 p-3 backdrop-blur-xl transition-all duration-300 animate-in slide-in-from-bottom-full sm:hidden">
         <div className="mx-auto flex max-w-md items-center gap-2.5">
           <Button 
-             variant="outline" 
-             size="icon" 
-             className="h-10 w-10 shrink-0 rounded-xl border border-[#25D366]/20 text-[#25D366] hover:bg-[#25D366]/5"
-             asChild
-          >
-            <a href={`https://wa.me/919495532563?text=${whatsappMsg}`} target="_blank" rel="noreferrer">
-              <MessageCircle className="h-4.5 w-4.5" />
-            </a>
-          </Button>
-          <Button 
             className="h-10 flex-1 rounded-xl bg-primary text-xs font-bold tracking-wider text-white uppercase"
             onClick={() => addToCart(product, qty)}
           >
@@ -916,6 +898,13 @@ function ProductDetailPage() {
         </div>
         <div className="h-1 w-full mobile-safe-bottom" />
       </div>
+
+      <ThankYouModal 
+        isOpen={showThankYou} 
+        onClose={() => setShowThankYou(false)} 
+        title="Review Submitted! 🎉"
+        message="Thank you for sharing your experience. Your feedback helps our local artisan community grow and improve!"
+      />
     </div>
   );
 }
